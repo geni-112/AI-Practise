@@ -1,0 +1,43 @@
+#cloud-config
+ssh_pwauth: true
+disable_root: false
+package_update: true
+packages:
+  - nginx
+write_files:
+  - path: /etc/ssh/sshd_config.d/99-ai-site.conf
+    permissions: "0644"
+    content: |
+      PasswordAuthentication yes
+      PermitRootLogin yes
+  - path: /tmp/ai-hardware-config-site.tar.gz.b64
+    permissions: "0600"
+    encoding: text/plain
+    content: |
+      ${site_archive_b64}
+  - path: /etc/nginx/sites-available/ai-hardware-config-site
+    permissions: "0644"
+    content: |
+      server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+        root /var/www/ai-hardware-config-site;
+        index index.html;
+        location / {
+          try_files $uri $uri/ /index.html;
+        }
+        location /data/ {
+          add_header Cache-Control "public, max-age=300";
+        }
+      }
+runcmd:
+  - mkdir -p /var/www/ai-hardware-config-site
+  - base64 -d /tmp/ai-hardware-config-site.tar.gz.b64 > /tmp/ai-hardware-config-site.tar.gz
+  - tar -xzf /tmp/ai-hardware-config-site.tar.gz -C /var/www/ai-hardware-config-site
+  - rm -f /etc/nginx/sites-enabled/default
+  - ln -sf /etc/nginx/sites-available/ai-hardware-config-site /etc/nginx/sites-enabled/ai-hardware-config-site
+  - nginx -t
+  - systemctl enable nginx
+  - systemctl restart ssh || systemctl restart sshd
+  - systemctl restart nginx

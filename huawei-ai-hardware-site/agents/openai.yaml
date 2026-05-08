@@ -1,0 +1,4 @@
+interface:
+  display_name: "Huawei AI Hardware Site"
+  short_description: "Build and deploy a Huawei Cloud AI hardware sizing website."
+  default_prompt: "Create or update the Huawei Cloud AI hardware configuration website with public model data, Terraform deployment, and Windows credential dialogs."

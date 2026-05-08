@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Huawei Cloud AI Hardware Configurator</title>
+    <meta
+      name="description"
+      content="A public-data sizing tool for deploying open-weight LLMs on Huawei Ascend AI hardware."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Huawei Cloud LA-Santiago · AI Capacity Planner</div>
+          <h1>AI Hardware Configurator</h1>
+          <p class="lead">
+            Estimate deployment capacity for open-weight LLMs on Ascend 910B and 950DT. Select at least three inputs to get a recommended quantization, minimum card count, context and concurrency pressure, calculation details, and public data sources.
+          </p>
+        </div>
+        <aside class="hero-panel">
+          <div class="mini-stat">
+            <span>Deployment region</span>
+            <strong>LA-Santiago</strong>
+            <small>region: la-south-2</small>
+          </div>
+          <div class="mini-stat">
+            <span>Website runtime</span>
+            <strong>On-demand ECS + EVS + EIP</strong>
+            <small>RDS remains optional</small>
+          </div>
+        </aside>
+      </section>
+
+      <section class="layout">
+        <form class="panel config-panel" id="configForm">
+          <div class="section-head">
+            <div>
+              <strong>Configuration Inputs</strong>
+              <span>Fill at least three fields before generating a recommendation.</span>
+            </div>
+            <button class="ghost" type="button" id="resetBtn">Reset</button>
+          </div>
+
+          <div class="field-grid">
+            <label>
+              Hardware SKU
+              <select id="hardware">
+                <option value="">Select hardware</option>
+              </select>
+            </label>
+            <label>
+              Hardware count
+              <input id="hardwareCount" type="number" min="1" max="256" placeholder="Example: 2" />
+            </label>
+            <label>
+              Model
+              <select id="model">
+                <option value="">Select model</option>
+              </select>
+            </label>
+            <label>
+              Use case
+              <select id="scenario">
+                <option value="">Select use case</option>
+              </select>
+            </label>
+            <label>
+              Context tokens
+              <select id="contextTokens">
+                <option value="">Select context</option>
+                <option value="8000">8K</option>
+                <option value="32000">32K</option>
+                <option value="64000">64K</option>
+                <option value="100000">100K</option>
+                <option value="128000">128K</option>
+                <option value="200000">200K</option>
+                <option value="256000">256K</option>
+                <option value="512000">512K</option>
+                <option value="1000000">1M</option>
+              </select>
+            </label>
+            <label>
+              Concurrency
+              <select id="concurrency">
+                <option value="">Select concurrency</option>
+                <option value="1">1</option>
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="16">16</option>
+                <option value="32">32</option>
+                <option value="64">64</option>
+                <option value="128">128</option>
+                <option value="256">256</option>
+                <option value="512">512</option>
+                <option value="800">800</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button type="submit">Generate Recommendation</button>
+            <button class="secondary" type="button" id="sampleBtn">Load Example</button>
+          </div>
+        </form>
+
+        <section class="panel result-panel" id="resultPanel">
+          <div class="empty-state">
+            <strong>Waiting for input</strong>
+            <p>Select at least three fields across hardware, count, model, use case, context, and concurrency.</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel" id="processPanel">
+        <div class="section-head">
+          <div>
+            <strong>Calculation Details</strong>
+            <span>Weight memory + KV cache + runtime reserve. Throughput is a conservative estimate from public hardware specs.</span>
+          </div>
+        </div>
+        <div class="process-grid" id="processGrid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <strong>Huawei Cloud Resource Plan</strong>
+            <span>Resources for hosting this website, not the inference cluster itself. Everything is on-demand.</span>
+          </div>
+        </div>
+        <div class="resource-grid" id="resourceGrid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <strong>Public Data and Assumptions</strong>
+            <span>Cloud availability and model specs can change. Roadmap-only hardware is clearly marked.</span>
+          </div>
+        </div>
+        <div class="source-grid" id="sourceGrid"></div>
+      </section>
+    </main>
+
+    <dialog id="deployDialog">
+      <form method="dialog" class="dialog-card">
+        <div class="section-head">
+          <div>
+            <strong>Deployment Variables</strong>
+            <span>Generated locally in the browser. Credentials are not uploaded by this page.</span>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close">x</button>
+        </div>
+        <label>Access Key<input id="akInput" autocomplete="off" /></label>
+        <label>Secret Key<input id="skInput" type="password" autocomplete="off" /></label>
+        <label>IAM Domain Name<input id="domainInput" placeholder="Your Huawei Cloud IAM domain" /></label>
+        <pre id="deploySnippet"></pre>
+      </form>
+    </dialog>
+
+    <script src="/dashboard.js"></script>
+  </body>
+</html>

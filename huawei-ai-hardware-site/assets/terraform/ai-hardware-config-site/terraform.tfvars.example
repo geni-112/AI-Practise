@@ -1,0 +1,20 @@
+access_key     = "YOUR_HUAWEI_ACCESS_KEY"
+secret_key     = "YOUR_HUAWEI_SECRET_KEY"
+domain_name    = "YOUR_IAM_DOMAIN_NAME"
+admin_password = "ChangeMe_StrongPassword_123!"
+
+# Restrict SSH before production apply.
+admin_cidr = "0.0.0.0/0"
+
+# Keep false for the minimum-cost static website.
+create_rds = false
+
+# Leave these empty to query LA-Santiago availability at plan time.
+image_id      = ""
+ecs_flavor_id = ""
+
+# Minimum website host candidate. The deployment script tries 1 vCPU / 2 GB first,
+# then falls back to 2 vCPU / 4 GB and finally to explicit c6.large.2 if needed.
+ecs_performance_type = "normal"
+ecs_cpu_core_count   = 1
+ecs_memory_size      = 2
