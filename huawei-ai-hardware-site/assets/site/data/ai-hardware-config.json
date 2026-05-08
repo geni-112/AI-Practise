@@ -1,0 +1,316 @@
+{
+  "metadata": {
+    "generatedAt": "2026-05-08",
+    "scope": "Open-weight LLM deployment sizing on Huawei Ascend AI hardware, using public data and conservative engineering assumptions."
+  },
+  "hardware": [
+    {
+      "id": "ascend-910b",
+      "name": "Ascend 910B",
+      "memoryGB": 64,
+      "usableMemoryRatio": 0.9,
+      "int8Tops": 512,
+      "fp16Tflops": 320,
+      "inferenceEfficiency": 0.05,
+      "confidence": "medium",
+      "notes": "Public 910B references differ on exact HBM capacity. This planner uses a 64GB planning assumption and should be reconciled with the actually purchasable Huawei Cloud SKU."
+    },
+    {
+      "id": "ascend-950dt",
+      "name": "Ascend 950DT",
+      "memoryGB": 144,
+      "usableMemoryRatio": 0.9,
+      "int8Tops": 900,
+      "fp16Tflops": 450,
+      "inferenceEfficiency": 0.055,
+      "confidence": "roadmap",
+      "notes": "950DT is treated as a roadmap estimate based on public 2025-2026 reporting, not as a confirmed LA-Santiago cloud SKU."
+    }
+  ],
+  "scenarios": [
+    { "id": "coding", "name": "Coding", "throughputFactor": 0.82 },
+    { "id": "chatbot", "name": "Chatbot", "throughputFactor": 1.0 },
+    { "id": "rag", "name": "RAG / Knowledge Base", "throughputFactor": 0.9 },
+    { "id": "agent", "name": "Agent / Tool Use", "throughputFactor": 0.72 },
+    { "id": "reasoning", "name": "Reasoning", "throughputFactor": 0.62 }
+  ],
+  "models": [
+    {
+      "id": "glm-5-1",
+      "name": "GLM-5.1",
+      "family": "Z.ai",
+      "releaseYear": 2026,
+      "architecture": "MoE + DSA",
+      "totalParametersB": 744,
+      "activeParametersB": 40,
+      "maxContextTokens": 202752,
+      "layers": 78,
+      "kvHeads": 64,
+      "headDim": 64,
+      "kvBytes": 2,
+      "kvCacheFactor": 0.35,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.08,
+      "frameworkReserveGB": 14,
+      "notes": "GLM-5.1 is public on zai-org/GLM-5.1 with MIT license. The 744B total / 40B active figures come from Z.ai ecosystem sources; Hugging Face currently reports model-size metadata around 754B. The KV cache factor is a conservative planning assumption for DSA-style long-context deployment and must be validated by framework benchmarks.",
+      "quantizations": [
+        { "name": "BF16", "bits": 16, "qualityScore": 98, "throughputFactor": 0.64, "rationale": "Highest-quality baseline, but the full-weight memory footprint is extremely large.", "scenarioFit": { "coding": 5, "reasoning": 4, "agent": 4 } },
+        { "name": "FP8", "bits": 8, "qualityScore": 95, "throughputFactor": 0.92, "rationale": "Public model card and provider pages list BF16/FP8 deployment; FP8 is the practical quality-first production baseline.", "scenarioFit": { "coding": 5, "reasoning": 4, "agent": 4 } },
+        { "name": "NVFP4 / MXFP4", "bits": 4, "qualityScore": 90, "throughputFactor": 1.42, "rationale": "Public quantized derivatives include NVIDIA/AMD 4-bit formats; use when memory budget matters but engineering quality remains important.", "scenarioFit": { "coding": 3, "chatbot": 4, "rag": 3 } },
+        { "name": "AWQ 4-bit", "bits": 4, "qualityScore": 88, "throughputFactor": 1.35, "rationale": "Community AWQ 4-bit derivatives are visible on Hugging Face and are useful for lower-memory trials.", "scenarioFit": { "chatbot": 4, "rag": 3 } },
+        { "name": "GGUF IQ2/2.7bpw", "bits": 2.7, "qualityScore": 78, "throughputFactor": 1.62, "rationale": "Very low-bit GGUF ports reduce memory sharply, but quality loss is material; treat as experimentation rather than production coding.", "scenarioFit": { "chatbot": 2 } }
+      ]
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "name": "DeepSeek-V4-Flash",
+      "family": "DeepSeek",
+      "releaseYear": 2026,
+      "architecture": "MoE + hybrid compressed attention",
+      "totalParametersB": 284,
+      "activeParametersB": 13,
+      "maxContextTokens": 1048576,
+      "layers": 43,
+      "kvHeads": 1,
+      "headDim": 512,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.08,
+      "frameworkReserveGB": 12,
+      "notes": "DeepSeek's model card lists V4-Flash at 284B total / 13B active with 1M context. The official instruct checkpoint uses mixed FP4 expert weights plus FP8 for most other weights; the sizing model uses bit-width equivalents for planning.",
+      "quantizations": [
+        { "name": "FP8 Mixed Base", "bits": 8, "qualityScore": 94, "throughputFactor": 0.96, "rationale": "The base checkpoint is listed as FP8 Mixed; choose this for conservative quality and simpler serving.", "scenarioFit": { "reasoning": 3, "coding": 3 } },
+        { "name": "FP4 + FP8 Mixed", "bits": 4.6, "qualityScore": 91, "throughputFactor": 1.35, "rationale": "The official V4-Flash instruct checkpoint uses FP4 experts plus FP8 for most other weights, making it the most relevant local-deployment baseline.", "scenarioFit": { "chatbot": 5, "rag": 4, "agent": 3 } },
+        { "name": "4-bit MLX", "bits": 4, "qualityScore": 86, "throughputFactor": 1.42, "rationale": "Community 4-bit MLX ports exist for Apple Silicon style deployments; use as a lower-memory reference rather than an Ascend production format.", "scenarioFit": { "chatbot": 4, "rag": 3 } }
+      ]
+    },
+    {
+      "id": "glm-4-5",
+      "name": "GLM-4.5",
+      "family": "Z.ai / Zhipu",
+      "releaseYear": 2025,
+      "architecture": "MoE",
+      "totalParametersB": 355,
+      "activeParametersB": 32,
+      "maxContextTokens": 128000,
+      "layers": 80,
+      "kvHeads": 8,
+      "headDim": 128,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.08,
+      "frameworkReserveGB": 8,
+      "notes": "A practical Z.ai baseline from the previous model generation.",
+      "quantizations": [
+        { "name": "FP8", "bits": 8, "qualityScore": 96, "throughputFactor": 0.9, "rationale": "Quality-first deployment for coding, reasoning, and serious business Q&A.", "scenarioFit": { "coding": 4, "reasoning": 4 } },
+        { "name": "INT8", "bits": 8, "qualityScore": 94, "throughputFactor": 1.0, "rationale": "Balanced quality and throughput for production inference.", "scenarioFit": { "chatbot": 3, "rag": 2 } },
+        { "name": "INT4 / AWQ", "bits": 4, "qualityScore": 88, "throughputFactor": 1.35, "rationale": "Roughly halves weight memory and is useful when card count is constrained.", "scenarioFit": { "chatbot": 4, "rag": 3 } }
+      ]
+    },
+    {
+      "id": "qwen3-coder-480b",
+      "name": "Qwen3-Coder-480B-A35B",
+      "family": "Qwen",
+      "releaseYear": 2025,
+      "architecture": "MoE",
+      "totalParametersB": 480,
+      "activeParametersB": 35,
+      "maxContextTokens": 1000000,
+      "layers": 62,
+      "kvHeads": 8,
+      "headDim": 128,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.08,
+      "frameworkReserveGB": 10,
+      "notes": "Native 256K context with YaRN extension to 1M. Long context makes KV cache the main bottleneck.",
+      "quantizations": [
+        { "name": "FP8", "bits": 8, "qualityScore": 95, "throughputFactor": 0.92, "rationale": "Official FP8 is the quality-first coding option.", "scenarioFit": { "coding": 5, "agent": 4 } },
+        { "name": "FP4", "bits": 4, "qualityScore": 89, "throughputFactor": 1.45, "rationale": "A better fit for long-context or high-concurrency memory pressure.", "scenarioFit": { "coding": 3, "chatbot": 3 } },
+        { "name": "AWQ 4-bit", "bits": 4, "qualityScore": 87, "throughputFactor": 1.35, "rationale": "Community AWQ quantization for availability-first low-memory trials.", "scenarioFit": { "chatbot": 4, "rag": 3 } }
+      ]
+    },
+    {
+      "id": "deepseek-r1",
+      "name": "DeepSeek-R1",
+      "family": "DeepSeek",
+      "releaseYear": 2025,
+      "architecture": "MoE",
+      "totalParametersB": 671,
+      "activeParametersB": 37,
+      "maxContextTokens": 64000,
+      "layers": 61,
+      "kvHeads": 8,
+      "headDim": 128,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.1,
+      "frameworkReserveGB": 12,
+      "notes": "Strong reasoning model, but the full checkpoint is large. Smaller clusters should also evaluate Distill variants.",
+      "quantizations": [
+        { "name": "FP8", "bits": 8, "qualityScore": 95, "throughputFactor": 0.9, "rationale": "Prioritizes reasoning quality.", "scenarioFit": { "reasoning": 5, "coding": 2 } },
+        { "name": "INT8", "bits": 8, "qualityScore": 93, "throughputFactor": 1.0, "rationale": "Balanced production-quality baseline.", "scenarioFit": { "reasoning": 4, "rag": 2 } },
+        { "name": "INT4", "bits": 4, "qualityScore": 86, "throughputFactor": 1.35, "rationale": "Feasible for memory-constrained deployments, but complex reasoning quality needs regression testing.", "scenarioFit": { "chatbot": 3 } }
+      ]
+    },
+    {
+      "id": "llama-3-3-70b",
+      "name": "Llama 3.3 70B Instruct",
+      "family": "Meta",
+      "releaseYear": 2024,
+      "architecture": "Dense",
+      "totalParametersB": 70.6,
+      "activeParametersB": 70.6,
+      "maxContextTokens": 128000,
+      "layers": 80,
+      "kvHeads": 8,
+      "headDim": 128,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.06,
+      "frameworkReserveGB": 6,
+      "notes": "Smaller, mature ecosystem model and a safe baseline for small 910B pilots.",
+      "quantizations": [
+        { "name": "BF16", "bits": 16, "qualityScore": 97, "throughputFactor": 0.72, "rationale": "Highest quality for low-concurrency services.", "scenarioFit": { "rag": 3, "chatbot": 3 } },
+        { "name": "INT8", "bits": 8, "qualityScore": 94, "throughputFactor": 1.0, "rationale": "Balanced quality and performance.", "scenarioFit": { "chatbot": 4, "rag": 4 } },
+        { "name": "INT4 / AWQ", "bits": 4, "qualityScore": 88, "throughputFactor": 1.35, "rationale": "Makes long context and multi-user testing easier on two 910B-class cards.", "scenarioFit": { "chatbot": 4 } }
+      ]
+    },
+    {
+      "id": "qwen3-235b-a22b",
+      "name": "Qwen3-235B-A22B",
+      "family": "Qwen",
+      "releaseYear": 2025,
+      "architecture": "MoE",
+      "totalParametersB": 235,
+      "activeParametersB": 22,
+      "maxContextTokens": 32000,
+      "layers": 94,
+      "kvHeads": 4,
+      "headDim": 128,
+      "kvBytes": 2,
+      "kvCacheFactor": 1,
+      "weightOverheadFactor": 1.08,
+      "runtimeOverheadFactor": 1.08,
+      "frameworkReserveGB": 8,
+      "notes": "Apache 2.0 model suitable for general bilingual chat, RAG, and limited coding tasks.",
+      "quantizations": [
+        { "name": "FP8", "bits": 8, "qualityScore": 94, "throughputFactor": 0.92, "rationale": "Quality-first option.", "scenarioFit": { "reasoning": 3, "coding": 2 } },
+        { "name": "INT8", "bits": 8, "qualityScore": 92, "throughputFactor": 1.0, "rationale": "Balanced production baseline.", "scenarioFit": { "chatbot": 3, "rag": 3 } },
+        { "name": "INT4", "bits": 4, "qualityScore": 86, "throughputFactor": 1.35, "rationale": "Useful for two-to-four-card pilots.", "scenarioFit": { "chatbot": 4, "rag": 3 } }
+      ]
+    }
+  ],
+  "cloudResources": [
+    {
+      "layer": "Compute",
+      "recommendation": "ECS s3.medium.2 was selected in LA-Santiago",
+      "reason": "Terraform queried the region and selected the smallest available on-demand flavor for static Nginx hosting. This ECS hosts the website only; it is not the inference cluster.",
+      "terraform": "huaweicloud_compute_instance.site"
+    },
+    {
+      "layer": "Storage",
+      "recommendation": "EVS SSD 40 GB system disk",
+      "reason": "Enough for Ubuntu, Nginx, static assets, and logs. Add a data disk only if collection or audit history grows.",
+      "terraform": "system_disk_type=SSD, system_disk_size=40"
+    },
+    {
+      "layer": "Public access",
+      "recommendation": "EIP 5 Mbit/s, traffic billing",
+      "reason": "Sufficient for a public demo and sizing tool. Add ELB/CDN and HTTPS for production.",
+      "terraform": "bandwidth charge_mode=traffic"
+    },
+    {
+      "layer": "Database",
+      "recommendation": "Not created by default; optional RDS MySQL 8.0",
+      "reason": "The current site is static and ships its public dataset with the code. Create RDS only when saved scenarios, accounts, or audit history are required.",
+      "terraform": "var.create_rds=false"
+    },
+    {
+      "layer": "Network",
+      "recommendation": "VPC + subnet + security group",
+      "reason": "HTTP/HTTPS are public. SSH should be restricted to an office or VPN CIDR before production use.",
+      "terraform": "huaweicloud_vpc, huaweicloud_networking_secgroup"
+    },
+    {
+      "layer": "Automation",
+      "recommendation": "Terraform provider huaweicloud, region la-south-2",
+      "reason": "The module lives in terraform/ai-hardware-config-site and uses temporary local tfvars for credentials.",
+      "terraform": "terraform apply"
+    }
+  ],
+  "sources": [
+    {
+      "title": "Huawei Cloud LA-Santiago region code",
+      "summary": "Huawei Cloud documentation lists LA-Santiago with region code la-south-2.",
+      "url": "https://support.huaweicloud.com/intl/en-us/usermanual-organizations/org_03_0082.html",
+      "confidence": "official",
+      "updated": "2025-12-10"
+    },
+    {
+      "title": "Ascend 910B public hardware specs",
+      "summary": "Public hardware references provide planning-level HBM and compute figures, though exact SKU memory can vary.",
+      "url": "https://www.waredb.com/processor/ascend-910b",
+      "confidence": "third-party"
+    },
+    {
+      "title": "Ascend 950DT roadmap",
+      "summary": "Public reporting mentions 144GB HBM and high-bandwidth plans for Ascend 950DT. Treat as roadmap, not a confirmed cloud SKU.",
+      "url": "https://www.tomshardware.com/tech-industry/semiconductors/huawei-unveils-ascend-roadmap-backed-by-in-house-hbm",
+      "confidence": "media-roadmap"
+    },
+    {
+      "title": "GLM-5.1 Hugging Face model card",
+      "summary": "Z.ai's GLM-5.1 model card lists MIT license, local serving options, and coding/agentic benchmark positioning.",
+      "url": "https://huggingface.co/zai-org/GLM-5.1",
+      "confidence": "model-card"
+    },
+    {
+      "title": "GLM-5.1 Z.ai docs",
+      "summary": "Z.ai docs list GLM-5.1 as a flagship foundation model with 200K context and 128K maximum output tokens.",
+      "url": "https://docs.z.ai/guides/llm/glm-5.1",
+      "confidence": "official-docs"
+    },
+    {
+      "title": "GLM-5.1 quantized derivatives",
+      "summary": "Hugging Face lists multiple quantized derivatives for zai-org/GLM-5.1, including GGUF, AWQ 4-bit, FP8, NVFP4, MXFP4, and MLX variants.",
+      "url": "https://huggingface.co/models?other=base_model%3Aquantized%3Azai-org%2FGLM-5.1",
+      "confidence": "model-index"
+    },
+    {
+      "title": "DeepSeek-V4-Flash model card",
+      "summary": "The deepseek-ai model card lists V4-Flash at 284B total parameters, 13B active parameters, 1M context, MIT license, and FP4+FP8 mixed precision for the instruct model.",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
+      "confidence": "model-card"
+    },
+    {
+      "title": "DeepSeek-V4-Flash config",
+      "summary": "The model config exposes max_position_embeddings 1048576, 43 layers, one KV head, FP4 expert dtype, and FP8 quantization metadata.",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/config.json",
+      "confidence": "model-config"
+    },
+    {
+      "title": "Qwen3-Coder-480B-A35B model card",
+      "summary": "The model card lists 480B total / 35B active parameters and long-context deployment details.",
+      "url": "https://huggingface.co/Qwen/Qwen3-Coder-480B-A35B-Instruct",
+      "confidence": "model-card"
+    },
+    {
+      "title": "DeepSeek-R1 model card",
+      "summary": "The model card describes DeepSeek-R1 open weights and related distilled dense models under the MIT license.",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1",
+      "confidence": "model-card"
+    },
+    {
+      "title": "Llama 3.3 70B context",
+      "summary": "Public partner documentation lists Llama 3.3 70B Instruct with a 128K context window.",
+      "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-meta-llama-3-3-70b-instruct.html",
+      "confidence": "partner-model-card"
+    }
+  ]
+}
