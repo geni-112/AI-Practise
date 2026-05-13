@@ -1,0 +1,20 @@
+{
+  "REDIS_PWD": "26f40c899e49302fc7edcd312fee39d4",
+  "PG_PWD": "d809ca9cfb87a6ee1286c6eec45e2e20",
+  "LITELLM_MASTER_KEY": "sk-eef9a788ca497594f319e6cb70a9c99b80d23edd0e797fb7",
+  "MCP_TOKEN": "f3f321af86fe53feac9c775ee6baf111",
+  "VPC_ID": "a4dc04af-99d8-488d-af55-f299df4cea85",
+  "SUBNET_ID": "f4767f67-4138-4d1b-be53-5448985d4b32",
+  "SG_ID": "0679dbf0-901e-4fb9-9c80-a9c48da44dc8",
+  "LAPTOP_CIDR": "119.8.128.20/32",
+  "IMAGE_ID": "a4605ecc-7558-4d2c-95f7-3a595ec3f876",
+  "ECS_ID": "0614e4f4-b0a2-4486-8015-7dd6addd8db3",
+  "ECS_STATUS": "ACTIVE",
+  "ECS_PUBLIC_IP": "110.238.67.215",
+  "ECS_SSH_KEY": "C:\\Users\\l00584501\\.ssh\\litellm-gw-key",
+  "litellm_installed": true,
+  "searxng_installed": true,
+  "e2e_validated": false,
+  "claude_glm_wired": true,
+  "LITELLM_VIRTUAL_KEY": "sk-3SRXLTP-hKZjiif5zGXAPA"
+}
