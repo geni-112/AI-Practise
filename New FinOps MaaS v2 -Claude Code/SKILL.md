@@ -301,6 +301,37 @@ See [assets/config/litellm.config.yaml.example](assets/config/litellm.config.yam
 - `input_cost_per_token: 1.078e-06`
 - `output_cost_per_token: 3.774e-06`
 
+**Claude model aliases (required for `claude-code-router` compatibility):** ccr always sends the original Anthropic model name (e.g. `claude-3-5-sonnet-20241022`) to the upstream; it does not rewrite it to `huawei-glm-5.1`. LiteLLM will return `400: Invalid model name` unless you add aliases. Add these entries to `model_list` alongside the `huawei-glm-5.1` entry:
+
+```yaml
+  - model_name: "claude-3-5-sonnet-20241022"
+    litellm_params:
+      model: "openai/glm-5.1"
+      api_base: os.environ/HUAWEI_MAAS_API_BASE
+      api_key: os.environ/HUAWEI_MAAS_API_KEY
+      timeout: 120
+      input_cost_per_token: 1.078e-06
+      output_cost_per_token: 3.774e-06
+  - model_name: "claude-3-7-sonnet-20250219"
+    litellm_params:
+      model: "openai/glm-5.1"
+      api_base: os.environ/HUAWEI_MAAS_API_BASE
+      api_key: os.environ/HUAWEI_MAAS_API_KEY
+      timeout: 120
+      input_cost_per_token: 1.078e-06
+      output_cost_per_token: 3.774e-06
+  - model_name: "claude-opus-4-5"
+    litellm_params:
+      model: "openai/glm-5.1"
+      api_base: os.environ/HUAWEI_MAAS_API_BASE
+      api_key: os.environ/HUAWEI_MAAS_API_KEY
+      timeout: 120
+      input_cost_per_token: 1.078e-06
+      output_cost_per_token: 3.774e-06
+```
+
+After adding aliases, `systemctl restart litellm.service` and verify with `curl .../health/liveliness`.
+
 ### 8. Bootstrap Prisma BEFORE first start — the most fragile step
 
 This is the single most fragile step on enterprise Linux. Do it explicitly; do **not** trust `--use_prisma_db_push` to bootstrap from nothing.
@@ -540,6 +571,106 @@ bash scripts/install_claude_glm_client.sh
 
 Full client recipe (manual install, day-2 ops, off-boarding) is in [references/laptop-client-onboarding.md](references/laptop-client-onboarding.md).
 
+## Security Group Day-2 Operations
+
+The ECS security group is the most common cause of "网站打不开" after a working deployment. Two scenarios arise repeatedly.
+
+### Scenario A — Your laptop's IP changed
+
+Public egress IPs from ISPs and corporate networks rotate without warning. When they do, your `/32` whitelist rule silently blocks all traffic — the ECS is alive but unreachable.
+
+**Diagnosis:** ECS is `ACTIVE` via SDK but `curl` to port 4000 times out.
+
+**Fix with `check_ecs.py`** (bundled in this project):
+
+```bash
+python check_ecs.py
+# Prints: ECS status, current IPs, your current outbound IP, and all SG ingress rules.
+# If your current IP != the CIDR in the rules, run update_sg.py (or re-run deploy.py step 3).
+```
+
+Manual fix via SDK (Python, copy-paste ready):
+
+```python
+import json, os, urllib.request
+from huaweicloudsdkcore.auth.credentials import BasicCredentials
+from huaweicloudsdkvpc.v2 import (VpcClient, ListSecurityGroupRulesRequest,
+    DeleteSecurityGroupRuleRequest, CreateSecurityGroupRuleRequest,
+    CreateSecurityGroupRuleRequestBody, SecurityGroupRule)
+from huaweicloudsdkvpc.v2.region.vpc_region import VpcRegion
+
+cred = json.load(open("credential.skill"))
+state = json.load(open("deploy_state.json"))
+vpc = VpcClient.new_builder() \
+    .with_credentials(BasicCredentials(cred["HUAWEI_AK"], cred["HUAWEI_SK"], cred["HUAWEI_PROJECT"])) \
+    .with_region(VpcRegion.value_of(cred["HUAWEI_REGION"])) \
+    .build()
+
+OLD_CIDR = "1.2.3.4/32"   # old IP
+NEW_IP   = urllib.request.urlopen("https://ifconfig.me", timeout=10).read().decode().strip()
+NEW_CIDR = f"{NEW_IP}/32"
+SG_ID    = state["SG_ID"]
+
+# Delete old rules
+rules = vpc.list_security_group_rules(ListSecurityGroupRulesRequest(security_group_id=SG_ID)).security_group_rules
+for r in rules:
+    if r.direction == "ingress" and r.remote_ip_prefix == OLD_CIDR:
+        vpc.delete_security_group_rule(DeleteSecurityGroupRuleRequest(security_group_rule_id=r.id))
+
+# Add new rules (keep SSH on whitelist only)
+for port, desc in [(22, "SSH"), (4000, "LiteLLM"), (8788, "SearXNG MCP")]:
+    vpc.create_security_group_rule(CreateSecurityGroupRuleRequest(
+        body=CreateSecurityGroupRuleRequestBody(
+            security_group_rule=SecurityGroupRule(
+                security_group_id=SG_ID, direction="ingress", protocol="tcp",
+                port_range_min=port, port_range_max=port,
+                remote_ip_prefix=NEW_CIDR, description=f"{desc} from operator"
+            )
+        )
+    ))
+```
+
+### Scenario B — Open LiteLLM UI and MCP to the public
+
+When multiple users with dynamic IPs need access (e.g., a team), maintaining per-person `/32` rules becomes unmanageable. Opening ports 4000 and 8788 to `0.0.0.0/0` is acceptable **if**:
+
+- Every user has their own **Virtual Key** with a monthly spend budget (set in the UI).
+- SSH (port 22) remains on the `/32` whitelist — never open SSH to `0.0.0.0/0`.
+
+**Steps:**
+
+```python
+# 1. Delete all existing /32 rules for ports 4000 and 8788
+rules = vpc.list_security_group_rules(ListSecurityGroupRulesRequest(security_group_id=SG_ID)).security_group_rules
+for r in rules:
+    if r.direction == "ingress" and r.protocol == "tcp" and r.port_range_min in (4000, 8788):
+        vpc.delete_security_group_rule(DeleteSecurityGroupRuleRequest(security_group_rule_id=r.id))
+
+# 2. Add 0.0.0.0/0 for ports 4000 and 8788 only
+for port, desc in [(4000, "LiteLLM public"), (8788, "SearXNG MCP public")]:
+    vpc.create_security_group_rule(CreateSecurityGroupRuleRequest(
+        body=CreateSecurityGroupRuleRequestBody(
+            security_group_rule=SecurityGroupRule(
+                security_group_id=SG_ID, direction="ingress", protocol="tcp",
+                port_range_min=port, port_range_max=port,
+                remote_ip_prefix="0.0.0.0/0", description=desc
+            )
+        )
+    ))
+```
+
+After opening to public, **immediately** go to `http://<ECS_PUBLIC_IP>:4000/ui` and create per-user Virtual Keys with budget limits. Requests over budget return HTTP 429 automatically.
+
+### Adding a specific user's IP (whitelist mode)
+
+Ask the user to open `https://ifconfig.me` and send their IP. Then add `/32` rules for ports 4000 and 8788 (and 22 if SSH access is needed):
+
+```python
+NEW_CIDR = "100.64.212.21/32"   # user's IP
+for port, desc in [(4000, "LiteLLM"), (8788, "SearXNG MCP")]:
+    vpc.create_security_group_rule(...)  # same pattern as above
+```
+
 ## FinOps: Token Cost Management
 
 LiteLLM ships a full admin UI at:
@@ -583,7 +714,7 @@ Inherits everything from `litellm-huawei-maas-single-ecs`. Add:
 - If ccr config file changes are not picked up, `ccr stop` then `ccr start`. There is no SIGHUP path; restart is mandatory.
 - If `claude-glm` shows the **interactive Anthropic model picker** after a wrapper edit, the wrapper failed to set `ANTHROPIC_MODEL` before `claude` started. Use `claude --model "$ANTHROPIC_MODEL"`, not `--model=$ANTHROPIC_MODEL` — Claude Code's CLI parser is tolerant of both, but quoting the value avoids surprises with model names containing slashes.
 - If `mcp list` reports `searxng: ! Failed` but `curl` to `:8788/mcp` works, check that the `--header` you registered exactly matches `Authorization: Bearer <token>`. Quotes and trailing spaces are silent killers.
-- If the laptop's outbound IP changed, **do not** widen SG to `0.0.0.0/0`. Add a new `/32` rule for the new IP and remove the stale rule.
+- If the laptop's outbound IP changed, run `check_ecs.py` to diagnose, then use the SDK snippet in **Security Group Day-2 Operations / Scenario A** to swap the `/32` rule. Keep SSH on whitelist; optionally open 4000/8788 to `0.0.0.0/0` for team access (Scenario B).
 - If ECS provisioning fails with `Ecs.0005`, check that the Ubuntu image is the plain server edition, not a CUDA/Tesla GPU image (see Trap 5).
 - If SDK calls fail with `TypeError: unexpected keyword argument '__imagetype'`, remove the double underscores (see Trap 4).
 
@@ -607,6 +738,7 @@ When completing the task, leave behind:
 
 - `credential_form.py` — Tkinter GUI for credential input (dark theme, password masking, SSH key browser). Saves to `credential.skill` (JSON, mode 600). Run once per operator or when credentials rotate.
 - `deploy.py` — Python orchestrator for all 17 deployment steps. Reads `credential.skill`, generates secrets on first run, persists all state in `deploy_state.json`. Idempotent — safe to re-run after partial failure.
+- `check_ecs.py` — Day-2 diagnostic: prints ECS status, all IPs, current outbound IP, and SG ingress rules side-by-side. Run whenever the gateway becomes unreachable to instantly confirm whether an IP rotation is the cause.
 - `deploy_state.json` — auto-generated; stores `REDIS_PWD`, `PG_PWD`, `LITELLM_MASTER_KEY`, `MCP_TOKEN`, ECS IDs, and SSH key path.
 
 ### Remote scripts
