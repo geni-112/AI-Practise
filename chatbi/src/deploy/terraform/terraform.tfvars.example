@@ -1,0 +1,16 @@
+# Copy this file to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored — never commit it
+
+access_key    = "YOUR_HUAWEI_ACCESS_KEY"
+secret_key    = "YOUR_HUAWEI_SECRET_KEY"
+region        = "la-south-2"
+maas_api_key  = "YOUR_MAAS_API_KEY"
+maas_base_url = "https://api-ap-southeast-1.modelarts-maas.com/openai/v1"
+maas_model    = "glm-5.1"
+ecs_flavor    = "c7.xlarge.4"
+dws_flavor    = "dws.d2.xlarge.8"
+eip_bandwidth = 5
+project_name  = "chatbi"
+
+# Restrict SSH to your IP for production (optional but recommended)
+# allowed_ssh_cidr = "203.0.113.10/32"
