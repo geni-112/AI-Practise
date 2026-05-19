@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scenario Demo Builder"
+  short_description: "Build architecture-backed demo previews for business scenarios."
+  default_prompt: "Create a previewable architecture and interactive demo for this business scenario, with clear purpose, validation, and CCPM planning artifacts when relevant."
