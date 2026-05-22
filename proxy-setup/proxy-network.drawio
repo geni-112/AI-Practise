@@ -1,0 +1,47 @@
+<mxfile host="app.diagrams.net" modified="2026-05-22T00:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="proxy-network" name="Corporate Proxy Flow">
+    <mxGraphModel dx="1194" dy="729" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="2" value="PowerShell Session&#xa;Windows Terminal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f1ff;strokeColor=#2f5f98;fontColor=#1f2937;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="70" y="190" width="170" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="3" value="CLI Tools&#xa;git / pip / npm / curl" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f7fa;strokeColor=#6b7280;fontColor=#1f2937;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="310" y="190" width="180" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="4" value="Process Environment&#xa;http_proxy / https_proxy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf3;strokeColor=#2f855a;fontColor=#1f2937;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="560" y="190" width="210" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="5" value="Corporate Proxy&#xa;host + port" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff7ed;strokeColor=#c05621;fontColor=#1f2937;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="840" y="190" width="170" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="6" value="External Services&#xa;GitHub / PyPI / npm / Docker Hub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef2f2;strokeColor=#b91c1c;fontColor=#1f2937;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="470" y="360" width="240" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="7" value="" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#374151;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="8" value="" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#374151;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="9" value="" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#374151;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="10" value="HTTP CONNECT / HTTPS via proxy" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#374151;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925" y="402"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="11" value="open_proxy sets session vars&#xa;close_proxy restores/removes them" style="shape=note;whiteSpace=wrap;html=1;size=18;fillColor=#fffbeb;strokeColor=#d97706;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="520" y="70" width="260" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="" style="endArrow=open;html=1;rounded=0;dashed=1;strokeColor=#d97706;" edge="1" parent="1" source="11" target="4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

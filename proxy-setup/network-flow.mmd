@@ -1,0 +1,7 @@
+flowchart LR
+    terminal["PowerShell session"] --> tool["CLI tool<br/>git / pip / npm / curl"]
+    tool --> env["Process environment<br/>http_proxy / https_proxy"]
+    env --> proxy["Corporate proxy<br/>proxy host + port"]
+    proxy --> internet["External services<br/>GitHub / PyPI / npm / Docker Hub"]
+    terminal -. "open_proxy enables session-scoped vars" .-> env
+    terminal -. "close_proxy restores or removes vars" .-> env
