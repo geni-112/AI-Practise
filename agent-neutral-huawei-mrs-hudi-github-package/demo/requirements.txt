@@ -1,0 +1,5 @@
+esdk-obs-python>=3.24.12
+huaweicloudsdkcore>=3.1.197
+huaweicloudsdkiam>=3.1.197
+huaweicloudsdkdli>=3.1.197
+huaweicloudsdkmrs>=3.1.197

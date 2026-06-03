@@ -1,0 +1,43 @@
+name: dockone-dli-hudi-cdc-workflow
+description: Near-production replacement for Databricks Workflows using DataArts orchestration.
+schedule:
+  mode: cron
+  expression: "0 0 0/3 * * ?"
+  timezone: UTC
+  initial_pause_status: paused_for_poc
+retry_policy:
+  max_retries: 6
+  retry_interval_minutes: 5
+  alert_on_last_attempt: true
+timeline:
+  T_minus_7_days:
+    - confirm Huawei Cloud region, quotas, DLI queue, OBS bucket, IAM agency, DEW keys
+    - validate Hudi bundle compatibility for selected DLI Spark version
+  T_minus_1_day:
+    - upload synthetic CDC data and DLI job scripts to OBS
+    - run notebook local preflight and dry-run DLI payload generation
+  T0_raw_to_bronze:
+    - for_each_table: submit bronze_hudi_job.py
+    - wait_for: bronze job success
+  T0_bronze_to_silver:
+    - for_each_table: submit silver_hudi_job.py
+    - wait_for: silver job success
+  T0_serving_optional:
+    - load selected silver Hudi tables to DWS
+    - refresh Superset or BI dashboards
+  T_plus_1_hour:
+    - collect DLI job states, LTS logs, row counts, Hudi commit timeline
+    - create adaptation report
+modules:
+  raw_ingestion:
+    implementation: CDM optional path or self-built manifest/checkpoint/schema-log path
+    output: OBS raw CDC JSON/Avro
+  bronze:
+    implementation: DLI Spark writes Hudi COW
+    output: OBS bronze Hudi tables
+  silver:
+    implementation: DLI Spark deduplicates latest CDC and writes Hudi upsert/delete
+    output: OBS silver Hudi tables
+  notebook:
+    implementation: JupyterHub on CCE calling DLI API/SDK and OBS/DWS clients
+    success_gate: notebook preflight cells execute locally and cloud cells dry-run without exception

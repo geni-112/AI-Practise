@@ -1,0 +1,42 @@
+{
+  "region": "sa-brazil-1",
+  "bucket": "docktest-sa-brazil-1",
+  "cluster": {
+    "mode": "existing-or-transient",
+    "existing_cluster_id_env": "MRS_CLUSTER_ID",
+    "transient_cluster_name_prefix": "mrs-dockone-hudi-demo-sa",
+    "cluster_version": "MRS 3.5.0-LTS",
+    "cluster_type": "ANALYSIS",
+    "components": "Hadoop,Hive,Spark,JobGateway",
+    "vpc_name": "vpc-sap-sfs-test",
+    "subnet_id": "7f223b50-27ae-4b03-97cc-824b1d0b569c",
+    "subnet_name": "subnet-sap-az1",
+    "availability_zone": "sa-brazil-1a",
+    "security_groups_id": "62e0ad00-94c2-477f-af08-fd536496531c",
+    "mrs_ecs_default_agency": "dockone_mrs_ecs_agency",
+    "master_node_size": "m6.2xlarge.8.linux.bigdata",
+    "core_node_size": "m6.2xlarge.8.linux.bigdata",
+    "master_node_num": 2,
+    "core_node_num": 3,
+    "root_volume_type": "SAS",
+    "root_volume_size": 480,
+    "data_volume_type": "SAS",
+    "data_volume_size": 600,
+    "data_volume_count": 1,
+    "delete_when_no_steps": false
+  },
+  "spark": {
+    "deploy_mode": "cluster",
+    "master": "yarn",
+    "hudi_bundle": "obs://${DEMO_BUCKET}/jobs/jars/hudi-spark3.3-bundle_2.12-0.15.0.jar",
+    "job_properties": {
+      "fs.obs.endpoint": "obs.sa-brazil-1.myhuaweicloud.com"
+    },
+    "conf": {
+      "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+      "spark.sql.catalogImplementation": "hive",
+      "spark.sql.shuffle.partitions": "2",
+      "spark.sql.files.maxRecordsPerFile": "50000"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Minimal JupyterHub-on-CCE values. Adjust image registry and storage class per region/account.
+proxy:
+  service:
+    type: ClusterIP
+singleuser:
+  cpu:
+    limit: 1
+    guarantee: 0.25
+  memory:
+    limit: 2G
+    guarantee: 512M
+  image:
+    name: jupyter/pyspark-notebook
+    tag: latest
+  extraEnv:
+    DLI_ENDPOINT: "${DLI_ENDPOINT}"
+    HUAWEICLOUD_PROJECT_ID: "${HUAWEICLOUD_PROJECT_ID}"
+    DEMO_BUCKET: "${DEMO_BUCKET}"
+hub:
+  config:
+    Authenticator:
+      admin_users: []
+    DummyAuthenticator:
+      password: "replace-in-poc-only"
+    JupyterHub:
+      authenticator_class: dummy

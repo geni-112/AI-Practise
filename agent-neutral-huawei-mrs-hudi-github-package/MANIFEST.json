@@ -1,0 +1,68 @@
+{
+  "package_name": "agent-neutral-huawei-mrs-hudi-package",
+  "created_for": "Databricks CDC/Delta to Huawei Cloud MRS + OBS + Apache Hudi demo",
+  "agent_runtime": "generic",
+  "contains_secrets": false,
+  "github_friendly": true,
+  "stable_region": "la-south-2",
+  "secondary_region_diagnostic": "sa-brazil-1",
+  "default_bucket": "docktest",
+  "smoke_table": "dockone_exampleapp_payment_outbox",
+  "flow": [
+    "raw CDC JSON",
+    "bronze Hudi",
+    "silver Hudi"
+  ],
+  "directories": {
+    "demo": "demo",
+    "synthetic_data": "data",
+    "automation": "automation",
+    "env_template": "env"
+  },
+  "entrypoints": {
+    "validate_package": "automation/Test-AgentPackage.ps1",
+    "chile_mrs_smoke": "automation/Invoke-ChileMrsSmoke.ps1",
+    "notebook_smoke": "automation/Invoke-NotebookSmoke.ps1",
+    "check_mrs_cluster": "automation/Check-MrsCluster.ps1",
+    "remove_mrs_cluster": "automation/Remove-MrsCluster.ps1",
+    "diagnose_sao_paulo": "automation/Diagnose-SaoPauloMrs.ps1"
+  },
+  "large_assets": {
+    "hudi_bundle": {
+      "committed": false,
+      "fetch_script": "automation/Fetch-HudiBundle.ps1",
+      "target": "demo/dist/hudi-spark3.3-bundle_2.12-0.15.0.jar"
+    }
+  },
+  "key_demo_scripts": [
+    "demo/scripts/18_run_mrs_dataflow_workflow.py",
+    "demo/scripts/19_resume_mrs_notebook_workflow.ps1",
+    "demo/scripts/15_run_notebook_auto.ps1",
+    "demo/scripts/02_upload_assets_to_obs.py",
+    "demo/scripts/17_prepare_mrs_assets.py"
+  ],
+  "key_assets": [
+    "data/schema/inferred-table-schemas.json",
+    "data/schema/inferred-table-ddl.sql",
+    "data/raw-map.json",
+    "data/raw/dockone_exampleapp_payment_outbox.json"
+  ],
+  "latest_validated_chile": {
+    "date": "2026-06-03",
+    "bronze_job_ids": [
+      "d960ad3c-d19b-485e-8abf-9eaf8796ed98",
+      "8595bac3-7ce7-49db-b253-2cdb23adfec3"
+    ],
+    "silver_job_ids": [
+      "97d7dbfe-9049-47eb-97c1-218956a32756",
+      "e5e1f2fd-6877-4f61-b084-612a75e3ccc7"
+    ],
+    "cluster_cleanup_state": "terminated"
+  },
+  "notes": [
+    "Use one smoke table first.",
+    "Do not enable Hive sync in the minimal PoC.",
+    "Do not remove JobGateway warm-up retry and existing-job adoption logic.",
+    "Sao Paulo MRS smoke was quota-blocked before Spark/Hudi execution in the tested account."
+  ]
+}

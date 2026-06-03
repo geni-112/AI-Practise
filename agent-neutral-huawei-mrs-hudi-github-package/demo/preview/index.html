@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huawei DLI + Hudi CDC Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Databricks replacement demo</p>
+        <h1>华为云 DLI + Hudi CDC 迁移演示</h1>
+        <p>用 OBS、DLI、Hudi、DataArts 和 CCE JupyterHub 替代 Databricks Auto Loader、Delta table、Workflows 和 Notebook。</p>
+      </div>
+      <div class="metric-grid">
+        <div><span id="tables">21</span><small>tables</small></div>
+        <div><span id="events">26,250</span><small>CDC events</small></div>
+        <div><span>100%</span><small>notebook preflight target</small></div>
+      </div>
+    </section>
+    <section class="flow">
+      <article><b>Raw</b><span>CDC JSON on OBS</span></article>
+      <article><b>Bronze</b><span>DLI Spark writes Hudi</span></article>
+      <article><b>Silver</b><span>Hudi upsert/delete</span></article>
+      <article><b>Notebook</b><span>JupyterHub on CCE</span></article>
+    </section>
+    <section class="workspace">
+      <div>
+        <h2>执行时间线</h2>
+        <ol id="timeline"></ol>
+      </div>
+      <div>
+        <h2>关键替换点</h2>
+        <ul>
+          <li>Auto Loader -> CDM optional + self-built manifest/checkpoint/schema log</li>
+          <li>Delta merge -> Hudi record key + precombine + upsert/delete</li>
+          <li>Serverless Databricks -> DLI serverless Spark/Flink</li>
+          <li>Databricks Notebook -> CCE JupyterHub + DLI API/SDK</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

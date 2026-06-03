@@ -1,0 +1,40 @@
+region: la-south-2
+billing_mode: pay-per-use
+resources:
+  obs:
+    count: 1
+    storage_class: STANDARD
+    purpose: raw CDC, Hudi bronze/silver, checkpoints, DLI job packages
+    lifecycle: archive raw after POC validation; delete temporary job artifacts after 7-30 days
+  dli:
+    queues:
+      - name: dli-demo-min
+        type: general-purpose
+        sizing: minimum available queue / resource-pool shape in selected region
+        purpose: serverless Spark bronze/silver Hudi jobs
+  dataarts:
+    purpose: workflow orchestration, dependency control, retry policy, alert handoff
+    sizing: minimum workspace/instance supported by the region
+  cce_jupyterhub:
+    optional_for_batch_only: true
+    sizing: minimum node flavor or elastic container profile accepted by CCE in the region
+    purpose: open-source notebook workbench
+  dws:
+    optional_for_lake_validation: true
+    sizing: smallest pay-per-use DWS flavor allowed by region; POC only
+    purpose: curated serving and BI SQL
+  cdm:
+    optional: true
+    sizing: cdm.large or smallest region-supported flavor only if managed connector ingestion is required
+  mrs:
+    optional: true
+    sizing: smallest Spark/Hive cluster only if Livy or MRS-specific Hudi compatibility is required
+security:
+  iam: least-privilege agencies for DLI, CCE/JupyterHub, OBS, DWS
+  dew: enable bucket and credential encryption
+  network: keep DWS/MRS private; expose only Notebook/BI through controlled ingress if needed
+verification_required:
+  - service availability in selected region
+  - exact queue/flavor names and quotas
+  - Hudi bundle compatibility for selected DLI Spark version
+  - DWS minimum shape and endpoint port
