@@ -1,3 +1,5 @@
+import argparse
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     col,
@@ -31,22 +33,41 @@ def read_raw(spark, input_format, raw_path):
     raise ValueError(f"Unsupported input format: {input_format}")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="OBS raw-to-curated Spark ETL for the Huawei DataArts + MRS demo.")
+    parser.add_argument("--raw-path")
+    parser.add_argument("--clean-path")
+    parser.add_argument("--reject-path")
+    parser.add_argument("--curated-path")
+    parser.add_argument("--event-path")
+    parser.add_argument("--input-format", default=None)
+    parser.add_argument("--biz-date", default=None)
+    parser.add_argument("--shuffle-partitions", default=None)
+    parser.add_argument("--curated-table", default=None)
+    return parser.parse_args()
+
+
+def pick(cli_value, spark, conf_key, default=None):
+    return cli_value or conf(spark, conf_key, default)
+
+
 def main():
+    args = parse_args()
     spark = (
         SparkSession.builder.appName("dataarts-mrs-bigdata-lakehouse-etl")
         .enableHiveSupport()
         .getOrCreate()
     )
 
-    raw_path = conf(spark, "demo.raw_path")
-    clean_path = conf(spark, "demo.clean_path")
-    reject_path = conf(spark, "demo.reject_path")
-    curated_path = conf(spark, "demo.curated_path")
-    event_path = conf(spark, "demo.event_path", f"{curated_path.rstrip('/')}/_events")
-    input_format = conf(spark, "demo.input_format", "csv")
-    biz_date = conf(spark, "demo.biz_date", "2026-06-07")
-    shuffle_partitions = conf(spark, "demo.shuffle_partitions", "200")
-    curated_table = conf(spark, "demo.curated_table", "demo_daily_channel_metrics")
+    raw_path = pick(args.raw_path, spark, "demo.raw_path")
+    clean_path = pick(args.clean_path, spark, "demo.clean_path")
+    reject_path = pick(args.reject_path, spark, "demo.reject_path")
+    curated_path = pick(args.curated_path, spark, "demo.curated_path")
+    event_path = pick(args.event_path, spark, "demo.event_path", f"{curated_path.rstrip('/')}/_events")
+    input_format = pick(args.input_format, spark, "demo.input_format", "csv")
+    biz_date = pick(args.biz_date, spark, "demo.biz_date", "2026-06-07")
+    shuffle_partitions = pick(args.shuffle_partitions, spark, "demo.shuffle_partitions", "200")
+    curated_table = pick(args.curated_table, spark, "demo.curated_table", "demo_daily_channel_metrics")
 
     required = {
         "demo.raw_path": raw_path,
