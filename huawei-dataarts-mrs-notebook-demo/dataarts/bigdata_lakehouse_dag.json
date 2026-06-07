@@ -1,0 +1,51 @@
+{
+  "name": "bigdata_lakehouse_etl_from_notebook",
+  "description": "VS Code Notebook exported PySpark job orchestrated by DataArts and executed on MRS Spark.",
+  "schedule": {
+    "type": "cron",
+    "expression": "0 30 2 * * ?",
+    "timezone": "Asia/Shanghai"
+  },
+  "parameters": {
+    "mrs_cluster_id": "${MRS_CLUSTER_ID}",
+    "obs_bucket": "${OBS_BUCKET}",
+    "biz_date": "${BIZ_DATE}",
+    "raw_path": "obs://${OBS_BUCKET}/raw/orders/${BIZ_DATE}/",
+    "clean_path": "obs://${OBS_BUCKET}/clean/orders/${BIZ_DATE}/",
+    "reject_path": "obs://${OBS_BUCKET}/clean/rejects/orders/${BIZ_DATE}/",
+    "curated_path": "obs://${OBS_BUCKET}/curated/daily_channel_metrics/${BIZ_DATE}/",
+    "event_path": "obs://${OBS_BUCKET}/curated/daily_channel_metrics/${BIZ_DATE}/_events",
+    "input_format": "csv",
+    "shuffle_partitions": "200"
+  },
+  "nodes": [
+    {
+      "id": "check_raw_orders",
+      "type": "data_check",
+      "success_condition": "raw_path_exists && source_rows > 0"
+    },
+    {
+      "id": "submit_bigdata_lakehouse_etl",
+      "type": "mrs_spark_python",
+      "script": "huawei-dataarts-mrs-notebook-demo/spark/jobs/bigdata_lakehouse_etl.py",
+      "depends_on": ["check_raw_orders"],
+      "spark_conf": {
+        "demo.raw_path": "${raw_path}",
+        "demo.clean_path": "${clean_path}",
+        "demo.reject_path": "${reject_path}",
+        "demo.curated_path": "${curated_path}",
+        "demo.event_path": "${event_path}",
+        "demo.input_format": "${input_format}",
+        "demo.biz_date": "${biz_date}",
+        "demo.shuffle_partitions": "${shuffle_partitions}",
+        "demo.curated_table": "demo_daily_channel_metrics"
+      }
+    },
+    {
+      "id": "publish_monitor_event",
+      "type": "monitor_event",
+      "depends_on": ["submit_bigdata_lakehouse_etl"],
+      "targets": ["DataArts Monitor", "Cloud Eye", "LTS", "SMN"]
+    }
+  ]
+}
