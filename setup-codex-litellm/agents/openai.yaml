@@ -1,0 +1,4 @@
+interface:
+  display_name: "Setup Codex LiteLLM"
+  short_description: "Add an OpenAI-compatible model to Codex"
+  default_prompt: "Use $setup-codex-litellm to configure an OpenAI-compatible model through LiteLLM."
