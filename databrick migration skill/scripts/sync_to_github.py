@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
 DEFAULT_REPO = "https://github.com/geni-112/AI-Practise.git"
 DEFAULT_TARGET_DIR = "databrick migration skill"
 DEFAULT_CHECKOUT = Path.home() / "Documents" / "Codex" / "skill-github-sync" / "AI-Practise"
+DEFAULT_VALIDATOR = Path.home() / ".codex" / "skills" / ".system" / "skill-creator" / "scripts" / "quick_validate.py"
 
 
 def run(command: list[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -36,6 +38,13 @@ def ensure_checkout(repo_url: str, checkout_dir: Path, branch: str) -> None:
     if checkout_dir.exists() and any(checkout_dir.iterdir()):
         raise SystemExit(f"checkout directory exists but is not a git repo: {checkout_dir}")
     run(["git", "clone", "--branch", branch, repo_url, str(checkout_dir)])
+
+
+def validate_skill(skill_dir: Path, validator: Path) -> None:
+    if not validator.exists():
+        raise SystemExit(f"skill validator not found: {validator}")
+    result = run([sys.executable, str(validator), str(skill_dir)])
+    print(result.stdout.strip())
 
 
 def copy_skill(skill_dir: Path, checkout_dir: Path, target_dir_name: str) -> Path:
@@ -87,6 +96,12 @@ def main() -> int:
     parser.add_argument("--target-dir", default=DEFAULT_TARGET_DIR, help="Directory inside the repository")
     parser.add_argument("--message", default="Update databrick migration skill", help="Commit message")
     parser.add_argument(
+        "--skip-validate",
+        action="store_true",
+        help="Skip quick_validate.py before mirroring",
+    )
+    parser.add_argument("--validator", type=Path, default=DEFAULT_VALIDATOR, help="Path to quick_validate.py")
+    parser.add_argument(
         "--skill-dir",
         type=Path,
         default=Path(__file__).resolve().parents[1],
@@ -99,6 +114,8 @@ def main() -> int:
     if not (skill_dir / "SKILL.md").exists():
         parser.error(f"skill directory missing SKILL.md: {skill_dir}")
 
+    if not args.skip_validate:
+        validate_skill(skill_dir, args.validator.resolve())
     ensure_checkout(args.repo, checkout_dir, args.branch)
     copy_skill(skill_dir, checkout_dir, args.target_dir)
     commit_and_push(checkout_dir, args.target_dir, args.branch, args.message)

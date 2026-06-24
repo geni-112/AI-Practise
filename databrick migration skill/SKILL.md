@@ -1,6 +1,6 @@
 ---
 name: databricks-snowflake-huawei-migration
-description: Migrate Databricks or Snowflake demo scripts, notebooks, SQL, Delta Lake pipelines, CDC jobs, and warehouse workloads into Huawei Cloud demo artifacts using OBS, MRS Spark with Iceberg, DataArts Factory jobs, and DWS-compatible SQL. Use when converting Delta Lake to Iceberg, translating Databricks Jobs to Huawei DataArts/MRS jobs, adapting Snowflake or Databricks SQL to GaussDB(DWS), consulting on Databricks migration scripts, comparing AI-generated conversion documents against human conversion documents, or updating this personal migration skill with reusable lessons from each demo/session.
+description: Migrate Databricks or Snowflake demo scripts, notebooks, SQL, Delta Lake pipelines, CDC jobs, and warehouse workloads into Huawei Cloud demo artifacts using OBS, MRS Spark with Iceberg, DataArts Factory jobs, and DWS-compatible SQL. Use when converting Delta Lake to Iceberg, translating Databricks Jobs to Huawei DataArts/MRS jobs, adapting Snowflake or Databricks SQL to GaussDB(DWS), consulting on Databricks migration scripts, comparing AI-generated conversion documents against human conversion documents, updating this personal migration skill with reusable lessons, or syncing the skill mirror to GitHub repository geni-112/AI-Practise.
 ---
 
 # Databricks/Snowflake Huawei Migration
@@ -60,8 +60,8 @@ When a user opens a new session and asks to convert, inspect, explain, consult o
 Before the final response:
 
 1. Identify whether the session produced a reusable lesson: a new source pattern, rewrite, Huawei limitation, demo workaround, validation command, repeated manual step, or AI-vs-human conversion gap.
-2. If yes, append a dated entry to `references/demo-lessons.md`. Prefer `scripts/append_demo_lesson.py` for consistent formatting.
+2. If yes, append a dated entry to `references/demo-lessons.md`. Prefer `scripts/record_update.py` so the lesson append, validation, and GitHub sync happen together.
 3. If the lesson changes a general rule, update the relevant reference file as well.
 4. If the lesson is one-off, customer-specific, secret-bearing, or not verified, do not add it; summarize it only in the current answer.
-5. Sync local skill changes to GitHub with `scripts/sync_to_github.py`; `append_demo_lesson.py` already does this automatically unless disabled.
+5. Sync local skill changes to GitHub with `scripts/sync_to_github.py`; it validates before pushing by default. `append_demo_lesson.py` also syncs automatically unless disabled.
 6. In the final response, briefly state whether the skill was updated, which file changed, and whether the GitHub mirror was pushed.

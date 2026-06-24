@@ -40,7 +40,7 @@ Do not capture:
 4. Record the Huawei replacement that actually works or is the chosen demo-safe approximation.
 5. Record validation evidence. If no validation was run, write `Validation: Not yet validated` and avoid promoting the idea into a general rule.
 6. Run `quick_validate.py` after editing `SKILL.md` or metadata. For reference-only updates, at least inspect the appended markdown.
-7. Sync the skill mirror to GitHub with `python scripts/sync_to_github.py` after any local update. `append_demo_lesson.py` runs this sync automatically unless `--no-github-sync` is used.
+7. Sync the skill mirror to GitHub with `python scripts/sync_to_github.py` after any local update. Prefer `python scripts/record_update.py` when adding a lesson because it appends the lesson, validates, and syncs in one step. `append_demo_lesson.py` also runs sync automatically unless `--no-github-sync` is used.
 
 ## Document Comparison Capture
 
@@ -56,10 +56,11 @@ When comparing AI-generated conversion docs with human conversion docs:
 Use:
 
 ```bash
+python scripts/record_update.py --title "Demo name" --source "..." --issue "..." --replacement "..." --validation "..."
 python scripts/append_demo_lesson.py --title "Demo name" --source "..." --issue "..." --replacement "..." --validation "..."
 ```
 
-The script appends to `references/demo-lessons.md` using the current local date unless `--date` is provided.
+`record_update.py` is the preferred entrypoint. It appends to `references/demo-lessons.md`, runs validation through `sync_to_github.py`, and pushes the GitHub mirror. `append_demo_lesson.py` remains available for direct lesson append and also syncs by default unless `--no-github-sync` is provided.
 
 ## GitHub Mirror Sync
 
@@ -75,4 +76,4 @@ Use:
 python scripts/sync_to_github.py
 ```
 
-The sync script clones or updates a local checkout, replaces the repository directory `databrick migration skill/` with the current local skill files, commits changes when there is a diff, and pushes to `main`.
+The sync script validates the skill by default, clones or updates a local checkout, replaces the repository directory `databrick migration skill/` with the current local skill files, commits changes when there is a diff, and pushes to `main`.

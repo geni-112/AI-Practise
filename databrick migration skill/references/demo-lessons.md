@@ -93,3 +93,18 @@ Huawei replacement:
 
 Validation:
 - GitHub repo access and push permission confirmed; quick_validate.py and sync_to_github.py will be run before final response.
+
+
+## 2026-06-24 - Automatic GitHub linkage hardening
+
+Source pattern:
+- User emphasized that the Databricks migration skill must remember the GitHub linkage mechanism and ensure all local updates can automatically trigger GitHub synchronization.
+
+Issue:
+- The prior flow had automatic sync for append_demo_lesson.py, but larger manual reference/SKILL updates depended on the agent remembering to run sync_to_github.py.
+
+Huawei replacement:
+- Added record_update.py as the preferred unified update entrypoint, added validation inside sync_to_github.py before push, and updated SKILL.md/update-protocol.md to require validation plus GitHub mirror sync for every local skill update.
+
+Validation:
+- record_update.py is being used for this update so lesson append, quick_validate.py, and GitHub sync run as one chain.
