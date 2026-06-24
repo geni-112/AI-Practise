@@ -1,0 +1,4 @@
+interface:
+  display_name: "Databricks/Snowflake Huawei Migration"
+  short_description: "Migrate and learn from Huawei demos."
+  default_prompt: "Use $databricks-snowflake-huawei-migration to migrate or review a Databricks/Snowflake-to-Huawei demo, compare AI and human conversion docs when provided, and update the skill with reusable lessons."
