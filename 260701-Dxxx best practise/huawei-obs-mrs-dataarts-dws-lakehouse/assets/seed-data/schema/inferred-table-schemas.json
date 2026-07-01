@@ -1,0 +1,2363 @@
+{
+  "dockone_silver.dockone_exampleapp_billing_contracts": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "contracts",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_contracts",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_contracts"
+  },
+  "dockone_silver.dockone_exampleapp_billing_contracts_additional_data": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "contracts_additional_data",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic extra attributes",
+        "name": "additional_data_json",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_contracts_additional_data",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_contracts_additional_data"
+  },
+  "dockone_silver.dockone_exampleapp_billing_cycles": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "cycles",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_cycles",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_cycles"
+  },
+  "dockone_silver.dockone_exampleapp_billing_events": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "events",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic event version",
+        "name": "event_version",
+        "nullable": true,
+        "type": "int"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_events",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_events"
+  },
+  "dockone_silver.dockone_exampleapp_billing_installment_components": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "installment_components",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_installment_components",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_installment_components"
+  },
+  "dockone_silver.dockone_exampleapp_billing_installment_events": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "installment_events",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic event version",
+        "name": "event_version",
+        "nullable": true,
+        "type": "int"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_installment_events",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_installment_events"
+  },
+  "dockone_silver.dockone_exampleapp_billing_installments": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "installments",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_installments",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_installments"
+  },
+  "dockone_silver.dockone_exampleapp_billing_operations": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "operations",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_operations",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_operations"
+  },
+  "dockone_silver.dockone_exampleapp_billing_outbox": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "outbox",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic outbox topic",
+        "name": "outbox_topic",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic publish timestamp",
+        "name": "published_at",
+        "nullable": true,
+        "type": "timestamp"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_outbox",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_outbox"
+  },
+  "dockone_silver.dockone_exampleapp_billing_profiles": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "profiles",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_profiles",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_profiles"
+  },
+  "dockone_silver.dockone_exampleapp_billing_statement_components": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "statement_components",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_statement_components",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_statement_components"
+  },
+  "dockone_silver.dockone_exampleapp_billing_statements": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "billing",
+    "entity": "statements",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "profile_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "contract_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "cycle_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "statement_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "installment_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "component_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "due_date",
+        "nullable": true,
+        "type": "date"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic billing field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_billing_statements",
+    "task_id": "dockone_silver.dockone_exampleapp_billing_statements"
+  },
+  "dockone_silver.dockone_exampleapp_connector_account_configurations": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "account_configurations",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_account_configurations",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_account_configurations"
+  },
+  "dockone_silver.dockone_exampleapp_connector_generated_event_logs": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "generated_event_logs",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic event version",
+        "name": "event_version",
+        "nullable": true,
+        "type": "int"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_generated_event_logs",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_generated_event_logs"
+  },
+  "dockone_silver.dockone_exampleapp_connector_inbound_operation_step_status_configurations": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "inbound_operation_step_status_configurations",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_inbound_operation_step_status_configurations",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_inbound_operation_step_status_configurations"
+  },
+  "dockone_silver.dockone_exampleapp_connector_outbound_operation_step_configurations": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "outbound_operation_step_configurations",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_outbound_operation_step_configurations",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_outbound_operation_step_configurations"
+  },
+  "dockone_silver.dockone_exampleapp_connector_parameters": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "parameters",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_parameters",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_parameters"
+  },
+  "dockone_silver.dockone_exampleapp_connector_restriction_logs": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "connector",
+    "entity": "restriction_logs",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "connector_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_id",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "operation_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "step_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_name",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "parameter_value",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "restriction_reason",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic connector field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_connector_restriction_logs",
+    "task_id": "dockone_silver.dockone_exampleapp_connector_restriction_logs"
+  },
+  "dockone_silver.dockone_exampleapp_payment_events": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "payment",
+    "entity": "events",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payment_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "method",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "provider",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "external_reference",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic event version",
+        "name": "event_version",
+        "nullable": true,
+        "type": "int"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_payment_events",
+    "task_id": "dockone_silver.dockone_exampleapp_payment_events"
+  },
+  "dockone_silver.dockone_exampleapp_payment_outbox": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "payment",
+    "entity": "outbox",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payment_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "method",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "provider",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "external_reference",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic outbox topic",
+        "name": "outbox_topic",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic publish timestamp",
+        "name": "published_at",
+        "nullable": true,
+        "type": "timestamp"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_payment_outbox",
+    "task_id": "dockone_silver.dockone_exampleapp_payment_outbox"
+  },
+  "dockone_silver.dockone_exampleapp_payment_payments": {
+    "cdc_timestamp_source": "ts_ms",
+    "domain": "payment",
+    "entity": "payments",
+    "fields": [
+      {
+        "description": "Synthetic primary key",
+        "name": "id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Business creation timestamp",
+        "name": "created_at",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Business update timestamp used by CDC logic",
+        "name": "update_date",
+        "nullable": false,
+        "type": "timestamp"
+      },
+      {
+        "description": "Synthetic tenant partition key",
+        "name": "tenant_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic source system name",
+        "name": "source_system",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payment_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "account_id",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "amount",
+        "nullable": false,
+        "type": "decimal(18,2)"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "currency",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "status",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "method",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "provider",
+        "nullable": false,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "external_reference",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "event_type",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "description": "Synthetic payment field",
+        "name": "payload",
+        "nullable": true,
+        "type": "string"
+      }
+    ],
+    "precombine_field": "_cdc_timestamp",
+    "record_key": [
+      "id"
+    ],
+    "table_name": "dockone_exampleapp_payment_payments",
+    "task_id": "dockone_silver.dockone_exampleapp_payment_payments"
+  }
+}

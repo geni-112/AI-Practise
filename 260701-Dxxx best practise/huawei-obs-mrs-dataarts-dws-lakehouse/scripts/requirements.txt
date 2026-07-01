@@ -1,0 +1,8 @@
+esdk-obs-python
+huaweicloudsdkcore
+huaweicloudsdkmrs
+huaweicloudsdkdataartsstudio
+huaweicloudsdkdws
+psycopg2-binary
+requests
+kafka-python

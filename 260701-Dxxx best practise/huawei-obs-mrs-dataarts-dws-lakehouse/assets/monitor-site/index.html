@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>DockOne Monitor</title>
+    <link rel="stylesheet" href="./styles.css?v=20260623-9" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><span></span><span></span><span></span></div>
+        <div>
+          <p class="eyebrow">HUAWEI CLOUD · LA-SOUTH-2</p>
+          <h1>DockOne Monitor</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="live-clock">
+          <span class="live-dot"></span>
+          <div>
+          <b>LIVE · 5s</b>
+            <small id="lastUpdated">Waiting for first sample</small>
+          </div>
+        </div>
+        <button id="refreshBtn" class="refresh-button">Refresh now</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">LIVE DATA FLOW</p>
+          <h2>OBS to Iceberg and DWS.</h2>
+          <p class="hero-copy">
+            A compact operator view for service health, storage volume,
+            catalog counts, processing progress, and run history.
+          </p>
+        </div>
+        <div class="health-orbit">
+          <div class="orbit-ring"></div>
+          <div class="health-value"><strong id="healthCount">—</strong><span>services healthy</span></div>
+        </div>
+      </section>
+
+      <section class="kpis" aria-label="Key metrics">
+        <article class="kpi-card">
+          <div class="kpi-top"><span>OBS volume</span><strong id="obsBytes">—</strong></div>
+          <div id="obsLayerChart" class="mini-bars"></div>
+          <small>Raw / Iceberg / Publish</small>
+        </article>
+        <article class="kpi-card visual-kpi">
+          <div class="kpi-top"><span>Catalog objects</span><strong id="tableCount">—</strong></div>
+          <div id="tableDonut" class="mini-donut" aria-label="Table distribution"><span id="tableDonutValue">—</span></div>
+          <small>MRS / DWS</small>
+        </article>
+        <article class="kpi-card visual-kpi">
+          <div class="kpi-top"><span>MRS progress</span><strong id="mrsProgress">—</strong></div>
+          <div id="progressRing" class="mini-ring" aria-label="MRS progress"><span id="progressRingValue">—</span></div>
+          <small>Latest Spark job</small>
+        </article>
+        <article class="kpi-card">
+          <div class="kpi-top"><span>Run history</span><strong id="historyCount">—</strong></div>
+          <div id="historySparkline" class="mini-spark"></div>
+          <small>MRS + DataArts</small>
+        </article>
+      </section>
+
+      <section class="panel flow-panel">
+        <div class="section-title">
+          <div><p class="eyebrow">LIVE TOPOLOGY</p><h3>Data path</h3></div>
+          <div id="globalStatus" class="status-badge neutral">Connecting to cloud services</div>
+        </div>
+        <div id="pipeline" class="pipeline"></div>
+      </section>
+
+      <section class="split-grid">
+        <article class="panel">
+          <div class="section-title">
+            <div><p class="eyebrow">RESOURCE INVENTORY</p><h3>Service specs</h3></div>
+            <span class="section-meta">Live cloud APIs</span>
+          </div>
+          <div id="resourceGrid" class="resource-grid"></div>
+        </article>
+
+        <article class="panel progress-panel">
+          <div class="section-title">
+            <div><p class="eyebrow">PROCESSING</p><h3>Run progress</h3></div>
+            <span class="section-meta">Latest run</span>
+          </div>
+          <div id="progressList" class="progress-list"></div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-title table-heading">
+          <div><p class="eyebrow">DATA CATALOG</p><h3>Catalog</h3></div>
+          <div class="catalog-controls">
+            <input id="tableSearch" type="search" placeholder="Search table names…" />
+            <select id="systemFilter">
+              <option value="">All systems</option>
+              <option value="MRS Iceberg">MRS Iceberg</option>
+              <option value="DWS">DWS</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>System</th><th>Category</th><th>Table/View name</th><th>Format</th><th>Rows</th><th>Objects</th><th>Storage</th></tr>
+            </thead>
+            <tbody id="tableRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <div><p class="eyebrow">RUN HISTORY</p><h3>History</h3></div>
+          <span class="section-meta">Latest 40 records</span>
+        </div>
+        <div id="history" class="history"></div>
+      </section>
+
+      <section id="errorsPanel" class="panel error-panel hidden">
+        <div class="section-title"><div><p class="eyebrow">ATTENTION</p><h3>Collector limits and errors</h3></div></div>
+        <div id="errors"></div>
+      </section>
+    </main>
+
+    <script src="./app.js?v=20260623-5"></script>
+  </body>
+</html>

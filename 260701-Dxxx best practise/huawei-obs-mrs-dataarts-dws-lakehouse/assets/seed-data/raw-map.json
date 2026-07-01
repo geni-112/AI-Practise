@@ -1,0 +1,107 @@
+﻿[
+    {
+        "table_name":  "dockone_exampleapp_payment_outbox",
+        "local_file":  "raw/dockone_exampleapp_payment_outbox.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.outbox/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_payment_payments",
+        "local_file":  "raw/dockone_exampleapp_payment_payments.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.payments/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_payment_events",
+        "local_file":  "raw/dockone_exampleapp_payment_events.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.events/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_account_configurations",
+        "local_file":  "raw/dockone_exampleapp_connector_account_configurations.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.account.configurations/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_parameters",
+        "local_file":  "raw/dockone_exampleapp_connector_parameters.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.parameters/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_inbound_operation_step_status_configurations",
+        "local_file":  "raw/dockone_exampleapp_connector_inbound_operation_step_status_configurations.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.inbound.operation.step.status.configurations/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_outbound_operation_step_configurations",
+        "local_file":  "raw/dockone_exampleapp_connector_outbound_operation_step_configurations.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.outbound.operation.step.configurations/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_generated_event_logs",
+        "local_file":  "raw/dockone_exampleapp_connector_generated_event_logs.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.generated.event.logs/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_connector_restriction_logs",
+        "local_file":  "raw/dockone_exampleapp_connector_restriction_logs.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.restriction.logs/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_profiles",
+        "local_file":  "raw/dockone_exampleapp_billing_profiles.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.profiles/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_cycles",
+        "local_file":  "raw/dockone_exampleapp_billing_cycles.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.cycles/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_contracts",
+        "local_file":  "raw/dockone_exampleapp_billing_contracts.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.contracts/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_operations",
+        "local_file":  "raw/dockone_exampleapp_billing_operations.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.operations/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_statements",
+        "local_file":  "raw/dockone_exampleapp_billing_statements.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.statements/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_installments",
+        "local_file":  "raw/dockone_exampleapp_billing_installments.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installments/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_statement_components",
+        "local_file":  "raw/dockone_exampleapp_billing_statement_components.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.statement.components/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_events",
+        "local_file":  "raw/dockone_exampleapp_billing_events.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.events/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_installment_events",
+        "local_file":  "raw/dockone_exampleapp_billing_installment_events.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installment.events/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_installment_components",
+        "local_file":  "raw/dockone_exampleapp_billing_installment_components.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installment.components/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_contracts_additional_data",
+        "local_file":  "raw/dockone_exampleapp_billing_contracts_additional_data.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.contracts.additional.data/part-00001.json"
+    },
+    {
+        "table_name":  "dockone_exampleapp_billing_outbox",
+        "local_file":  "raw/dockone_exampleapp_billing_outbox.json",
+        "obs_key":  "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.outbox/part-00001.json"
+    }
+]

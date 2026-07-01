@@ -1,0 +1,4 @@
+interface:
+  display_name: "Huawei OBS-MRS-DataArts-DWS Lakehouse"
+  short_description: "Run DockOne batch and streaming lakehouse flows on Huawei Cloud."
+  default_prompt: "Use $huawei-obs-mrs-dataarts-dws-lakehouse to generate contracts stream data, land raw JSON through RDS-DMS-Flink-OBS, run the MRS/DataArts/DWS pipeline, and validate DWS results."

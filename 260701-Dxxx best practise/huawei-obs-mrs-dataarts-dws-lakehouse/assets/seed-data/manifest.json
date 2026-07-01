@@ -1,0 +1,329 @@
+{
+  "dataset_name": "synthetic-dockone-exampleapp-cdc",
+  "format": "cdc-json-lines",
+  "generated_at": "2026-06-02T14:19:15.052958Z",
+  "random_seed": 20260602,
+  "records_per_table": {
+    "deletes": 50,
+    "initial": 1000,
+    "total": 1250,
+    "updates": 200
+  },
+  "tables": [
+    {
+      "domain": "payment",
+      "entity": "outbox",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.outbox/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_payment_outbox",
+      "task_id": "dockone_silver.dockone_exampleapp_payment_outbox"
+    },
+    {
+      "domain": "payment",
+      "entity": "payments",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.payments/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_payment_payments",
+      "task_id": "dockone_silver.dockone_exampleapp_payment_payments"
+    },
+    {
+      "domain": "payment",
+      "entity": "events",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.payment.events/part-00001.json",
+      "schema_field_count": 16,
+      "table_name": "dockone_exampleapp_payment_events",
+      "task_id": "dockone_silver.dockone_exampleapp_payment_events"
+    },
+    {
+      "domain": "connector",
+      "entity": "account_configurations",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.account.configurations/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_connector_account_configurations",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_account_configurations"
+    },
+    {
+      "domain": "connector",
+      "entity": "parameters",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.parameters/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_connector_parameters",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_parameters"
+    },
+    {
+      "domain": "connector",
+      "entity": "inbound_operation_step_status_configurations",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.inbound.operation.step.status.configurations/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_connector_inbound_operation_step_status_configurations",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_inbound_operation_step_status_configurations"
+    },
+    {
+      "domain": "connector",
+      "entity": "outbound_operation_step_configurations",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.outbound.operation.step.configurations/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_connector_outbound_operation_step_configurations",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_outbound_operation_step_configurations"
+    },
+    {
+      "domain": "connector",
+      "entity": "generated_event_logs",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.generated.event.logs/part-00001.json",
+      "schema_field_count": 16,
+      "table_name": "dockone_exampleapp_connector_generated_event_logs",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_generated_event_logs"
+    },
+    {
+      "domain": "connector",
+      "entity": "restriction_logs",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.connector.restriction.logs/part-00001.json",
+      "schema_field_count": 15,
+      "table_name": "dockone_exampleapp_connector_restriction_logs",
+      "task_id": "dockone_silver.dockone_exampleapp_connector_restriction_logs"
+    },
+    {
+      "domain": "billing",
+      "entity": "profiles",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.profiles/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_profiles",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_profiles"
+    },
+    {
+      "domain": "billing",
+      "entity": "cycles",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.cycles/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_cycles",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_cycles"
+    },
+    {
+      "domain": "billing",
+      "entity": "contracts",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.contracts/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_contracts",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_contracts"
+    },
+    {
+      "domain": "billing",
+      "entity": "operations",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.operations/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_operations",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_operations"
+    },
+    {
+      "domain": "billing",
+      "entity": "statements",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.statements/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_statements",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_statements"
+    },
+    {
+      "domain": "billing",
+      "entity": "installments",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installments/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_installments",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_installments"
+    },
+    {
+      "domain": "billing",
+      "entity": "statement_components",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.statement.components/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_statement_components",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_statement_components"
+    },
+    {
+      "domain": "billing",
+      "entity": "events",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.events/part-00001.json",
+      "schema_field_count": 18,
+      "table_name": "dockone_exampleapp_billing_events",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_events"
+    },
+    {
+      "domain": "billing",
+      "entity": "installment_events",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installment.events/part-00001.json",
+      "schema_field_count": 18,
+      "table_name": "dockone_exampleapp_billing_installment_events",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_installment_events"
+    },
+    {
+      "domain": "billing",
+      "entity": "installment_components",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.installment.components/part-00001.json",
+      "schema_field_count": 17,
+      "table_name": "dockone_exampleapp_billing_installment_components",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_installment_components"
+    },
+    {
+      "domain": "billing",
+      "entity": "contracts_additional_data",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.contracts.additional.data/part-00001.json",
+      "schema_field_count": 18,
+      "table_name": "dockone_exampleapp_billing_contracts_additional_data",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_contracts_additional_data"
+    },
+    {
+      "domain": "billing",
+      "entity": "outbox",
+      "event_count": 1250,
+      "operation_counts": {
+        "c": 950,
+        "d": 50,
+        "r": 50,
+        "u": 200
+      },
+      "raw_path": "raw/dockone_exampleapp/kfk.prd.cdc.dockone_exampleapp.billing.outbox/part-00001.json",
+      "schema_field_count": 19,
+      "table_name": "dockone_exampleapp_billing_outbox",
+      "task_id": "dockone_silver.dockone_exampleapp_billing_outbox"
+    }
+  ]
+}
