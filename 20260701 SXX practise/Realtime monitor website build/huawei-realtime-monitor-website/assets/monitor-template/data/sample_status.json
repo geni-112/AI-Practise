@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-07-01T00:00:00+00:00",
+  "refresh_seconds": 5,
+  "region": "la-north-2",
+  "project": {
+    "id": "pending"
+  },
+  "account": {},
+  "summary": {
+    "healthy_services": 2,
+    "total_services": 10,
+    "resource_count": 0,
+    "catalog_count": 0,
+    "job_count": 0,
+    "risk_count": 4
+  },
+  "topology": {
+    "stages": [
+      {
+        "key": "obs",
+        "label": "OBS Raw/Lake",
+        "status": "idle",
+        "progress": 0,
+        "resource_count": 0,
+        "job_count": 0
+      },
+      {
+        "key": "mrs",
+        "label": "MRS Spark/Flink",
+        "status": "idle",
+        "progress": 0,
+        "resource_count": 0,
+        "job_count": 0
+      },
+      {
+        "key": "dataarts",
+        "label": "DataArts Scheduling",
+        "status": "idle",
+        "progress": 0,
+        "resource_count": 0,
+        "job_count": 0
+      },
+      {
+        "key": "dws",
+        "label": "DWS Serving Layer",
+        "status": "idle",
+        "progress": 0,
+        "resource_count": 0,
+        "job_count": 0
+      }
+    ]
+  },
+  "services": {},
+  "catalog": [],
+  "jobs": [],
+  "risks": [
+    "Huawei Cloud account collection has not been connected yet.",
+    "The assessment will use the SAT Mexico inventory as the source of truth instead of DockOne Brazil asset names.",
+    "Configure DATAARTS_WORKSPACE_ID to collect DataArts job metadata.",
+    "Configure OBS_BUCKETS and AK/SK to sample object prefixes."
+  ],
+  "recommendations": [
+    "Run scripts/Set-HuaweiCredentialEnv.ps1 -Region la-north-2 -RunInventory first.",
+    "Confirm the actual region and project ID before generating the final monitoring flow.",
+    "Add DWS connection details to output field-level table structures."
+  ]
+}

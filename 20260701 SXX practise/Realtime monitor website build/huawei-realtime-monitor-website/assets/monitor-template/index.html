@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAT Mexico Realtime Monitor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <p id="regionLabel" class="eyebrow">Huawei Cloud</p>
+          <h1>SAT Mexico Realtime Monitor</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="live-state"><span></span><b>LIVE 5s</b><small id="lastUpdated">waiting</small></div>
+        <button id="refreshBtn" type="button" title="Refresh"><span aria-hidden="true">&#8635;</span> Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary-grid" aria-label="Summary">
+        <article class="metric">
+          <span>Service Health</span>
+          <strong id="healthCount">0/0</strong>
+        </article>
+        <article class="metric">
+          <span>Discovered Resources</span>
+          <strong id="resourceCount">0</strong>
+        </article>
+        <article class="metric">
+          <span>Data Objects</span>
+          <strong id="catalogCount">0</strong>
+        </article>
+        <article class="metric">
+          <span>Jobs / Scripts</span>
+          <strong id="jobCount">0</strong>
+        </article>
+        <article class="metric risk">
+          <span>Open Items</span>
+          <strong id="riskCount">0</strong>
+        </article>
+      </section>
+
+      <section class="panel flow-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Dynamic Flow</p>
+            <h2>End-to-End Pipeline</h2>
+          </div>
+          <span id="projectLabel" class="meta-pill">Project pending</span>
+        </div>
+        <div id="pipeline" class="pipeline"></div>
+      </section>
+
+      <section class="work-grid">
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Resource Assessment</p>
+              <h2>Account Resources</h2>
+            </div>
+            <select id="serviceFilter" title="Service filter"></select>
+          </div>
+          <div id="resourceList" class="resource-list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Script Role</p>
+              <h2>MRS / DWS / DataArts</h2>
+            </div>
+            <span class="meta-pill" id="jobMeta">0 jobs</span>
+          </div>
+          <div id="jobList" class="job-list"></div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-head table-head">
+          <div>
+            <p class="eyebrow">Data Structure</p>
+            <h2>Tables, Prefixes, and Fields</h2>
+          </div>
+          <input id="catalogSearch" type="search" placeholder="Search objects, fields, or systems" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>System</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Format</th>
+                <th>Fields</th>
+                <th>Objects</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="catalogRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="work-grid bottom-grid">
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Assessment Notes</p>
+              <h2>Open Items</h2>
+            </div>
+          </div>
+          <div id="riskList" class="note-list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Next Actions</p>
+              <h2>Recommendations</h2>
+            </div>
+          </div>
+          <div id="recommendationList" class="note-list"></div>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
