@@ -1,0 +1,16 @@
+[Unit]
+Description=DockOne Huawei Cloud realtime monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dockone-monitor
+EnvironmentFile=/etc/dockone-monitor/monitor.env
+ExecStart=/opt/dockone-monitor/venv/bin/python /opt/dockone-monitor/monitor_api.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

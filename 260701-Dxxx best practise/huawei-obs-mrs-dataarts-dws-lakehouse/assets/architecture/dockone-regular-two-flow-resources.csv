@@ -1,0 +1,30 @@
+﻿node_id,resource_key,resource_title,label_or_business_role,group_id,group_label,quantity,source
+flow1_label,CUSTOM,Self-built / third-party,"Self-built
+① Batch
+S3 → OMS → OBS",external_sources,External / Source Systems,1,custom
+aws_s3,CUSTOM,Self-built / third-party,"Third-party
+AWS S3",external_sources,External / Source Systems,1,custom
+oms,OMS,Object Storage Migration Service (OMS),"OMS
+Migration",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,official-huaweicloud-icon
+flow2_label,CUSTOM,Self-built / third-party,"Self-built
+② Stream
+RDS → DMS → Flink → OBS",external_sources,External / Source Systems,1,custom
+rds_contracts,RDSFORPOSTGRESQL,RDS for PostgreSQL,"RDS PostgreSQL
+contracts",data_vpc,Data VPC / private subnet,1,official-huaweicloud-icon
+dms_kafka,KAFKA,Distributed Message Service (DMS) for Kafka,"DMS Kafka
+CDC",data_vpc,Data VPC / private subnet,1,official-huaweicloud-icon
+mrs_flink,MAPREDUCE,MapReduce Service (MRS),"MRS Flink
+Stream",data_vpc,Data VPC / private subnet,1,official-huaweicloud-icon
+obs_raw,OBS,Object Storage Service (OBS),"Huawei OBS
+Raw Zone
+JSON / CDC",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,official-huaweicloud-icon
+dataarts,DATAARTS,DataArts Studio,"DataArts
+Orchestration",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,official-huaweicloud-icon
+mrs_spark,MAPREDUCE,MapReduce Service (MRS),"MRS Spark
+Iceberg ETL",data_vpc,Data VPC / private subnet,1,official-huaweicloud-icon
+obs_lakehouse,OBS,Object Storage Service (OBS),"OBS Lakehouse
+Iceberg + Golden",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,official-huaweicloud-icon
+dws_golden,DWS,Data Warehouse Service (DWS),"DWS
+Golden Mart",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,official-huaweicloud-icon
+bi_consumers,CUSTOM,Self-built / third-party,"Self-built / third-party
+BI",huawei_region,Huawei Cloud la-south-2 / Sao Paulo,1,custom

@@ -1,0 +1,209 @@
+{
+  "title": "DockOne Two-Flow Converged Data Architecture",
+  "style": "color",
+  "groups": [
+    {
+      "id": "external_sources",
+      "type": "CLOUD",
+      "label": "External / Source Systems",
+      "x": 40,
+      "y": 90,
+      "w": 300,
+      "h": 460
+    },
+    {
+      "id": "huawei_region",
+      "type": "REGION",
+      "label": "Huawei Cloud la-south-2 / Sao Paulo",
+      "x": 390,
+      "y": 60,
+      "w": 1620,
+      "h": 620
+    },
+    {
+      "id": "data_vpc",
+      "type": "VPC",
+      "label": "Data VPC / private subnet",
+      "parent": "huawei_region",
+      "x": 450,
+      "y": 300,
+      "w": 900,
+      "h": 260
+    }
+  ],
+  "nodes": [
+    {
+      "id": "flow1_label",
+      "service": "CUSTOM",
+      "label": "Self-built\n① Batch\nS3 → OMS → OBS",
+      "custom": true,
+      "group": "external_sources",
+      "x": 70,
+      "y": 125
+    },
+    {
+      "id": "aws_s3",
+      "service": "CUSTOM",
+      "label": "Third-party\nAWS S3",
+      "custom": true,
+      "group": "external_sources",
+      "x": 200,
+      "y": 205
+    },
+    {
+      "id": "oms",
+      "service": "OMS",
+      "label": "OMS\nMigration",
+      "group": "huawei_region",
+      "x": 520,
+      "y": 205
+    },
+    {
+      "id": "flow2_label",
+      "service": "CUSTOM",
+      "label": "Self-built\n② Stream\nRDS → DMS → Flink → OBS",
+      "custom": true,
+      "group": "external_sources",
+      "x": 70,
+      "y": 365
+    },
+    {
+      "id": "rds_contracts",
+      "service": "RDSFORPOSTGRESQL",
+      "label": "RDS PostgreSQL\ncontracts",
+      "group": "data_vpc",
+      "x": 520,
+      "y": 420
+    },
+    {
+      "id": "dms_kafka",
+      "service": "KAFKA",
+      "label": "DMS Kafka\nCDC",
+      "group": "data_vpc",
+      "x": 730,
+      "y": 420
+    },
+    {
+      "id": "mrs_flink",
+      "service": "MAPREDUCE",
+      "label": "MRS Flink\nStream",
+      "group": "data_vpc",
+      "x": 940,
+      "y": 420
+    },
+    {
+      "id": "obs_raw",
+      "service": "OBS",
+      "label": "Huawei OBS\nRaw Zone\nJSON / CDC",
+      "group": "huawei_region",
+      "x": 1040,
+      "y": 205
+    },
+    {
+      "id": "dataarts",
+      "service": "DATAARTS",
+      "label": "DataArts\nOrchestration",
+      "group": "huawei_region",
+      "x": 1190,
+      "y": 540
+    },
+    {
+      "id": "mrs_spark",
+      "service": "MAPREDUCE",
+      "label": "MRS Spark\nIceberg ETL",
+      "group": "data_vpc",
+      "x": 1280,
+      "y": 420
+    },
+    {
+      "id": "obs_lakehouse",
+      "service": "OBS",
+      "label": "OBS Lakehouse\nIceberg + Golden",
+      "group": "huawei_region",
+      "x": 1490,
+      "y": 205
+    },
+    {
+      "id": "dws_golden",
+      "service": "DWS",
+      "label": "DWS\nGolden Mart",
+      "group": "huawei_region",
+      "x": 1690,
+      "y": 420
+    },
+    {
+      "id": "bi_consumers",
+      "service": "CUSTOM",
+      "label": "Self-built / third-party\nBI",
+      "custom": true,
+      "group": "huawei_region",
+      "x": 1880,
+      "y": 420
+    }
+  ],
+  "edges": [
+    {
+      "from": "flow1_label",
+      "to": "aws_s3",
+      "label": "①"
+    },
+    {
+      "from": "aws_s3",
+      "to": "oms",
+      "label": "① migrate objects"
+    },
+    {
+      "from": "oms",
+      "to": "obs_raw",
+      "label": "① write to Huawei OBS"
+    },
+    {
+      "from": "flow2_label",
+      "to": "rds_contracts",
+      "label": "②"
+    },
+    {
+      "from": "rds_contracts",
+      "to": "dms_kafka",
+      "label": "② CDC events"
+    },
+    {
+      "from": "dms_kafka",
+      "to": "mrs_flink",
+      "label": "② Kafka stream"
+    },
+    {
+      "from": "mrs_flink",
+      "to": "obs_raw",
+      "label": "② raw JSON landing"
+    },
+    {
+      "from": "obs_raw",
+      "to": "mrs_spark",
+      "label": "③ unified raw input"
+    },
+    {
+      "from": "dataarts",
+      "to": "mrs_spark"
+    },
+    {
+      "from": "mrs_spark",
+      "to": "obs_lakehouse",
+      "label": "④ Iceberg + Golden"
+    },
+    {
+      "from": "obs_lakehouse",
+      "to": "dws_golden",
+      "label": "⑤ load Golden"
+    },
+    {
+      "from": "dataarts",
+      "to": "dws_golden"
+    },
+    {
+      "from": "dws_golden",
+      "to": "bi_consumers",
+      "label": "⑥ BI / third-party serving"
+    }
+  ]
+}
