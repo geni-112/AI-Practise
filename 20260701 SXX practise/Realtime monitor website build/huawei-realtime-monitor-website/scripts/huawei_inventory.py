@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -35,6 +36,7 @@ REDACT_KEY_FRAGMENTS = (
     "admin_pass",
     "private_key",
 )
+OBS_URI_RE = re.compile(r"obs://([A-Za-z0-9][A-Za-z0-9.-]{1,61})(?:/|$)")
 
 
 def utc_now() -> str:
@@ -130,6 +132,10 @@ def endpoint(service: str, region: str) -> str:
         return overrides[service].rstrip("/")
     if service == "iam":
         return "https://iam.myhuaweicloud.com"
+    if service == "dayu-dlf":
+        return f"https://dayu-dlf.{region}.myhuaweicloud.com"
+    if service in {"dayu", "dataartsstudio"}:
+        return f"https://dayu.{region}.myhuaweicloud.com"
     return f"https://{service}.{region}.myhuaweicloud.com"
 
 
@@ -234,6 +240,17 @@ def safe_call(name: str, method: str, url: str, token: str, **kwargs: Any) -> di
         }
 
 
+def safe_call_first(name: str, method: str, urls: list[str], token: str, **kwargs: Any) -> dict[str, Any]:
+    last_result: dict[str, Any] | None = None
+    for url in urls:
+        result = safe_call(name, method, url, token, **kwargs)
+        result["url"] = url
+        if result.get("ok"):
+            return result
+        last_result = result
+    return last_result or {"ok": False, "name": name, "error": "No endpoint candidates were provided."}
+
+
 def list_rms_resources(region: str, token: str, domain_id: str) -> dict[str, Any]:
     if not domain_id:
         return {"ok": False, "name": "rms_all_resources", "error": "No domain_id available from IAM token."}
@@ -282,11 +299,28 @@ def compact_list(payload: Any, keys: tuple[str, ...]) -> list[Any]:
     return []
 
 
+def discover_obs_buckets(sources: dict[str, Any]) -> list[str]:
+    configured = [item.strip() for item in os.environ.get("OBS_BUCKETS", "").split(",") if item.strip()]
+    buckets: set[str] = set(configured)
+
+    def scan(value: Any) -> None:
+        if isinstance(value, str):
+            buckets.update(OBS_URI_RE.findall(value))
+        elif isinstance(value, dict):
+            for nested in value.values():
+                scan(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                scan(nested)
+
+    scan(sources)
+    return sorted(bucket for bucket in buckets if not bucket.startswith("sat-mexico-monitor-"))
+
+
 def service_calls(region: str, project_id: str, token: str, workspace_ids: list[str]) -> dict[str, Any]:
     calls: dict[str, Any] = {}
     definitions = {
         "mrs_clusters_v11": ("mrs", f"/v1.1/{project_id}/cluster_infos"),
-        "dws_clusters": ("dws", f"/v2/{project_id}/clusters"),
         "rds_instances": ("rds", f"/v3/{project_id}/instances"),
         "dms_instances": ("dms", f"/v2/{project_id}/instances"),
         "oms_tasks": ("oms", f"/v2/{project_id}/tasks"),
@@ -294,6 +328,9 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
         "ecs_servers": ("ecs", f"/v1/{project_id}/cloudservers/detail?limit=100"),
         "vpc_publicips": ("vpc", f"/v1/{project_id}/publicips?limit=100"),
     }
+    include_dws = os.environ.get("INCLUDE_DWS", "").lower() in {"1", "true", "yes"}
+    if include_dws:
+        definitions["dws_clusters"] = ("dws", f"/v2/{project_id}/clusters")
     for name, (service, path) in definitions.items():
         calls[name] = safe_call(name, "GET", f"{endpoint(service, region)}{path}", token)
 
@@ -307,12 +344,12 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
         result = safe_call(
             f"mrs_jobs_v2_{cluster_id}",
             "GET",
-            f"{endpoint('mrs', region)}/v2/{project_id}/clusters/{cluster_id}/job-exes?limit=20",
+            f"{endpoint('mrs', region)}/v2/{project_id}/clusters/{cluster_id}/job-executions?limit=50",
             token,
         )
         if result.get("ok"):
             payload = result.get("payload") or {}
-            rows = compact_list(payload, ("job_list", "jobs", "job_exes", "data"))
+            rows = compact_list(payload, ("job_list", "jobs", "job_exes", "job_executions", "data"))
             for row in rows:
                 if isinstance(row, dict):
                     row["cluster_id"] = cluster_id
@@ -329,10 +366,13 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
 
     dataarts_jobs: list[dict[str, Any]] = []
     dataarts_errors: list[dict[str, str]] = []
-    workspace_result = safe_call(
+    workspace_result = safe_call_first(
         "dataarts_workspaces",
         "GET",
-        f"{endpoint('dataartsstudio', region)}/v1/{project_id}/workspaces?limit=100&offset=0",
+        [
+            f"{endpoint('dayu', region)}/v1/{project_id}/workspaces?limit=100&offset=0",
+            f"{endpoint('dayu-dlf', region)}/v1/{project_id}/workspaces?limit=100&offset=0",
+        ],
         token,
     )
     calls["dataarts_workspaces"] = workspace_result
@@ -345,10 +385,13 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
     if workspace_ids:
         for workspace_id in workspace_ids:
             path = f"/v1/{project_id}/jobs?limit=100&offset=0"
-            result = safe_call(
+            result = safe_call_first(
                 f"dataarts_jobs_{workspace_id}",
                 "GET",
-                f"{endpoint('dataartsstudio', region)}{path}",
+                [
+                    f"{endpoint('dayu-dlf', region)}{path}",
+                    f"{endpoint('dayu', region)}{path}",
+                ],
                 token,
                 headers={"workspace": workspace_id},
             )
@@ -358,10 +401,13 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
             else:
                 dataarts_errors.append({"workspace_id": workspace_id, "error": result.get("error", "")})
     else:
-        result = safe_call(
+        result = safe_call_first(
             "dataarts_jobs_without_workspace",
             "GET",
-            f"{endpoint('dataartsstudio', region)}/v1/{project_id}/jobs?limit=100&offset=0",
+            [
+                f"{endpoint('dayu-dlf', region)}/v1/{project_id}/jobs?limit=100&offset=0",
+                f"{endpoint('dayu', region)}/v1/{project_id}/jobs?limit=100&offset=0",
+            ],
             token,
         )
         if result.get("ok"):
@@ -372,6 +418,7 @@ def service_calls(region: str, project_id: str, token: str, workspace_ids: list[
         "ok": len(dataarts_errors) == 0,
         "name": "dataarts_jobs",
         "payload": {"jobs": dataarts_jobs, "errors": dataarts_errors},
+        "error": "; ".join(item["error"] for item in dataarts_errors),
     }
     return calls
 
@@ -420,10 +467,10 @@ def collect_dws_schema() -> dict[str, Any]:
         return {"ok": False, "name": "dws_schema", "error": str(exc)}
 
 
-def collect_obs_samples(region: str) -> dict[str, Any]:
-    buckets = [item.strip() for item in os.environ.get("OBS_BUCKETS", "").split(",") if item.strip()]
+def collect_obs_samples(region: str, sources: dict[str, Any] | None = None) -> dict[str, Any]:
+    buckets = discover_obs_buckets(sources or {})
     if not buckets:
-        return {"ok": False, "name": "obs_samples", "error": "OBS_BUCKETS is not set."}
+        return {"ok": False, "name": "obs_samples", "error": "No OBS bucket was discovered from OBS_BUCKETS or job arguments."}
     ak = os.environ.get("HUAWEICLOUD_ACCESS_KEY")
     sk = os.environ.get("HUAWEICLOUD_SECRET_KEY")
     if not (ak and sk):
@@ -438,23 +485,43 @@ def collect_obs_samples(region: str) -> dict[str, Any]:
         secret_access_key=sk,
         server=f"https://obs.{region}.myhuaweicloud.com",
     )
+    max_objects = int(os.environ.get("OBS_SAMPLE_MAX_OBJECTS", "5000"))
     sampled: dict[str, Any] = {}
     try:
         for bucket in buckets:
-            response = client.listObjects(bucket, max_keys=300)
-            if response.status >= 300:
-                sampled[bucket] = {"ok": False, "error": f"HTTP {response.status}"}
-                continue
             objects = []
-            for item in response.body.contents or []:
-                objects.append(
-                    {
-                        "key": item.key,
-                        "size": int(item.size or 0),
-                        "modified": str(item.lastModified or ""),
-                    }
-                )
-            sampled[bucket] = {"ok": True, "objects": objects}
+            marker = None
+            truncated = False
+            while len(objects) < max_objects:
+                kwargs: dict[str, Any] = {"max_keys": min(1000, max_objects - len(objects))}
+                if marker:
+                    kwargs["marker"] = marker
+                response = client.listObjects(bucket, **kwargs)
+                if response.status >= 300:
+                    sampled[bucket] = {"ok": False, "error": f"HTTP {response.status}"}
+                    break
+                body = response.body
+                contents = list(getattr(body, "contents", None) or [])
+                for item in contents:
+                    objects.append(
+                        {
+                            "key": item.key,
+                            "size": int(item.size or 0),
+                            "modified": str(item.lastModified or ""),
+                        }
+                    )
+                truncated = bool(getattr(body, "is_truncated", False) or getattr(body, "isTruncated", False))
+                marker = getattr(body, "next_marker", None) or getattr(body, "nextMarker", None)
+                if not truncated or not marker or not contents:
+                    break
+            if bucket not in sampled:
+                sampled[bucket] = {
+                    "ok": True,
+                    "objects": objects,
+                    "object_count": len(objects),
+                    "sample_limit": max_objects,
+                    "is_truncated": truncated and len(objects) >= max_objects,
+                }
         return {"ok": True, "name": "obs_samples", "payload": sampled}
     finally:
         client.close()
@@ -483,7 +550,7 @@ def summarize(inventory: dict[str, Any]) -> dict[str, Any]:
         elif name == "dws_schema":
             rows = compact_list(payload, ("columns",))
         elif name == "obs_samples":
-            rows = []
+            rows = [bucket for bucket, payload in (payload or {}).items() if isinstance(payload, dict) and payload.get("ok")]
         else:
             rows = compact_list(payload, ("clusters", "cluster_infos", "instances", "servers", "publicips", "tasks", "jobs"))
         summary["services"][name] = len(rows)
@@ -517,11 +584,15 @@ def main() -> int:
 
     sources: dict[str, Any] = {
         "rms_all_resources": list_rms_resources(region, auth["token"], auth.get("domain_id", "")),
-        "dws_schema": collect_dws_schema(),
-        "obs_samples": collect_obs_samples(region),
     }
+    include_dws = os.environ.get("INCLUDE_DWS", "").lower() in {"1", "true", "yes"} or all(
+        os.environ.get(name) for name in ("DWS_HOST", "DWS_DATABASE", "DWS_USER", "DWS_PASSWORD")
+    )
+    if include_dws:
+        sources["dws_schema"] = collect_dws_schema()
     if not args.skip_service_calls:
         sources.update(service_calls(region, project_id, auth["token"], workspace_ids))
+    sources["obs_samples"] = collect_obs_samples(region, sources)
 
     inventory = {
         "generated_at": utc_now(),

@@ -1,4 +1,4 @@
-$script:SatCredentialProfilePath = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-realtime-monitor\credential-profile.xml"
+$script:SatCredentialProfilePath = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-sat-mexico\credential-profile.xml"
 
 function Convert-SatSecureStringToPlainText([securestring]$SecureValue) {
   if (-not $SecureValue) {

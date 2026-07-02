@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,10 +22,20 @@ def timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
+def refresh_seconds() -> int:
+    try:
+        return max(5, int(os.environ.get("SAT_MONITOR_REFRESH_SECONDS", "20")))
+    except ValueError:
+        return 20
+
+
 def load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
 
 
 def compact_list(payload: Any, keys: tuple[str, ...]) -> list[Any]:
@@ -94,7 +105,7 @@ def first(*values: Any, default: Any = "") -> Any:
 
 def normalize_resource(row: dict[str, Any], service: str) -> dict[str, Any]:
     datastore = row.get("datastore")
-    return {
+    resource = {
         "service": service.upper(),
         "name": first(
             row.get("name"),
@@ -132,6 +143,21 @@ def normalize_resource(row: dict[str, Any], service: str) -> dict[str, Any]:
         ),
         "region": first(row.get("region_id"), row.get("region"), row.get("dataCenter"), row.get("availabilityZoneId"), default=""),
     }
+    if service == "ecs":
+        metadata = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+        description = str(row.get("description") or "")
+        name = str(resource.get("name") or "")
+        if metadata.get("lockSource") == "MRS":
+            resource["role"] = "MRS node"
+            resource["pipeline_parent"] = metadata.get("lockSourceId", "")
+        elif "monitor" in name.lower() or "realtime monitor" in description.lower():
+            resource["role"] = "monitor website"
+            resource["excluded_from_pipeline"] = True
+        else:
+            resource["role"] = "infrastructure"
+    if service == "vpc":
+        resource["role"] = "network / public ingress"
+    return resource
 
 
 def service_status(count: int, errors: list[str] | None = None) -> str:
@@ -172,12 +198,18 @@ def analyze_obs_samples(samples: dict[str, Any]) -> tuple[list[dict[str, Any]], 
             continue
         objects = payload.get("objects") or []
         prefixes = Counter()
+        table_prefixes: set[str] = set()
         total_bytes = 0
         for obj in objects:
             key = str(obj.get("key", ""))
             prefix = key.split("/", 1)[0] if "/" in key else "(root)"
             prefixes[prefix] += 1
             total_bytes += int(obj.get("size") or 0)
+            if "/metadata/" in key:
+                table_prefixes.add(key.split("/metadata/", 1)[0])
+            elif key.endswith((".parquet", ".orc", ".avro")) and "/" in key:
+                parts = key.split("/")
+                table_prefixes.add("/".join(parts[:-1]))
         resources.append(
             {
                 "service": "OBS",
@@ -188,6 +220,23 @@ def analyze_obs_samples(samples: dict[str, Any]) -> tuple[list[dict[str, Any]], 
                 "region": "",
                 "objects": len(objects),
                 "bytes": total_bytes,
+                "prefixes": len(prefixes),
+                "tables": len(table_prefixes),
+                "sample_limit": payload.get("sample_limit"),
+                "is_truncated": bool(payload.get("is_truncated")),
+            }
+        )
+        catalog.append(
+            {
+                "system": "OBS",
+                "category": "bucket",
+                "name": f"obs://{bucket}/",
+                "format": "OBS bucket",
+                "columns": None,
+                "rows": None,
+                "objects": len(objects),
+                "bytes": total_bytes,
+                "detail": f"{len(prefixes)} prefixes; {len(table_prefixes)} table-like paths inferred from object layout",
             }
         )
         for prefix, count in prefixes.most_common():
@@ -203,7 +252,62 @@ def analyze_obs_samples(samples: dict[str, Any]) -> tuple[list[dict[str, Any]], 
                     "detail": "Sampled from OBS object listing",
                 }
             )
+        for table in sorted(table_prefixes)[:80]:
+            catalog.append(
+                {
+                    "system": "OBS",
+                    "category": "table path",
+                    "name": f"obs://{bucket}/{table}/",
+                    "format": "Iceberg/object table path",
+                    "columns": None,
+                    "rows": None,
+                    "objects": None,
+                    "detail": "Table-like path inferred from metadata or columnar files",
+                }
+            )
     return catalog, resources
+
+
+def catalog_layer(row: dict[str, Any]) -> str:
+    name = str(row.get("name") or "").lower()
+    system = str(row.get("system") or "").lower()
+    category = str(row.get("category") or "").lower()
+    if system == "rds" or "/gold/" in name or "serving" in category:
+        return "Gold"
+    if "/silver/" in name or "curated" in name or "/mvp/iceberg/mvp_rec_" in name or "resico_marcas" in name:
+        return "Silver"
+    if "/bronze/" in name or "/mvp/iceberg/" in name:
+        return "Bronze"
+    if (
+        "/raw/" in name
+        or "/input/" in name
+        or "datos_idc" in name
+        or "dlf-log" in name
+        or "/tmp/" in name
+        or "/temp/" in name
+        or "log" in category
+    ):
+        return "RAW"
+    return "Support"
+
+
+def catalog_status(row: dict[str, Any]) -> str:
+    if row.get("status"):
+        return str(row["status"])
+    if row.get("objects") == 0:
+        return "empty"
+    if row.get("objects") is not None:
+        return "sampled"
+    if str(row.get("category") or "").lower() == "table path":
+        return "inferred"
+    return "sampled"
+
+
+def enrich_catalog(catalog: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for row in catalog:
+        row["layer"] = row.get("layer") or catalog_layer(row)
+        row["status"] = row.get("status") or catalog_status(row)
+    return catalog
 
 
 def extract_jobs(inventory: dict[str, Any]) -> list[dict[str, Any]]:
@@ -221,20 +325,96 @@ def extract_jobs(inventory: dict[str, Any]) -> list[dict[str, Any]]:
                 "detail": first(job.get("description"), job.get("owner"), default=""),
             }
         )
-    mrs_jobs = compact_list(source_payload(inventory, "mrs_jobs_v2"), ("job_list", "jobs", "data"))
+    mrs_jobs = compact_list(source_payload(inventory, "mrs_jobs_v2"), ("job_list", "jobs", "job_executions", "data"))
     for job in mrs_jobs:
         jobs.append(
             {
                 "source": "MRS",
-                "name": first(job.get("job_name"), job.get("name"), job.get("job_id")),
-                "status": first(job.get("job_result"), job.get("job_state"), job.get("status"), default="unknown"),
+                "name": first(job.get("job_name"), job.get("name"), job.get("job_id"), job.get("id")),
+                "status": first(job.get("job_result"), job.get("job_state"), job.get("job_status"), job.get("status"), default="unknown"),
                 "type": first(job.get("job_type"), job.get("type"), default="MRS job"),
                 "started_at": first(job.get("started_time"), job.get("start_time"), default=""),
                 "finished_at": first(job.get("finished_time"), job.get("end_time"), default=""),
                 "detail": first(job.get("arguments"), job.get("jar_path"), default=""),
             }
         )
-    return jobs
+    def sort_key(row: dict[str, Any]) -> tuple[int, str]:
+        started = row.get("started_at")
+        if isinstance(started, (int, float)):
+            return (int(started), row.get("source", ""))
+        if isinstance(started, str) and started.isdigit():
+            return (int(started), row.get("source", ""))
+        return (0, row.get("source", ""))
+
+    return sorted(jobs, key=sort_key, reverse=True)
+
+
+def active_resources(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    inactive = {"terminated", "deleted", "deleting", "failed", "error", "unavailable"}
+    return [row for row in rows if str(row.get("status", "")).lower() not in inactive]
+
+
+def script_chain() -> list[dict[str, str]]:
+    refresh_state = load_json(EXPORTS / "sat_live_refresh_state.json")
+    refresh_running = (EXPORTS / "sat_live_refresh.pid").exists()
+    refresh_status = "running" if refresh_running else "success" if refresh_state.get("ok") else "ready"
+    refresh_detail = "Continuously refreshes live cloud inventory, rebuilds status.json, and uploads it to OBS."
+    if refresh_state.get("finished_at"):
+        refresh_detail = (
+            f"Last refresh finished at {refresh_state.get('finished_at')} UTC; "
+            f"duration {int(refresh_state.get('duration_ms') or 0) / 1000:.1f}s."
+        )
+    return [
+        {
+            "source": "Local",
+            "name": "Load-HuaweiCredentialProfile.ps1",
+            "status": "ready",
+            "type": "Credential bootstrap",
+            "detail": "Loads the encrypted local AK/SK profile into the current PowerShell process.",
+        },
+        {
+            "source": "Local",
+            "name": "huawei_inventory.py",
+            "status": "ready",
+            "type": "Resource and job discovery",
+            "detail": "Collects MRS, CDM, RDS, DataArts job metadata, ECS, VPC/EIP, and optional OBS samples.",
+        },
+        {
+            "source": "Local",
+            "name": "analyze_bigdata_assets.py",
+            "status": "ready",
+            "type": "Asset aggregation",
+            "detail": "Builds monitor/data/status.json and maps the actual SAT flow as DataArts/CDM to MRS to RDS.",
+        },
+        {
+            "source": "Local",
+            "name": "build_static_site.py",
+            "status": "ready",
+            "type": "Website packaging",
+            "detail": "Packages the cadence-aware dark monitoring site from monitor/ into dist/.",
+        },
+        {
+            "source": "Local",
+            "name": "deploy_obs_static_site.py",
+            "status": "ready",
+            "type": "Static asset publication",
+            "detail": "Uploads the generated monitor site and status payload to OBS for the HTTPS ECS proxy.",
+        },
+        {
+            "source": "Local",
+            "name": "refresh_live_status.py",
+            "status": refresh_status,
+            "type": "Live status refresher",
+            "detail": refresh_detail,
+        },
+        {
+            "source": "Local",
+            "name": "Start-SatRealtimeStatusRefresh.ps1",
+            "status": "running" if refresh_running else "ready",
+            "type": "Background refresh launcher",
+            "detail": "Loads the encrypted local AK/SK profile and starts the live refresh loop with a 20-second cadence.",
+        },
+    ]
 
 
 def build_stage(key: str, label: str, resources: list[dict[str, Any]], jobs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -253,7 +433,11 @@ def build_stage(key: str, label: str, resources: list[dict[str, Any]], jobs: lis
     else:
         progress = 0
         status = "idle"
-    return {
+    object_count = sum(int(row.get("objects") or 0) for row in resources)
+    table_count = sum(int(row.get("tables") or 0) for row in resources)
+    byte_count = sum(int(row.get("bytes") or 0) for row in resources)
+    prefix_count = sum(int(row.get("prefixes") or 0) for row in resources)
+    stage = {
         "key": key,
         "label": label,
         "status": status,
@@ -261,6 +445,16 @@ def build_stage(key: str, label: str, resources: list[dict[str, Any]], jobs: lis
         "resource_count": len(resources),
         "job_count": len(job_rows),
     }
+    if object_count or table_count or byte_count or prefix_count:
+        stage.update(
+            {
+                "object_count": object_count,
+                "table_count": table_count,
+                "byte_count": byte_count,
+                "prefix_count": prefix_count,
+            }
+        )
+    return stage
 
 
 def assess(inventory: dict[str, Any]) -> dict[str, Any]:
@@ -281,7 +475,6 @@ def assess(inventory: dict[str, Any]) -> dict[str, Any]:
 
     service_map = {
         "mrs": ("mrs_clusters_v11", ("cluster_infos", "clusters", "data")),
-        "dws": ("dws_clusters", ("clusters", "data")),
         "rds": ("rds_instances", ("instances", "data")),
         "dms": ("dms_instances", ("instances", "data")),
         "oms": ("oms_tasks", ("tasks", "data")),
@@ -293,34 +486,29 @@ def assess(inventory: dict[str, Any]) -> dict[str, Any]:
         rows = compact_list(source_payload(inventory, source_name), keys)
         service_rows[service].extend(normalize_resource(row, service) for row in rows)
 
-    dws_columns = compact_list(source_payload(inventory, "dws_schema"), ("columns",))
-    catalog = analyze_dws_schema(dws_columns)
+    catalog: list[dict[str, Any]] = []
     obs_catalog, obs_sample_resources = analyze_obs_samples(source_payload(inventory, "obs_samples"))
     catalog.extend(obs_catalog)
     service_rows["obs"].extend(obs_sample_resources)
 
-    dataarts_jobs = compact_list(source_payload(inventory, "dataarts_jobs"), ("jobs",))
-    service_rows["dataarts"].extend(normalize_resource(row, "dataarts") for row in dataarts_jobs)
     jobs = extract_jobs(inventory)
 
     services: dict[str, Any] = {}
     labels = {
         "obs": "OBS Object Storage",
         "oms": "OMS Migration",
-        "rds": "RDS Data Source",
+        "rds": "RDS PostgreSQL Serving",
         "dms": "DMS Kafka",
         "mrs": "MRS Compute",
-        "dataarts": "DataArts Orchestration",
-        "dws": "DWS Warehouse",
+        "dataarts": "DataArts Factory",
         "cdm": "CDM Migration",
-        "ecs": "ECS/Web",
-        "vpc": "VPC/EIP",
+        "ecs": "ECS Infrastructure",
+        "vpc": "VPC/EIP Infrastructure",
     }
     error_source_map = {
         "obs": ("obs_samples", "rms_all_resources"),
         "mrs": ("mrs_clusters_v11", "mrs_jobs_v2"),
         "dataarts": ("dataarts_workspaces", "dataarts_jobs"),
-        "dws": ("dws_clusters", "dws_schema"),
         "rds": ("rds_instances",),
         "dms": ("dms_instances",),
         "oms": ("oms_tasks",),
@@ -347,51 +535,87 @@ def assess(inventory: dict[str, Any]) -> dict[str, Any]:
     mrs_jobs = [job for job in jobs if job.get("source") == "MRS"]
     dataarts_job_rows = [job for job in jobs if job.get("source") == "DataArts"]
     stages = []
+    if services["obs"]["resource_count"]:
+        stages.append(build_stage("obs", "OBS Data Lake / Logs", active_resources(service_rows["obs"])))
     if services["oms"]["resource_count"]:
-        stages.append(build_stage("oms", "S3/OMS Batch Ingestion", service_rows["oms"]))
+        stages.append(build_stage("oms", "OMS Batch Ingestion", active_resources(service_rows["oms"])))
     if services["rds"]["resource_count"] or services["dms"]["resource_count"]:
-        stages.append(build_stage("streaming", "RDS/DMS Realtime Ingestion", service_rows["rds"] + service_rows["dms"]))
+        if services["dms"]["resource_count"]:
+            stages.append(build_stage("streaming", "DMS Realtime Ingestion", active_resources(service_rows["dms"])))
     stages.extend(
         [
-            build_stage("obs", "OBS Raw/Lake", service_rows["obs"]),
-            build_stage("mrs", "MRS Spark/Flink", service_rows["mrs"], mrs_jobs),
-            build_stage("dataarts", "DataArts Scheduling", service_rows["dataarts"], dataarts_job_rows),
-            build_stage("dws", "DWS Serving Layer", service_rows["dws"]),
+            build_stage("dataarts", "DataArts / CDM Orchestration", active_resources(service_rows["dataarts"] + service_rows["cdm"]), dataarts_job_rows),
+            build_stage("mrs", "MRS Spark/Flink Processing", active_resources(service_rows["mrs"]), mrs_jobs),
+            build_stage("rds", "RDS PostgreSQL Serving", active_resources(service_rows["rds"])),
         ]
     )
-    if services["ecs"]["resource_count"]:
-        stages.append(build_stage("ecs", "ECS/Web Monitoring", service_rows["ecs"]))
 
     risks = []
     if not services["obs"]["resource_count"]:
-        risks.append("No OBS bucket or object prefixes were sampled. Configure OBS_BUCKETS and AK/SK if data-structure sampling is required.")
+        risks.append("No OBS bucket or object prefixes were sampled. Configure OBS_BUCKETS or keep OBS paths in job arguments if data-structure sampling is required.")
     if not services["mrs"]["resource_count"]:
         risks.append("No MRS cluster was identified. If MRS is used, verify the region, project ID, and IAM permissions.")
-    if not services["dataarts"]["resource_count"]:
-        risks.append("No DataArts jobs were identified. Set DATAARTS_WORKSPACE_ID when the workspace ID is confirmed.")
+    if not dataarts_job_rows and not services["dataarts"]["resource_count"]:
+        risks.append("No DataArts Factory jobs were identified. Set DATAARTS_WORKSPACE_ID when the workspace ID is confirmed.")
     if not catalog:
-        risks.append("No DWS table schema or OBS object prefix data was collected. The monitor is currently resource-level only.")
+        risks.append("No OBS object prefix data was collected. The monitor is currently resource-level only.")
+    if not jobs:
+        risks.append("No live MRS/DataArts job records were collected from API responses during this refresh.")
     for name, message in source_errors.items():
+        if name in {"dws_clusters", "dws_schema"}:
+            continue
         risks.append(f"{name} collection was limited: {message}")
 
     recommendations = [
         "Use the SAT Mexico resource inventory as the source of truth for the end-to-end flow instead of reusing DockOne Brazil asset names.",
-        "Add OBS prefix sampling and DWS information_schema access to produce field-level data lineage.",
-        "After the DataArts workspace ID is confirmed, collect job nodes and map each script to MRS and DWS actions.",
+        "Keep the visible pipeline aligned to the current SAT flow: OBS storage, DataArts/CDM orchestration, MRS processing, then RDS PostgreSQL serving.",
+        "Use OBS object counts as storage-level records; add table readers later if row-level counts are required.",
+        "After the DataArts workspace ID is confirmed, collect job nodes and map each script to MRS and RDS actions.",
     ]
 
-    healthy = sum(1 for service in services.values() if service["status"] in {"healthy", "idle"})
-    total_resources = sum(service["resource_count"] for service in services.values())
+    pipeline_service_keys = ("obs", "oms", "dms", "cdm", "dataarts", "mrs", "rds")
+    pipeline_services = {key: services[key] for key in pipeline_service_keys if key in services}
+    healthy = sum(1 for service in pipeline_services.values() if service["status"] in {"healthy", "idle"})
+    pipeline_resources = sum(len(active_resources(service_rows[key])) for key in pipeline_service_keys)
+    infrastructure_resources = services["ecs"]["resource_count"] + services["vpc"]["resource_count"]
+    inactive_resources = sum(service["resource_count"] for service in services.values()) - pipeline_resources - infrastructure_resources
+    obs_resources = active_resources(service_rows["obs"])
+    obs_object_count = sum(int(row.get("objects") or 0) for row in obs_resources)
+    obs_table_count = sum(int(row.get("tables") or 0) for row in obs_resources)
+    obs_prefix_count = sum(int(row.get("prefixes") or 0) for row in obs_resources)
+    obs_byte_count = sum(int(row.get("bytes") or 0) for row in obs_resources)
+    for row in active_resources(service_rows["rds"]):
+        catalog.append(
+            {
+                "system": "RDS",
+                "category": "serving database",
+                "name": row.get("name") or row.get("id") or "RDS PostgreSQL",
+                "format": row.get("type") or "PostgreSQL",
+                "columns": None,
+                "rows": None,
+                "objects": None,
+                "layer": "Gold",
+                "status": row.get("status") or "healthy",
+                "detail": "Serving layer after MRS processing.",
+            }
+        )
+    catalog = enrich_catalog(catalog)
     return {
         "generated_at": utc_now(),
-        "refresh_seconds": 5,
+        "refresh_seconds": refresh_seconds(),
         "region": inventory.get("region", ""),
         "project": inventory.get("project", {}),
         "account": inventory.get("account", {}),
         "summary": {
             "healthy_services": healthy,
-            "total_services": len(services),
-            "resource_count": total_resources,
+            "total_services": len(pipeline_services),
+            "resource_count": pipeline_resources,
+            "infrastructure_count": infrastructure_resources,
+            "inactive_count": max(0, inactive_resources),
+            "obs_object_count": obs_object_count,
+            "obs_table_count": obs_table_count,
+            "obs_prefix_count": obs_prefix_count,
+            "obs_byte_count": obs_byte_count,
             "catalog_count": len(catalog),
             "job_count": len(jobs),
             "risk_count": len(risks),
@@ -402,6 +626,7 @@ def assess(inventory: dict[str, Any]) -> dict[str, Any]:
         "services": services,
         "catalog": catalog,
         "jobs": jobs[:80],
+        "script_chain": script_chain(),
         "risks": risks,
         "recommendations": recommendations,
         "source_inventory_generated_at": inventory.get("generated_at"),

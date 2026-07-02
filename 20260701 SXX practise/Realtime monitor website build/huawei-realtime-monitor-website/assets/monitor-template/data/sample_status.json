@@ -1,15 +1,21 @@
 {
   "generated_at": "2026-07-01T00:00:00+00:00",
-  "refresh_seconds": 5,
+  "refresh_seconds": 20,
   "region": "la-north-2",
   "project": {
     "id": "pending"
   },
   "account": {},
   "summary": {
-    "healthy_services": 2,
-    "total_services": 10,
+    "healthy_services": 0,
+    "total_services": 7,
     "resource_count": 0,
+    "infrastructure_count": 0,
+    "inactive_count": 0,
+    "obs_object_count": 0,
+    "obs_table_count": 0,
+    "obs_prefix_count": 0,
+    "obs_byte_count": 0,
     "catalog_count": 0,
     "job_count": 0,
     "risk_count": 4
@@ -17,8 +23,8 @@
   "topology": {
     "stages": [
       {
-        "key": "obs",
-        "label": "OBS Raw/Lake",
+        "key": "dataarts",
+        "label": "DataArts / CDM Orchestration",
         "status": "idle",
         "progress": 0,
         "resource_count": 0,
@@ -26,23 +32,15 @@
       },
       {
         "key": "mrs",
-        "label": "MRS Spark/Flink",
+        "label": "MRS Spark/Flink Processing",
         "status": "idle",
         "progress": 0,
         "resource_count": 0,
         "job_count": 0
       },
       {
-        "key": "dataarts",
-        "label": "DataArts Scheduling",
-        "status": "idle",
-        "progress": 0,
-        "resource_count": 0,
-        "job_count": 0
-      },
-      {
-        "key": "dws",
-        "label": "DWS Serving Layer",
+        "key": "rds",
+        "label": "RDS PostgreSQL Serving",
         "status": "idle",
         "progress": 0,
         "resource_count": 0,
@@ -53,6 +51,22 @@
   "services": {},
   "catalog": [],
   "jobs": [],
+  "script_chain": [
+    {
+      "source": "Local",
+      "name": "huawei_inventory.py",
+      "status": "ready",
+      "type": "Resource and job discovery",
+      "detail": "Collects live Huawei Cloud resource and job metadata."
+    },
+    {
+      "source": "Local",
+      "name": "analyze_bigdata_assets.py",
+      "status": "ready",
+      "type": "Asset aggregation",
+      "detail": "Maps SAT flow as DataArts/CDM to MRS to RDS."
+    }
+  ],
   "risks": [
     "Huawei Cloud account collection has not been connected yet.",
     "The assessment will use the SAT Mexico inventory as the source of truth instead of DockOne Brazil asset names.",
@@ -62,6 +76,6 @@
   "recommendations": [
     "Run scripts/Set-HuaweiCredentialEnv.ps1 -Region la-north-2 -RunInventory first.",
     "Confirm the actual region and project ID before generating the final monitoring flow.",
-    "Add DWS connection details to output field-level table structures."
+    "Set OBS_BUCKETS to add object-prefix and file-structure lineage."
   ]
 }

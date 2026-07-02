@@ -27,7 +27,7 @@ def load_json(name: str) -> dict:
     except json.JSONDecodeError as exc:
         return {
             "generated_at": utc_now(),
-            "refresh_seconds": 5,
+            "refresh_seconds": 20,
             "summary": {"healthy_services": 0, "total_services": 0, "resource_count": 0, "catalog_count": 0, "job_count": 0, "risk_count": 1},
             "topology": {"stages": []},
             "services": {},

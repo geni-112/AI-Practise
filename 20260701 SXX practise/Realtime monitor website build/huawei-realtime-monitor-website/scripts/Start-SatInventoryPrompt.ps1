@@ -40,7 +40,7 @@ $form.MinimizeBox = $false
 $form.TopMost = $true
 
 $title = New-Object System.Windows.Forms.Label
-$title.Text = "Huawei Cloud resource inventory for the selected customer account."
+$title.Text = "SAT Mexico account only - do not reuse the older 584501 account."
 $title.Location = New-Object System.Drawing.Point(24, 18)
 $title.Size = New-Object System.Drawing.Size(500, 22)
 $title.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)

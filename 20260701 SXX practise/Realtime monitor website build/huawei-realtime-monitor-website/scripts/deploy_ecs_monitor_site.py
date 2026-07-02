@@ -43,11 +43,11 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPORTS = ROOT / "exports"
 
 DEFAULT_REGION = "la-north-2"
-DEFAULT_PROJECT_ID = ""
-DEFAULT_VPC_ID = ""
-DEFAULT_SUBNET_ID = ""
-DEFAULT_BUCKET = ""
-DEFAULT_NAME = "realtime-monitor-web"
+DEFAULT_PROJECT_ID = "019df8ed60697d339c5912dcfac2bae6"
+DEFAULT_VPC_ID = "f6fe8598-99a0-436d-aeac-a50c3e3cdde5"
+DEFAULT_SUBNET_ID = "67494b3a-c63f-4c2f-829c-deb68bb0d417"
+DEFAULT_BUCKET = "sat-mexico-monitor-019df8ed6069-la-north-2"
+DEFAULT_NAME = "sat-mexico-monitor-web"
 
 IMAGE_CANDIDATES = [
     "aeb3f35e-2852-4c6f-8085-3d0419d58483",  # Huawei Cloud EulerOS 2.0 Standard 64 bit
@@ -417,12 +417,12 @@ def result_payload(region: str, name: str, server: Any, security_group_id: str, 
         "domain": domain,
         "website_url": f"https://{domain}/" if domain else "",
         "http_ok": http_ok,
-        "refresh_seconds": 5,
+        "refresh_seconds": 20,
     }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Deploy a Huawei realtime monitor to a small ECS web endpoint.")
+    parser = argparse.ArgumentParser(description="Deploy SAT Mexico monitor to a small ECS web endpoint.")
     parser.add_argument("--region", default=env("HUAWEICLOUD_REGION", DEFAULT_REGION))
     parser.add_argument("--project-id", default=env("HUAWEICLOUD_PROJECT_ID", DEFAULT_PROJECT_ID))
     parser.add_argument("--vpc-id", default=DEFAULT_VPC_ID)
@@ -430,19 +430,6 @@ def main() -> int:
     parser.add_argument("--bucket", default=DEFAULT_BUCKET)
     parser.add_argument("--name", default=DEFAULT_NAME)
     args = parser.parse_args()
-
-    missing = [
-        name
-        for name, value in {
-            "--project-id or HUAWEICLOUD_PROJECT_ID": args.project_id,
-            "--vpc-id": args.vpc_id,
-            "--subnet-id": args.subnet_id,
-            "--bucket": args.bucket,
-        }.items()
-        if not value
-    ]
-    if missing:
-        raise SystemExit("Missing required deployment inputs: " + ", ".join(missing))
 
     ecs, vpc = clients(args.region, args.project_id)
     sg_id = ensure_security_group(vpc, args.vpc_id, f"{args.name}-sg")
@@ -467,7 +454,7 @@ def main() -> int:
     http_ok = wait_http(url)
     result = result_payload(args.region, args.name, server, sg_id, http_ok)
     EXPORTS.mkdir(parents=True, exist_ok=True)
-    out = EXPORTS / f"ecs_monitor_web_{args.region}.json"
+    out = EXPORTS / "sat_ecs_monitor_web_la-north-2.json"
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0 if http_ok else 2

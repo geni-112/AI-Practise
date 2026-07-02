@@ -113,8 +113,8 @@ def get_obs_auth(region: str) -> dict[str, str]:
 
 
 def default_bucket(project_id: str) -> str:
-    suffix = re.sub(r"[^a-z0-9-]", "", (project_id or "monitor")[:12].lower()) or "monitor"
-    return f"huawei-realtime-monitor-{suffix}-la-north-2"
+    suffix = re.sub(r"[^a-z0-9-]", "", (project_id or "satmexico")[:12].lower()) or "satmexico"
+    return f"sat-mexico-monitor-{suffix}-la-north-2"
 
 
 def ensure_ok(response: Any, action: str, allow: set[int] | None = None) -> None:
@@ -170,7 +170,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Deploy SAT Mexico monitor static site to OBS in Mexico City2.")
     parser.add_argument("--region", default=os.environ.get("HUAWEICLOUD_REGION", DEFAULT_REGION))
     parser.add_argument("--bucket", default=os.environ.get("SAT_MONITOR_OBS_BUCKET", ""))
-    parser.add_argument("--site-dir", default=str(ROOT / "dist" / "realtime-monitor-site"))
+    parser.add_argument("--site-dir", default=str(ROOT / "dist" / "sat-mexico-monitor-site"))
     parser.add_argument("--create-bucket", action="store_true")
     args = parser.parse_args()
 
@@ -232,7 +232,7 @@ def main() -> int:
         "website_url": url,
         "note": "Huawei Cloud may require a custom domain for in-browser preview on default OBS website domains in Mexico regions.",
     }
-    out = ROOT / "exports" / f"obs_website_{args.region}.json"
+    out = ROOT / "exports" / "sat_obs_website_la-north-2.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False, indent=2))

@@ -30,7 +30,7 @@ if ($ProjectId) {
 }
 
 if ($SaveEncryptedProfile) {
-  $profileDir = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-realtime-monitor"
+  $profileDir = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-sat-mexico"
   New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
   $profilePath = Join-Path $profileDir "credential-profile.xml"
   [pscustomobject]@{

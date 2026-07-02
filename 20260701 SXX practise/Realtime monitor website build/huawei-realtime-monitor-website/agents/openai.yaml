@@ -1,4 +1,4 @@
 interface:
   display_name: "Huawei Realtime Monitor Website"
-  short_description: "Build secure Huawei Cloud realtime monitoring sites"
-  default_prompt: "Use $huawei-realtime-monitor-website to inventory Huawei Cloud big-data resources and deploy a secure realtime monitoring website."
+  short_description: "Build secure cadence-aware Huawei Cloud monitoring sites"
+  default_prompt: "Use $huawei-realtime-monitor-website to inventory Huawei Cloud big-data resources, refresh live status, and deploy a secure realtime monitoring website with script and data-layer catalogs."

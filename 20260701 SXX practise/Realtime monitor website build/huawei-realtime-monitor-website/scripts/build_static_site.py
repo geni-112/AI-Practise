@@ -18,7 +18,7 @@ def copy_file(src: Path, dst: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build static SAT Mexico monitor site assets.")
-    parser.add_argument("--out", default=str(DIST_ROOT / "realtime-monitor-site"))
+    parser.add_argument("--out", default=str(DIST_ROOT / "sat-mexico-monitor-site"))
     parser.add_argument("--zip", action="store_true")
     args = parser.parse_args()
 

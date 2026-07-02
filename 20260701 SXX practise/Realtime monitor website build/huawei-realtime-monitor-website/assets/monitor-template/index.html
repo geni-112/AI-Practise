@@ -16,7 +16,14 @@
         </div>
       </div>
       <div class="top-actions">
-        <div class="live-state"><span></span><b>LIVE 5s</b><small id="lastUpdated">waiting</small></div>
+        <div class="live-state">
+          <span></span>
+          <b id="liveCadence">LIVE 20s</b>
+          <small>
+            <em id="lastUpdated">Poll waiting</em>
+            <em id="dataUpdated">Data waiting</em>
+          </small>
+        </div>
         <button id="refreshBtn" type="button" title="Refresh"><span aria-hidden="true">&#8635;</span> Refresh</button>
       </div>
     </header>
@@ -28,11 +35,11 @@
           <strong id="healthCount">0/0</strong>
         </article>
         <article class="metric">
-          <span>Discovered Resources</span>
+          <span>Pipeline Resources</span>
           <strong id="resourceCount">0</strong>
         </article>
         <article class="metric">
-          <span>Data Objects</span>
+          <span>OBS Objects</span>
           <strong id="catalogCount">0</strong>
         </article>
         <article class="metric">
@@ -71,13 +78,37 @@
         <article class="panel">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Script Role</p>
-              <h2>MRS / DWS / DataArts</h2>
+              <p class="eyebrow">Runtime Jobs</p>
+              <h2>Job & Script Activity</h2>
             </div>
             <span class="meta-pill" id="jobMeta">0 jobs</span>
           </div>
           <div id="jobList" class="job-list"></div>
         </article>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Execution Catalog</p>
+            <h2>Script Status Catalog</h2>
+          </div>
+          <span class="meta-pill" id="scriptMeta">0 scripts</span>
+        </div>
+        <div class="table-wrap script-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Script</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="scriptRows"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="panel">
@@ -93,7 +124,9 @@
             <thead>
               <tr>
                 <th>System</th>
+                <th>Layer</th>
                 <th>Type</th>
+                <th>Status</th>
                 <th>Name</th>
                 <th>Format</th>
                 <th>Fields</th>

@@ -2,7 +2,6 @@ const iconMap = {
   obs: "./assets/obs.png",
   mrs: "./assets/mapreduce.png",
   dataarts: "./assets/dataarts.png",
-  dws: "./assets/dws.png",
 };
 
 const serviceLabels = {
@@ -12,15 +11,19 @@ const serviceLabels = {
   dms: "DMS",
   mrs: "MRS",
   dataarts: "DataArts",
-  dws: "DWS",
   cdm: "CDM",
   ecs: "ECS",
   vpc: "VPC",
   streaming: "RT",
 };
 
+const DISPLAY_TIME_ZONE = "America/Sao_Paulo";
+const DISPLAY_TIME_ZONE_LABEL = "UTC-03";
+
 let currentStatus = null;
 let selectedService = "";
+let refreshTimer = null;
+let refreshSeconds = 20;
 
 function text(value, fallback = "-") {
   return value === undefined || value === null || value === "" ? fallback : String(value);
@@ -30,11 +33,29 @@ function number(value) {
   return new Intl.NumberFormat("en-US").format(Number(value || 0));
 }
 
+function bytes(value) {
+  let amount = Number(value || 0);
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let unit = 0;
+  while (amount >= 1024 && unit < units.length - 1) {
+    amount /= 1024;
+    unit += 1;
+  }
+  return `${amount >= 10 || unit === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[unit]}`;
+}
+
 function time(value) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString("en-US", { hour12: false });
+  return `${date.toLocaleString("en-US", { hour12: false, timeZone: DISPLAY_TIME_ZONE })} ${DISPLAY_TIME_ZONE_LABEL}`;
+}
+
+function timeOnly(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return `${date.toLocaleTimeString("en-US", { hour12: false, timeZone: DISPLAY_TIME_ZONE })} ${DISPLAY_TIME_ZONE_LABEL}`;
 }
 
 function escapeHtml(value) {
@@ -47,9 +68,10 @@ function escapeHtml(value) {
 
 function statusClass(value) {
   const normalized = text(value, "idle").toLowerCase();
-  if (["healthy", "success", "succeeded", "available", "running", "active", "sampled"].includes(normalized)) return "healthy";
-  if (["warning", "executing", "submitted", "creating"].includes(normalized)) return "warning";
+  if (["healthy", "success", "succeeded", "available", "running", "active", "sampled", "ready", "inferred"].includes(normalized)) return "healthy";
+  if (["warning", "executing", "submitted", "creating", "pending", "accepted", "empty"].includes(normalized)) return "warning";
   if (["unavailable", "failed", "failure", "error", "deleted"].includes(normalized)) return "unavailable";
+  if (["terminated", "stopped"].includes(normalized)) return "idle";
   return "idle";
 }
 
@@ -74,6 +96,13 @@ function statusLabel(value) {
     idle: "Not Found",
     unknown: "Unknown",
     sampled: "Sampled",
+    ready: "Ready",
+    inferred: "Inferred",
+    empty: "Empty",
+    terminated: "Inactive",
+    stopped: "Stopped",
+    pending: "Pending",
+    accepted: "Accepted",
   };
   return map[normalized] || text(value, "Unknown");
 }
@@ -85,12 +114,15 @@ function stageIcon(key) {
 
 function renderSummary(data) {
   const summary = data.summary || {};
+  const cadence = Math.max(5, Number(data.refresh_seconds || refreshSeconds || 20));
+  document.getElementById("liveCadence").textContent = `LIVE ${cadence}s`;
   document.getElementById("healthCount").textContent = `${summary.healthy_services || 0}/${summary.total_services || 0}`;
   document.getElementById("resourceCount").textContent = number(summary.resource_count);
-  document.getElementById("catalogCount").textContent = number(summary.catalog_count);
+  document.getElementById("catalogCount").textContent = number(summary.obs_object_count ?? summary.catalog_count);
   document.getElementById("jobCount").textContent = number(summary.job_count);
   document.getElementById("riskCount").textContent = number(summary.risk_count);
-  document.getElementById("lastUpdated").textContent = time(data.generated_at);
+  document.getElementById("lastUpdated").textContent = `Poll ${timeOnly(new Date().toISOString())}`;
+  document.getElementById("dataUpdated").textContent = `Data ${time(data.generated_at)}`;
   document.getElementById("regionLabel").textContent = `Huawei Cloud / ${text(data.region, "Region pending")}`;
   document.getElementById("projectLabel").textContent = `Project ${text(data.project?.id, "pending")}`;
 }
@@ -98,18 +130,30 @@ function renderSummary(data) {
 function renderPipeline(data) {
   const stages = data.topology?.stages || [];
   const root = document.getElementById("pipeline");
-  root.innerHTML = stages.length ? stages.map((stage, index) => `
-    <article class="stage" style="--progress:${Math.max(0, Math.min(100, Number(stage.progress || 0))) / 100}">
-      <span class="stage-pulse" style="animation-delay:${index * 180}ms"></span>
+  root.innerHTML = stages.length ? stages.map((stage) => {
+    const progress = Math.max(0, Math.min(100, Number(stage.progress || 0)));
+    const progressState = progress >= 100 ? "complete" : progress > 0 ? "partial" : "empty-progress";
+    const storageLine = stage.object_count || stage.table_count || stage.byte_count
+      ? `<p>${number(stage.object_count)} OBS objects / ${number(stage.table_count)} table paths / ${bytes(stage.byte_count)}</p>`
+      : "";
+    return `
+    <article class="stage ${statusClass(stage.status)} ${progressState}" data-progress="${progress}">
       <div class="stage-top">
         <div class="stage-icon">${stageIcon(stage.key)}</div>
         <span class="status ${statusClass(stage.status)}">${statusLabel(stage.status)}</span>
       </div>
-      <h3>${escapeHtml(stage.label)}</h3>
-      <p>${number(stage.resource_count)} resources / ${number(stage.job_count)} jobs</p>
-      <p>${number(stage.progress)}% progress signal</p>
+      <div class="stage-copy">
+        <h3>${escapeHtml(stage.label)}</h3>
+        <p>${number(stage.resource_count)} pipeline resources / ${number(stage.job_count)} jobs</p>
+        ${storageLine}
+      </div>
+      <progress class="stage-meter" value="${progress}" max="100" aria-label="${progress}% progress"></progress>
+      <div class="stage-foot">
+        <span>${number(progress)}%</span>
+        <span>progress signal</span>
+      </div>
     </article>
-  `).join("") : `<div class="empty">Waiting for resource assessment results</div>`;
+  `}).join("") : `<div class="empty">Waiting for resource assessment results</div>`;
 }
 
 function updateServiceFilter(data) {
@@ -148,7 +192,7 @@ function renderResources(data) {
         <span class="resource-service">${escapeHtml(resource.service || service.label)}</span>
         <div>
           <div class="resource-name" title="${escapeHtml(resource.name)}">${escapeHtml(resource.name)}</div>
-          <p class="resource-meta">${escapeHtml(resource.type)} / ${escapeHtml(resource.id)} ${resource.region ? `/ ${escapeHtml(resource.region)}` : ""}</p>
+          <p class="resource-meta">${escapeHtml(resource.type)} / ${escapeHtml(resource.id)} ${resource.region ? `/ ${escapeHtml(resource.region)}` : ""}${resource.objects !== undefined ? ` / ${number(resource.objects)} objects, ${number(resource.prefixes)} prefixes, ${number(resource.tables)} table paths, ${bytes(resource.bytes)}` : ""}</p>
         </div>
         <span class="status ${statusClass(resource.status)}">${statusLabel(resource.status)}</span>
       </div>`;
@@ -157,8 +201,9 @@ function renderResources(data) {
 
 function renderJobs(data) {
   const jobs = data.jobs || [];
-  document.getElementById("jobMeta").textContent = `${number(jobs.length)} jobs`;
-  document.getElementById("jobList").innerHTML = jobs.length ? jobs.map(job => `
+  const scripts = data.script_chain || [];
+  document.getElementById("jobMeta").textContent = `${number(jobs.length)} jobs / ${number(scripts.length)} scripts`;
+  const jobRows = jobs.map(job => `
     <div class="job-row">
       <span class="job-source">${escapeHtml(job.source)}</span>
       <div>
@@ -167,14 +212,43 @@ function renderJobs(data) {
       </div>
       <span class="status ${statusClass(job.status)}">${statusLabel(job.status)}</span>
     </div>
-  `).join("") : `<div class="empty">No MRS/DataArts job records have been collected yet</div>`;
+  `);
+  const scriptRows = scripts.map(item => `
+    <div class="job-row script-row">
+      <span class="job-source">${escapeHtml(item.source)}</span>
+      <div>
+        <div class="job-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+        <p class="job-meta">${escapeHtml(item.type)} / ${escapeHtml(item.detail)}</p>
+      </div>
+      <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+    </div>
+  `);
+  const empty = `<div class="empty">No live MRS/DataArts job records have been collected from APIs yet</div>`;
+  document.getElementById("jobList").innerHTML = [
+    ...(jobRows.length ? jobRows : [empty]),
+    ...scriptRows,
+  ].join("");
+}
+
+function renderScriptCatalog(data) {
+  const scripts = data.script_chain || [];
+  document.getElementById("scriptMeta").textContent = `${number(scripts.length)} scripts`;
+  document.getElementById("scriptRows").innerHTML = scripts.length ? scripts.map(item => `
+    <tr>
+      <td>${escapeHtml(item.source)}</td>
+      <td class="mono">${escapeHtml(item.name)}</td>
+      <td>${escapeHtml(item.type)}</td>
+      <td><span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span></td>
+      <td>${escapeHtml(item.detail || "")}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="5" class="empty">No script status records have been collected yet</td></tr>`;
 }
 
 function filteredCatalog() {
   const needle = document.getElementById("catalogSearch").value.trim().toLowerCase();
   return (currentStatus?.catalog || []).filter(row => {
     if (!needle) return true;
-    return `${row.system} ${row.category} ${row.name} ${row.format} ${row.detail}`.toLowerCase().includes(needle);
+    return `${row.system} ${row.layer} ${row.status} ${row.category} ${row.name} ${row.format} ${row.detail}`.toLowerCase().includes(needle);
   });
 }
 
@@ -183,14 +257,16 @@ function renderCatalog() {
   document.getElementById("catalogRows").innerHTML = rows.length ? rows.map(row => `
     <tr>
       <td>${escapeHtml(row.system)}</td>
+      <td><span class="layer-pill ${escapeHtml(text(row.layer, "Support").toLowerCase())}">${escapeHtml(text(row.layer, "Support"))}</span></td>
       <td>${escapeHtml(row.category)}</td>
+      <td><span class="status ${statusClass(row.status)}">${statusLabel(row.status)}</span></td>
       <td class="mono">${escapeHtml(row.name)}</td>
       <td>${escapeHtml(row.format)}</td>
       <td>${row.columns === null || row.columns === undefined ? "-" : number(row.columns)}</td>
       <td>${row.objects === null || row.objects === undefined ? "-" : number(row.objects)}</td>
       <td>${escapeHtml(row.detail || "")}</td>
     </tr>
-  `).join("") : `<tr><td colspan="7" class="empty">No table structures or object prefixes have been collected yet</td></tr>`;
+  `).join("") : `<tr><td colspan="9" class="empty">No table structures or object prefixes have been collected yet</td></tr>`;
 }
 
 function renderNotes(id, rows, className = "") {
@@ -209,6 +285,7 @@ function render(data) {
   updateServiceFilter(data);
   renderResources(data);
   renderJobs(data);
+  renderScriptCatalog(data);
   renderCatalog();
   renderNotes("riskList", data.risks || []);
   renderNotes("recommendationList", data.recommendations || [], "recommendation");
@@ -221,7 +298,17 @@ async function loadStatus() {
     response = await fetch(`./data/status.json?t=${stamp}`, { cache: "no-store" });
   }
   if (!response.ok) throw new Error(`status api ${response.status}`);
-  render(await response.json());
+  const data = await response.json();
+  render(data);
+  scheduleRefresh(data.refresh_seconds);
+}
+
+function scheduleRefresh(seconds) {
+  const nextSeconds = Math.max(5, Number(seconds || 20));
+  if (refreshTimer && nextSeconds === refreshSeconds) return;
+  refreshSeconds = nextSeconds;
+  if (refreshTimer) window.clearInterval(refreshTimer);
+  refreshTimer = window.setInterval(() => loadStatus().catch(console.error), refreshSeconds * 1000);
 }
 
 async function refreshNow() {
@@ -242,5 +329,5 @@ document.getElementById("serviceFilter").addEventListener("change", event => {
 document.getElementById("catalogSearch").addEventListener("input", renderCatalog);
 document.getElementById("refreshBtn").addEventListener("click", refreshNow);
 
+scheduleRefresh(refreshSeconds);
 loadStatus().catch(console.error);
-setInterval(() => loadStatus().catch(console.error), 5000);

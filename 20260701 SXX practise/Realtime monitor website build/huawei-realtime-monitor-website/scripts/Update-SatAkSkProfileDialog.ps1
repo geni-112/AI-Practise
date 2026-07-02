@@ -1,6 +1,6 @@
 param(
   [string]$Region = "la-north-2",
-  [string]$ProjectId = ""
+  [string]$ProjectId = "019df8ed60697d339c5912dcfac2bae6"
 )
 
 $ErrorActionPreference = "Stop"

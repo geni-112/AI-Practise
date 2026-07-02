@@ -18,7 +18,7 @@ function Convert-SecureStringToPlainText([securestring]$SecureValue) {
 }
 
 if (-not $ProfilePath) {
-  $ProfilePath = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-realtime-monitor\credential-profile.xml"
+  $ProfilePath = Join-Path $env:LOCALAPPDATA "Codex\huawei-cloud-sat-mexico\credential-profile.xml"
 }
 
 $profile = Import-Clixml -LiteralPath $ProfilePath
