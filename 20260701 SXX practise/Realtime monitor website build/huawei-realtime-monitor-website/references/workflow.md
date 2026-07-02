@@ -13,6 +13,7 @@
    - `python scripts/analyze_bigdata_assets.py`
    - Check `monitor/data/status.json`.
    - Confirm `generated_at`, `refresh_seconds`, `script_chain`, and catalog `layer`/`status` fields.
+   - Confirm `script_chain` contains cloud data-flow scripts from DataArts/MRS job metadata, not local maintenance scripts.
 5. Build the static site:
    - `python scripts/build_static_site.py --zip`
 6. Publish the OBS source copy:
@@ -54,6 +55,13 @@ For executive dashboards, split:
 - For SAT-style paths without explicit layer folders, classify log/input/Datos_idc paths as RAW, Iceberg/MVP intermediate paths as Bronze or Silver, and RDS serving records as Gold.
 - Include Support for script folders, user trash, temporary program paths, and other non-business data structures.
 
+## Script Status Catalog
+- Show business data-flow script status only.
+- Extract scripts from DataArts job records and MRS job arguments, including OBS-hosted `.py`, `.sql`, and `.jar` artifacts.
+- Use the cloud job status (`SUCCEEDED`, `FAILED`, `RUNNING`, and related API states) as the script status.
+- Include script layer hints where possible: RAW, Bronze, Silver, Gold, or Support.
+- Do not show local operator scripts such as credential loading, inventory collection, static-site build, OBS deployment, or background refresh launchers in the website Script Status Catalog.
+
 ## Common Commands
 ```powershell
 . .\scripts\Load-HuaweiCredentialProfile.ps1
@@ -72,7 +80,7 @@ python scripts\aggregate_monitor_evidence.py --site-url https://<domain>/
 - Keep the first screen the operational monitor, not a landing page.
 - Read the refresh cadence from `status.refresh_seconds`; do not hard-code `setInterval(..., 5000)`.
 - Render pipeline completion with native `<progress>` values, not decorative width bars blocked by CSP.
-- Place Script Status Catalog before Data Structure.
+- Place Script Status Catalog before Data Structure, and populate it from cloud data-flow scripts rather than local operator scripts.
 - Add Layer and Status columns to Data Structure.
 - Use consistent font size by hierarchy:
   - Body: 15px.

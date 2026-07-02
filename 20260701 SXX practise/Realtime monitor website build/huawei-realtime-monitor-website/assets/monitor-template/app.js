@@ -201,8 +201,7 @@ function renderResources(data) {
 
 function renderJobs(data) {
   const jobs = data.jobs || [];
-  const scripts = data.script_chain || [];
-  document.getElementById("jobMeta").textContent = `${number(jobs.length)} jobs / ${number(scripts.length)} scripts`;
+  document.getElementById("jobMeta").textContent = `${number(jobs.length)} jobs`;
   const jobRows = jobs.map(job => `
     <div class="job-row">
       <span class="job-source">${escapeHtml(job.source)}</span>
@@ -213,21 +212,8 @@ function renderJobs(data) {
       <span class="status ${statusClass(job.status)}">${statusLabel(job.status)}</span>
     </div>
   `);
-  const scriptRows = scripts.map(item => `
-    <div class="job-row script-row">
-      <span class="job-source">${escapeHtml(item.source)}</span>
-      <div>
-        <div class="job-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
-        <p class="job-meta">${escapeHtml(item.type)} / ${escapeHtml(item.detail)}</p>
-      </div>
-      <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
-    </div>
-  `);
   const empty = `<div class="empty">No live MRS/DataArts job records have been collected from APIs yet</div>`;
-  document.getElementById("jobList").innerHTML = [
-    ...(jobRows.length ? jobRows : [empty]),
-    ...scriptRows,
-  ].join("");
+  document.getElementById("jobList").innerHTML = (jobRows.length ? jobRows : [empty]).join("");
 }
 
 function renderScriptCatalog(data) {
@@ -237,11 +223,12 @@ function renderScriptCatalog(data) {
     <tr>
       <td>${escapeHtml(item.source)}</td>
       <td class="mono">${escapeHtml(item.name)}</td>
+      <td><span class="layer-pill ${escapeHtml(text(item.layer, "Support").toLowerCase())}">${escapeHtml(text(item.layer, "Support"))}</span></td>
       <td>${escapeHtml(item.type)}</td>
       <td><span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span></td>
       <td>${escapeHtml(item.detail || "")}</td>
     </tr>
-  `).join("") : `<tr><td colspan="5" class="empty">No script status records have been collected yet</td></tr>`;
+  `).join("") : `<tr><td colspan="6" class="empty">No script status records have been collected yet</td></tr>`;
 }
 
 function filteredCatalog() {

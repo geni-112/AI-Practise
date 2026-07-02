@@ -24,14 +24,16 @@ Prefer AK/SK loaded from encrypted local profiles or environment variables. Neve
    - The output `monitor/data/status.json` is the website data contract.
    - Distinguish cloud resource records from business assets. Exclude monitor ECS/EIP from pipeline counts unless the user explicitly wants infrastructure monitoring.
    - Add `layer` and `status` to data catalog rows. Classify RAW/Bronze/Silver/Gold from explicit path names where available, and otherwise use SAT path rules such as logs/input/Datos_idc as RAW, Iceberg/MVP intermediate tables as Bronze/Silver, and RDS serving records as Gold.
-   - Include `script_chain` records for credential loading, inventory, aggregation, packaging, OBS deployment, live refresh, and background launcher status.
+   - Use `script_chain` for big-data flow scripts only: DataArts/CDM job definitions, MRS Spark/Flink/SparkScript entries, OBS-hosted `.py`/`.sql`/`.jar` job artifacts, and their cloud execution status.
+   - Do not put local maintenance scripts such as `build_static_site.py`, `refresh_live_status.py`, or credential loaders into the website Script Status Catalog. Keep those in the skill/runbook only.
 4. **Website generation**
    - Copy `assets/monitor-template/` into the working project's `monitor/` folder, or adapt the existing monitor folder.
    - Run `scripts/build_static_site.py --zip`.
    - Use `refresh_seconds` from `status.json` for the browser polling cadence. Do not hard-code 5 seconds when live collection takes longer.
    - Use native `<progress value="..." max="100">` for stage progress so 100% fills green and partial values, such as 45%, stop at the real percentage.
    - Show separate poll time and data-generation time. Keep JSON timestamps in UTC, but display the user-facing business timezone clearly when required.
-   - Include the Script Status Catalog before Data Structure, and show Data Structure Layer and Status columns.
+   - Include the Script Status Catalog before Data Structure. The catalog must show business flow script status from MRS/DataArts, not local Codex/operator script execution status.
+   - Show Data Structure Layer and Status columns.
    - Use modern dark UI defaults unless the user provides another design.
 5. **OBS static copy**
    - Run `scripts/deploy_obs_static_site.py --region <region> --bucket <bucket>`.

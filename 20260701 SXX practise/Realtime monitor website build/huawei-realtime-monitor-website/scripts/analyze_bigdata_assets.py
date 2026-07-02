@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 MONITOR_DATA = ROOT / "monitor" / "data"
 EXPORTS = ROOT / "exports"
+SCRIPT_URI_RE = re.compile(r"obs://[^\s,\]\)\"']+\.(?:py|sql|jar)", re.IGNORECASE)
 
 
 def utc_now() -> str:
@@ -310,6 +312,78 @@ def enrich_catalog(catalog: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return catalog
 
 
+def iso_from_millis(value: Any) -> str:
+    if value in (None, ""):
+        return ""
+    try:
+        number_value = int(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if number_value > 10_000_000_000:
+        number_value = number_value / 1000
+    return datetime.fromtimestamp(number_value, timezone.utc).replace(microsecond=0).isoformat()
+
+
+def script_name_from_uri(uri: str) -> str:
+    clean = uri.split("#", 1)[0].rstrip("],)")
+    return clean.rsplit("/", 1)[-1] or clean
+
+
+def script_layer(name: str, detail: str = "") -> str:
+    text_value = f"{name} {detail}".lower()
+    if "iceberg2pg" in text_value or "rds" in text_value or "postgres" in text_value or "pg" in text_value:
+        return "Gold"
+    if "opt_zorder" in text_value or "partition" in text_value or "mvp_rec" in text_value:
+        return "Silver"
+    if "iceberg" in text_value or "create_table" in text_value or "padron" in text_value:
+        return "Bronze"
+    if "mock" in text_value or "raw" in text_value or "datos_idc" in text_value or "testcase" in text_value:
+        return "RAW"
+    return "Support"
+
+
+def script_status_catalog(jobs: list[dict[str, Any]]) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for job in jobs:
+        detail = str(job.get("detail") or "")
+        script_uris = SCRIPT_URI_RE.findall(detail)
+        if not script_uris:
+            script_uris = [""]
+        for uri in script_uris:
+            name = script_name_from_uri(uri) if uri else str(job.get("name") or "unnamed flow job")
+            key = (str(job.get("source") or ""), name, str(job.get("started_at") or ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            layer = script_layer(name, detail)
+            started = iso_from_millis(job.get("started_at"))
+            finished = iso_from_millis(job.get("finished_at"))
+            parts = [
+                f"layer={layer}",
+                f"job={job.get('name') or 'unnamed'}",
+            ]
+            if started:
+                parts.append(f"started={started}")
+            if finished:
+                parts.append(f"finished={finished}")
+            if uri:
+                parts.append(f"path={uri}")
+            elif detail:
+                parts.append(f"detail={detail[:220]}")
+            rows.append(
+                {
+                    "source": str(job.get("source") or "Unknown"),
+                    "name": name,
+                    "status": str(job.get("status") or "unknown"),
+                    "type": str(job.get("type") or "Flow script"),
+                    "layer": layer,
+                    "detail": "; ".join(parts),
+                }
+            )
+    return rows[:120]
+
+
 def extract_jobs(inventory: dict[str, Any]) -> list[dict[str, Any]]:
     jobs: list[dict[str, Any]] = []
     dataarts_jobs = compact_list(source_payload(inventory, "dataarts_jobs"), ("jobs",))
@@ -352,69 +426,6 @@ def extract_jobs(inventory: dict[str, Any]) -> list[dict[str, Any]]:
 def active_resources(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     inactive = {"terminated", "deleted", "deleting", "failed", "error", "unavailable"}
     return [row for row in rows if str(row.get("status", "")).lower() not in inactive]
-
-
-def script_chain() -> list[dict[str, str]]:
-    refresh_state = load_json(EXPORTS / "sat_live_refresh_state.json")
-    refresh_running = (EXPORTS / "sat_live_refresh.pid").exists()
-    refresh_status = "running" if refresh_running else "success" if refresh_state.get("ok") else "ready"
-    refresh_detail = "Continuously refreshes live cloud inventory, rebuilds status.json, and uploads it to OBS."
-    if refresh_state.get("finished_at"):
-        refresh_detail = (
-            f"Last refresh finished at {refresh_state.get('finished_at')} UTC; "
-            f"duration {int(refresh_state.get('duration_ms') or 0) / 1000:.1f}s."
-        )
-    return [
-        {
-            "source": "Local",
-            "name": "Load-HuaweiCredentialProfile.ps1",
-            "status": "ready",
-            "type": "Credential bootstrap",
-            "detail": "Loads the encrypted local AK/SK profile into the current PowerShell process.",
-        },
-        {
-            "source": "Local",
-            "name": "huawei_inventory.py",
-            "status": "ready",
-            "type": "Resource and job discovery",
-            "detail": "Collects MRS, CDM, RDS, DataArts job metadata, ECS, VPC/EIP, and optional OBS samples.",
-        },
-        {
-            "source": "Local",
-            "name": "analyze_bigdata_assets.py",
-            "status": "ready",
-            "type": "Asset aggregation",
-            "detail": "Builds monitor/data/status.json and maps the actual SAT flow as DataArts/CDM to MRS to RDS.",
-        },
-        {
-            "source": "Local",
-            "name": "build_static_site.py",
-            "status": "ready",
-            "type": "Website packaging",
-            "detail": "Packages the cadence-aware dark monitoring site from monitor/ into dist/.",
-        },
-        {
-            "source": "Local",
-            "name": "deploy_obs_static_site.py",
-            "status": "ready",
-            "type": "Static asset publication",
-            "detail": "Uploads the generated monitor site and status payload to OBS for the HTTPS ECS proxy.",
-        },
-        {
-            "source": "Local",
-            "name": "refresh_live_status.py",
-            "status": refresh_status,
-            "type": "Live status refresher",
-            "detail": refresh_detail,
-        },
-        {
-            "source": "Local",
-            "name": "Start-SatRealtimeStatusRefresh.ps1",
-            "status": "running" if refresh_running else "ready",
-            "type": "Background refresh launcher",
-            "detail": "Loads the encrypted local AK/SK profile and starts the live refresh loop with a 20-second cadence.",
-        },
-    ]
 
 
 def build_stage(key: str, label: str, resources: list[dict[str, Any]], jobs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -626,7 +637,7 @@ def assess(inventory: dict[str, Any]) -> dict[str, Any]:
         "services": services,
         "catalog": catalog,
         "jobs": jobs[:80],
-        "script_chain": script_chain(),
+        "script_chain": script_status_catalog(jobs),
         "risks": risks,
         "recommendations": recommendations,
         "source_inventory_generated_at": inventory.get("generated_at"),
