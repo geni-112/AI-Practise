@@ -1,0 +1,98 @@
+:root {
+  color-scheme: light;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+    "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --color-bg: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f4f5f6;
+  --color-surface-active: #eceeef;
+  --color-ink: #1f272d;
+  --color-muted: #5f6b73;
+  --color-faint: #7e888f;
+  --color-line: #d7dadd;
+  --color-line-strong: #b9bec3;
+  --color-accent: #ff3621;
+  --color-accent-hover: #df2c1b;
+  --color-accent-soft: #fff0ed;
+  --color-success: #217a4b;
+  --color-success-soft: #edf8f1;
+  --color-warning: #946300;
+  --color-warning-soft: #fff7df;
+  --color-danger: #c22b22;
+  --color-danger-soft: #fff0ee;
+  --color-focus: #356fbe;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-title: 1.5rem;
+
+  --line-height-tight: 1.3;
+  --line-height-body: 1.55;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --control-height: 36px;
+  --touch-target: 44px;
+  --topbar-height: 52px;
+  --results-sidebar-width: 210px;
+  --compose-max-width: 760px;
+  --content-max-width: 1320px;
+
+  --shadow-float: 0 8px 24px rgb(31 39 45 / 10%);
+  --focus-ring: 0 0 0 3px rgb(53 111 190 / 25%);
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-bg);
+  letter-spacing: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+[data-status="pending"],
+[data-status="skipped"] {
+  color: var(--color-muted);
+}
+
+[data-status="running"] {
+  color: var(--color-focus);
+}
+
+[data-status="success"] {
+  color: var(--color-success);
+}
+
+[data-status="review"],
+[data-status="blocked"] {
+  color: var(--color-warning);
+}
+
+[data-status="failed"] {
+  color: var(--color-danger);
+}
+
+@media (max-width: 700px) {
+  :root {
+    --results-sidebar-width: 100%;
+    --topbar-height: 48px;
+  }
+}
