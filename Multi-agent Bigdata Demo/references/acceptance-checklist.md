@@ -106,6 +106,19 @@ Confirm disabled controls explain their unmet dependency and do not trigger hidd
 - [ ] Status meaning is not communicated by color alone.
 - [ ] No unexpected browser console errors occur during the primary flow.
 
+## Bilingual Experience
+
+- [ ] The language control is visible and usable on desktop and at a mobile width near 390px.
+- [ ] The selected locale persists across reloads and is included in task, ChatBI, retry, and follow-up requests.
+- [ ] Switching language preserves the current run, selected step, open result category, and user-authored prompt.
+- [ ] Static chrome, dynamic progress, validation errors, result metadata, chart labels, table headers, tooltips, and accessibility labels use the selected language.
+- [ ] User prompts, generated code, SQL, physical field names, paths, resource IDs, and immutable evidence are not translated.
+- [ ] Equivalent Chinese and English ChatBI questions produce the same canonical contract and metric result.
+- [ ] Ranking, comparison, grouping, top-N, and follow-up queries are tested in both languages.
+- [ ] Every progress step and all result categories are inspected for unexpected text from the other language.
+- [ ] Both language directions work without a full-page state reset or horizontal overflow.
+- [ ] Public deployment checks use a cache-busted build and confirm that the currently served assets match the tested version.
+
 ## Deployment And Security
 
 - [ ] Application archives contain no credentials or customer data.

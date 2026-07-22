@@ -22,6 +22,7 @@ Use a structure similar to:
 ```json
 {
   "intent": "query",
+  "locale": "en",
   "year": "2025",
   "region": "Yucatan",
   "regime": "",
@@ -37,6 +38,17 @@ Use a structure similar to:
 ```
 
 Accept only catalog identifiers. Canonicalize safe aliases before validation. Reject unknown dimensions, metrics, values, sort keys, and excessive limits.
+
+## Locale And Semantic Parity
+
+Treat `locale` as a validated request field such as `zh` or `en`, not as an instruction embedded in free text. The same analytical request in any supported language must compile to the same canonical dimensions, metrics, filters, ordering, and limit.
+
+- Keep canonical catalog identifiers language-neutral.
+- Store localized labels and aliases separately from physical columns and metric formulas.
+- Return localized answer text, KPI labels, chart titles, table headers, source descriptions, clarification messages, and suggestions from the backend.
+- Preserve validated contract history across a language switch; do not reuse unrestricted translated conversation text as execution context.
+- Add deterministic aliases for frequent natural expressions in every supported language, then use MaaS only for unfamiliar phrasing.
+- Test intent variants such as ranking, comparison, grouping, top-N, and follow-up filters in each language. A translated phrase must not silently change the grouping or metric.
 
 ## Semantic Catalog
 
