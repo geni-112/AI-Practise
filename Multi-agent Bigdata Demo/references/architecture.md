@@ -34,6 +34,13 @@ Recommended agent roles:
 | Security Agent | Check identifiers, access, logging, and release policy | `security_review.md` |
 | Lineage Agent | Record source-to-output field and job relationships | `lineage_manifest.json` |
 
+These are responsibility boundaries, not a requirement for nine independent model calls. A production implementation should mix model-assisted nodes with deterministic adapters and validators. Do not present AI self-review as independent assurance.
+
+Support two first-class branches after intent routing:
+
+1. ChatBI query: semantic parser -> validated query contract -> catalog validation -> parameterized read-only query -> published result set.
+2. Data development: data context -> business contract -> artifact generation -> deterministic validation -> human review -> immutable release -> controlled cloud execution.
+
 ### 3. Governance Plane
 
 Treat the business contract, artifact reviews, quality gates, privacy policy, checksums, and release state as first-class data. Keep governance independent from model prose so it can be validated deterministically.
@@ -57,7 +64,14 @@ Store run manifests, model-path metadata, approvals, checksums, cloud job identi
 ```mermaid
 flowchart TD
     U["Business user prompt"] --> API["FastAPI experience API"]
-    API --> LG["LangGraph control plane"]
+    API --> ROUTE{"Query or development?"}
+    ROUTE -->|ChatBI| SEM["Local rules or MaaS semantic parser"]
+    SEM --> QC["Validated query contract"]
+    QC --> CATALOG["Metric and dimension catalog"]
+    CATALOG --> SAFE["Parameterized read-only compiler"]
+    SAFE --> SERVE["Published Gold or governed DWS view"]
+    SERVE --> RESULT["KPI, table, chart, and query evidence"]
+    ROUTE -->|Development| LG["LangGraph control plane"]
     LG --> CTX["Context preflight"]
     CTX --> BC["Business contract agent"]
     BC --> AUDIT["Contract audit"]
@@ -75,7 +89,7 @@ flowchart TD
     RELEASE --> PROBE["Read-only cloud probe"]
     PROBE --> EXEC["DataArts and MRS execution"]
     EXEC --> OBS["OBS Gold and evidence"]
-    OBS --> RESULT["Result API and workbench"]
+    OBS --> WORKBENCH["Result API and detailed workbench"]
 ```
 
 ## Runtime States
@@ -109,6 +123,8 @@ Keep four kinds of information separate:
 4. Evidence: metadata and aggregated outcomes safe for the workbench.
 
 Do not place raw direct identifiers in model context, logs, browser responses, or generated artifacts. Prefer field names, types, distributions, hashed examples, and policy labels.
+
+For ChatBI, send the model only the semantic catalog, privacy constraints, and previously validated query contracts. Do not send Gold rows merely to interpret a question.
 
 ## Deployment Topologies
 

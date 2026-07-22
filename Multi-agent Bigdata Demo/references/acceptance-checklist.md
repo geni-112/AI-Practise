@@ -36,6 +36,19 @@ Use this checklist before calling a local build, cloud deployment, or customer h
 - [ ] The UI never labels fallback content as MaaS-generated.
 - [ ] Raw direct identifiers are absent from MaaS requests, logs, and responses.
 
+## ChatBI Semantic Query
+
+- [ ] Free-form paraphrases work without requiring a predefined prompt.
+- [ ] Known expressions can use a deterministic fast path.
+- [ ] Unfamiliar expressions use MaaS only when runtime evidence confirms the call.
+- [ ] The model receives a semantic catalog and validated history, not raw Gold rows.
+- [ ] Dimensions, metrics, filters, and limits are validated against the catalog.
+- [ ] User values remain bound parameters and never enter SQL text directly.
+- [ ] Compiled queries are read-only and expose their catalog version in evidence.
+- [ ] Follow-up questions use only previously validated query contracts.
+- [ ] Unknown values and model failures return a clarification instead of an execution error.
+- [ ] Query results expose dataset, parser mode, filters, grouping, source, and run ID.
+
 ## Review And Safety Gates
 
 - [ ] PySpark approval works and records reviewer, timestamp, hash, and comment.
@@ -114,6 +127,7 @@ Confirm disabled controls explain their unmet dependency and do not trigger hidd
 - [ ] Packaged schemas and templates parse successfully.
 - [ ] Repository destination and license are confirmed with the user.
 - [ ] The user reviews the complete local package before any Git commit or upload.
+- [ ] The public product name and examples use generic Tax branding; legacy physical resource IDs remain only in protected operational evidence.
 
 ## Stop Conditions
 

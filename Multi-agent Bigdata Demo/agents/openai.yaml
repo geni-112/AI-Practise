@@ -1,4 +1,4 @@
 interface:
-  display_name: "Huawei Agentic Data Workbench"
-  short_description: "Build governed MaaS data workbenches on Huawei Cloud"
-  default_prompt: "Use $build-huawei-agentic-data-workbench to design or implement a governed chat-to-data workbench on Huawei Cloud."
+  display_name: "Agentic Tax Bigdata Workbench"
+  short_description: "Build governed ChatBI and data agents on Huawei Cloud"
+  default_prompt: "Use $build-huawei-agentic-data-workbench to design or implement a governed ChatBI and multi-agent data workbench on Huawei Cloud."
