@@ -16,7 +16,7 @@ Treat the workbench as a Notebook replacement or augmentation at the development
 1. Inspect the existing codebase, cloud inventory, data classifications, network boundaries, and deployment constraints.
 2. Define or validate the business contract before generating executable code.
 3. Separate the experience, agent-control, governance, execution, and evidence planes.
-4. Implement the three-stage user experience: chat composition, live progress, and detailed results.
+4. Implement the three-stage user experience: chat composition, live progress, and detailed results. When more than one language is required, carry an explicit locale through the complete request, progress, result, and follow-up flow.
 5. Generate PySpark, SQL, DAG, quality, security, and lineage artifacts as individually reviewable files.
 6. Run deterministic local checks and reconcile metrics before requesting cloud execution.
 7. Keep production execution blocked until required artifacts are approved and a release package is frozen.
@@ -37,6 +37,8 @@ For direct analytical questions, route the prompt through a separate ChatBI path
 - Send compact schemas, metadata, and policy context to MaaS; do not send raw direct identifiers.
 - Preserve a deterministic local fallback when MaaS is unavailable, and record which path actually ran.
 - Keep templates optional and hidden behind advanced controls so the initial screen remains a chat surface.
+- Treat locale as an end-to-end contract. Localize product chrome in the client and business-semantic responses in the backend; never present a partially translated run as a supported language.
+- Preserve the active task, selected result section, and validated ChatBI history when the user changes language.
 - Return a clarification or recoverable error state when intent cannot be mapped safely; preserve the prompt and expose retry controls.
 - Treat synthetic data as validation context, never as production truth.
 - Persist every run under a unique identifier so prompts, contracts, code, approvals, and results can be diffed.
@@ -50,6 +52,7 @@ For direct analytical questions, route the prompt through a separate ChatBI path
 - Read [references/agent-workflow.md](references/agent-workflow.md) when implementing LangGraph nodes, prompts, artifact contracts, reviews, or replay.
 - Read [references/chatbi-semantic-query.md](references/chatbi-semantic-query.md) when implementing natural-language result queries, semantic catalogs, safe SQL compilation, follow-up context, or query evidence.
 - Read [references/ui-design.md](references/ui-design.md) when implementing or reviewing the frontend experience.
+- Read [references/bilingual-interface.md](references/bilingual-interface.md) when adding Chinese/English switching, localizing dynamic progress or results, or testing semantic parity across languages.
 - Read [references/security-operations.md](references/security-operations.md) when handling credentials, MaaS connectivity, cloud probes, deployment, or operations.
 - Read [references/acceptance-checklist.md](references/acceptance-checklist.md) before declaring a build, deployment, or handoff complete.
 

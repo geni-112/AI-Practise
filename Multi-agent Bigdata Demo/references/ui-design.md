@@ -96,6 +96,17 @@ Use accordions inside each category so the user controls detail. Avoid putting c
 - Do not imply MaaS was used based only on configuration; read runtime evidence.
 - Do not imply cloud execution occurred based on a successful probe.
 
+## Language Switching
+
+- Put a compact `中文 / EN` segmented control in the global header or another stable location; do not duplicate the whole application into separate language pages.
+- Persist the selected locale and send it with every task, ChatBI, retry, and follow-up request.
+- Keep the active run, selected workflow step, open result category, and typed prompt when the locale changes.
+- Localize visible status, errors, empty states, tooltips, chart labels, table headers, accessibility labels, and streaming progress events.
+- Do not translate user-authored prompts, code, SQL, physical field names, paths, job IDs, resource IDs, or immutable evidence.
+- Size controls for the longest supported label and verify both languages at desktop and mobile widths.
+
+Use the client only for product chrome and deterministic display labels. Ask the backend for localized business answers, summaries, semantic labels, and suggested follow-up questions so meaning stays consistent with the validated query contract.
+
 ## Status Semantics
 
 Always pair color with text or an icon.
