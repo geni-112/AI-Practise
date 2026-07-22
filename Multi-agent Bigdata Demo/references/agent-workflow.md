@@ -24,6 +24,17 @@ Represent each run as durable state, not a single model response. Every stage mu
 
 Perform context preflight before interpreting the prompt. The user should not need to know bucket prefixes, table schemas, privacy labels, or available compute when the platform can discover them safely.
 
+## Hybrid Agent Rule
+
+Classify every workflow node as one of:
+
+- `model_assisted`: language interpretation, contract draft, code draft, explanation;
+- `deterministic`: schema validation, allowlists, safe SQL compilation, syntax, reconciliation, policy, hashing;
+- `human_decision`: artifact approval, release approval, paid-resource authorization;
+- `external_evidence`: Huawei Cloud API state, job status, row counts, logs, and object metadata.
+
+Record the class in run evidence. Never describe a deterministic node as MaaS-generated, and never accept a model's statement that its own output is safe as proof.
+
 ## Business Contract
 
 Make the contract the semantic center of the system. Validate it against `assets/business-contract.schema.json` and require, at minimum:
@@ -168,3 +179,5 @@ Maintain evaluation cases that test:
 - Gold result acceptance.
 
 Use prompt templates as optional accelerators and evaluation fixtures. Keep free-form chat as the primary user experience.
+
+Evaluate ChatBI separately with paraphrases, follow-up questions, unknown catalog values, prompt injection attempts, model timeout, local fallback, parameter isolation, and read-only enforcement. See `chatbi-semantic-query.md`.

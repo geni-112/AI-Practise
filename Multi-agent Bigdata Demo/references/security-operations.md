@@ -31,6 +31,10 @@ For a systemd-hosted POC, prefer an external environment file referenced by the 
 - Separate local synthetic samples from cloud production paths.
 - Scan browser/API responses so direct identifiers cannot appear in previews.
 - Keep source-level authorization checks in the execution plane; a prompt cannot grant access.
+- Treat model instructions embedded in user prompts, schema descriptions, and catalog labels as untrusted data.
+- Validate model-produced query intent against a versioned semantic catalog before compiling any query.
+- Keep user-provided values in bound parameters; never interpolate them into SQL text.
+- Reject non-read-only operations and identifiers outside the catalog even when the model requests them.
 
 ## Authorization Roles
 
@@ -113,6 +117,8 @@ Avoid logging full prompts or generated code by default when they can contain se
 - Require a new release hash when code or bindings change.
 - Keep the previous deployed application release for rollback.
 - Never roll back data blindly; use versioned outputs and documented recovery procedures.
+- Return a safe clarification when semantic parsing fails; do not expose provider errors, stack traces, prompts, or credentials to the browser.
+- Preserve the original user prompt and offer retry or return-to-input actions after workflow failures.
 
 ## Cost And Lifecycle Controls
 

@@ -1,4 +1,4 @@
-# SAT Business Prompt Template
+# Tax Business Prompt Template
 
 Use this template only when guided intake helps the user. Keep free-form chat available.
 
@@ -48,10 +48,10 @@ Acceptance criteria:
 [measurable result checks and expected evidence]
 ```
 
-## Synthetic SAT Example
+## Synthetic Tax Example
 
 ```text
-Build a governed SAT taxpayer annual analytical base for tax year 2025.
+Build a governed Tax taxpayer annual analytical base for tax year 2025.
 
 Use the synthetic source at local://landing/taxpayer_registry.csv for local validation. Restrict the demonstration to CDMX, Jalisco, Nuevo Leon, Puebla, and Yucatan.
 
