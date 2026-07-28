@@ -1,0 +1,8 @@
+huaweicloudsdkcore>=3.1.203
+huaweicloudsdkvpc>=3.1.203
+huaweicloudsdkmrs>=3.1.203
+huaweicloudsdkdws>=3.1.203
+huaweicloudsdkkms>=3.1.203
+huaweicloudsdkdataartsstudio>=3.1.203
+huaweicloudsdkobs>=3.1.203
+esdk-obs-python>=3.26.2

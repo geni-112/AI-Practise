@@ -1,0 +1,107 @@
+contract_version: "0.1"
+name: sat-agentic-cloud-execution-contract
+default_region: la-south-2
+execution_mode: operator_approved_only
+cloud_execution: blocked
+
+required_local_inputs:
+  release_manifest: generated/${RUN_ID}/release/release_manifest.json
+  dataarts_import_package: generated/${RUN_ID}/release/dataarts_import_package.json
+  resolved_dataarts_import_package: generated/${RUN_ID}/release/resolved_dataarts_import_package.json
+  final_import_manifest: generated/${RUN_ID}/release/final_import_manifest.json
+  pre_execution_readiness: generated/${RUN_ID}/pre_execution/pre_execution_readiness.json
+  pre_execution_report: generated/${RUN_ID}/pre_execution/pre_execution_report.md
+
+huawei_cloud_bindings:
+  region:
+    env: HUAWEICLOUD_REGION
+    default: la-south-2
+  project_id:
+    env: HUAWEICLOUD_PROJECT_ID
+    required: true
+  vpc_id:
+    placeholder: ${VPC_ID}
+    required: true
+  private_subnet_id:
+    placeholder: ${PRIVATE_SUBNET_ID}
+    required: true
+  kms_key_id:
+    placeholder: ${KMS_KEY_ID}
+    required: true
+  mrs_cluster_id:
+    placeholder: ${MRS_CLUSTER_ID}
+    required: true
+  dataarts_workspace_id:
+    placeholder: ${DATAARTS_WORKSPACE_ID}
+    required: true
+  dws_connection_name:
+    placeholder: ${DWS_CONNECTION_NAME}
+    required: true
+
+obs_layers:
+  raw: obs://${OBS_BUCKET}/raw/sat/
+  silver: obs://${OBS_BUCKET}/silver/sat/
+  gold: obs://${OBS_BUCKET}/gold/sat/
+  release: obs://${OBS_BUCKET}/release/${RUN_ID}/
+  audit: obs://${OBS_BUCKET}/audit/${RUN_ID}/
+
+execution_gates:
+  - id: maas_reliability_judge
+    required_status: passed
+  - id: business_contract_freeze
+    required_status: passed
+  - id: execution_sandbox
+    required_status: passed
+  - id: cloud_import_dry_run
+    required_status: passed
+  - id: operator_cloud_approval
+    required_status: approved
+    source: external_manual_approval
+
+artifact_destinations:
+  pyspark:
+    source: generated/${RUN_ID}/artifacts/mrs_transform.py
+    target_service: MRS Spark
+    target_stage: DataArts job node
+  sql:
+    source: generated/${RUN_ID}/artifacts/dws_serving.sql
+    target_service: GaussDB(DWS)
+    target_stage: serving schema review
+  dag:
+    source: generated/${RUN_ID}/artifacts/dataarts_dag.yaml
+    target_service: DataArts Factory
+    target_stage: import draft
+  quality_rules:
+    target_service: DataArts quality gate or local audit validation
+  security_review:
+    target_service: IAM/KMS/DataArts review evidence
+  lineage:
+    target_service: OBS audit and DataArts metadata
+
+observability:
+  metrics:
+    - input_rows
+    - output_rows
+    - rejected_rows
+    - obs_bytes_written
+    - mrs_application_id
+    - dws_loaded_rows
+    - stage_duration_seconds
+  evidence_destination: obs://${OBS_BUCKET}/audit/${RUN_ID}/
+
+secret_policy:
+  prohibited_in_files:
+    - access keys
+    - secret keys
+    - database passwords
+    - private keys
+  allowed_secret_sources:
+    - environment variables
+    - Huawei Cloud secret services
+    - approved CI/CD secret store
+
+rollback:
+  disable_dataarts_schedule: true
+  preserve_failed_outputs: true
+  restore_previous_dws_serving_pointer: true
+  require_incident_note: true

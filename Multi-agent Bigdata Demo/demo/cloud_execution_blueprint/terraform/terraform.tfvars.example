@@ -1,0 +1,15 @@
+run_id          = "front-11ed357b8f"
+project_root    = "../.."
+region          = "la-south-2"
+environment     = "poc"
+name_prefix     = "sat-agentic"
+obs_bucket_name = "replace-with-approved-obs-bucket"
+
+project_id            = "replace-with-project-id"
+vpc_id                = "replace-with-vpc-id"
+private_subnet_id     = "replace-with-private-subnet-id"
+security_group_ids    = ["replace-with-security-group-id"]
+kms_key_id            = "replace-with-kms-key-id"
+mrs_cluster_id        = "replace-with-mrs-cluster-id"
+dataarts_workspace_id = "replace-with-dataarts-workspace-id"
+dws_connection_name   = "replace-with-dws-connection-name"

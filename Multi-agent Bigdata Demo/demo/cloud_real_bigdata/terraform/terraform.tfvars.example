@@ -1,0 +1,33 @@
+region          = "la-south-2"
+project_id      = ""
+environment     = "poc"
+name_prefix     = "sat-agentic"
+obs_bucket_name = "sat-agentic-change-me"
+demo_owner      = "change-me"
+demo_purpose    = "sat-agentic-customer-demo"
+demo_expires_at = "2026-07-10T18:00:00Z"
+admin_cidr      = "203.0.113.10/32"
+web_cidr        = "0.0.0.0/0"
+
+# Existing Huawei Cloud key pair. Do not put a private key here.
+node_key_pair_name = "change-me"
+
+# Secrets must come from environment variables:
+# $env:TF_VAR_mrs_manager_admin_password = "<secret>"
+# $env:TF_VAR_dws_admin_password = "<secret>"
+
+enable_mrs       = true
+enable_dws       = false
+enable_dataarts  = false
+enable_dataarts_factory_assets = false
+existing_dataarts_workspace_id = ""
+enable_web_ecs   = false
+submit_smoke_job = false
+run_id           = "manual"
+
+# Override these if the selected region does not offer the defaults.
+mrs_version       = "MRS 3.5.0-LTS"
+mrs_master_flavor = "c6.2xlarge.4.linux.bigdata"
+mrs_core_flavor   = "c6.2xlarge.4.linux.bigdata"
+dws_version       = "8.2.1"
+dws_node_type     = "dws.m3.xlarge"
