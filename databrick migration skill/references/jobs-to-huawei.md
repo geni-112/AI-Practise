@@ -103,7 +103,8 @@ For failures, prefer raising a custom exception or `sys.exit(1)` so MRS/Yarn sta
 ## MRS PySpark Packaging Notes
 
 - Convert notebook chains into Python packages and a launcher script.
-- Replace Databricks-only dependency imports with local modules bundled through `--py-files` or packaged wheels.
+- Replace Databricks-only dependency imports such as `from sat_pypi_packages.mvp.padron_base import *` with explicit local-module imports, for example `from padron_base.main import run_padron_base`. Bundle those modules through `--py-files` or a packaged wheel.
+- Avoid wildcard imports during the rewrite. Explicit imports expose the actual runtime dependency and make missing MRS packages fail during packaging or smoke tests instead of deep inside the job.
 - Keep helper functions such as source-table parsing and output-path updates in shared utility modules.
 - For jobs needing custom Python packages, use `--archives hdfs:///tmp/python.zip#<alias>` and set `spark.pyspark.python`.
 - See `references/mrs-pyspark-iceberg-runbook.md` for complete spark-sql and spark-submit command patterns.

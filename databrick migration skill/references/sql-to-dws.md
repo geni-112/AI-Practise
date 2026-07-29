@@ -115,9 +115,75 @@ CASE WHEN EXISTS (
 
 Preferred migration direction:
 
-1. Build a staged join between the outer table and `TEMP_PADRON_ARSE_RESICO`.
-2. Evaluate the non-equality date predicates in the join or filter stage.
-3. Aggregate by the original row key and compute the marker with `MAX(CASE WHEN ... THEN 1 ELSE 0 END)`.
+1. Add or identify a key that uniquely represents each original outer row.
+2. Build a staged `LEFT JOIN` between the outer table and
+   `TEMP_PADRON_ARSE_RESICO`, keeping the equality and date-range predicates in
+   the `ON` clause so unmatched outer rows are preserved.
+3. Aggregate by the original outer-row key and compute the marker with
+   `MAX(CASE WHEN B.<non_null_key> IS NOT NULL THEN 1 ELSE 0 END)`.
+4. Join the marker back to the outer projection, or explicitly group by every
+   selected outer column.
+
+Example rewrite:
+
+```sql
+WITH PADRON_CON_ID AS (
+  SELECT
+    p.*,
+    ROW_NUMBER() OVER (
+      ORDER BY C_IDC_RFCEEOG1, C_IDC_ICDOENN1, Periodo_inicio, Perido_fin
+    ) AS outer_row_id
+  FROM padron_completo p
+),
+RESICO_MARCA AS (
+  SELECT
+    a.outer_row_id,
+    MAX(
+      CASE WHEN b.C_IDC_ICDOENN1 IS NOT NULL THEN 1 ELSE 0 END
+    ) AS MARACA_REGIMEN_RESICO
+  FROM PADRON_CON_ID a
+  LEFT JOIN TEMP_PADRON_ARSE_RESICO b
+    ON a.C_IDC_ICDOENN1 = b.C_IDC_ICDOENN1
+   AND b.Fecha_Alta <= DATE_ADD(a.Perido_fin, -1)
+   AND b.fecha_efectiva_baja >= a.Periodo_inicio
+  GROUP BY a.outer_row_id
+)
+SELECT
+  a.C_IDC_RFCEEOG1,
+  a.C_IDC_ICDOENN1,
+  a.Periodo_inicio,
+  a.Perido_fin,
+  m.MARACA_REGIMEN_RESICO
+FROM PADRON_CON_ID a
+LEFT JOIN RESICO_MARCA m
+  ON a.outer_row_id = m.outer_row_id;
+```
+
+Use a stable source primary key instead of the example `ROW_NUMBER()` whenever
+one exists. The rewrite avoids Catalyst's `LeftExistenceJoin` path for complex
+non-equality correlated predicates and prevents multiple RESICO matches from
+duplicating outer rows.
+
+For the other observed Spark SQL incompatibilities:
+
+```sql
+-- SQL Server-style source
+DATEADD(month, 1, Periodo_inicio)
+
+-- Spark SQL
+add_months(Periodo_inicio, 1)
+```
+
+```sql
+-- Unsupported BigQuery/Snowflake-style shorthand
+SELECT * EXCEPT(Periodo_inicio, Perido_fin, C_IDC_ICDOENN1)
+
+-- Spark SQL: enumerate only the columns that must survive
+SELECT C_IDC_RFCEEOG1, EJERCICIO, PERIODO, MARACA_REGIMEN_RESICO
+```
+
+Derive the explicit projection from the input schema and downstream consumers;
+do not guess the omitted or retained columns.
 
 ## DDL Guidance
 

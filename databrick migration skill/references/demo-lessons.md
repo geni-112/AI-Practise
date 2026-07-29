@@ -108,3 +108,18 @@ Huawei replacement:
 
 Validation:
 - record_update.py is being used for this update so lesson append, quick_validate.py, and GitHub sync run as one chain.
+
+
+## 2026-07-29 - Delta/Iceberg and Spark SQL migration hardening
+
+Source pattern:
+- Databricks PySpark used Delta format declarations, Delta overwriteSchema, DBFS or mounted storage paths, source-config format fields, a Databricks-only `sat_pypi_packages` import, and Spark SQL containing a correlated EXISTS with equality plus date-range predicates, SQL Server DATEADD, and `SELECT * EXCEPT`.
+
+Issue:
+- Mechanical token replacement is unsafe: Iceberg schema overwrite has no one-to-one `overwriteSchema` option, Delta directories are not Iceberg table roots, Databricks packages are unavailable on MRS, and Catalyst can fail while rewriting the complex correlated EXISTS to `LeftExistenceJoin` with a missing-attribute error such as `Couldn't find Fecha_Alta`.
+
+Huawei replacement:
+- Use catalog-backed Iceberg reads/writes, explicit Iceberg schema evolution and intentional overwrite semantics, HDFS/OBS Iceberg table locations, `iceberg` in all source configurations, and explicit local imports packaged with the MRS job. Rewrite the EXISTS as `LEFT JOIN` plus aggregation at the unique outer-row grain, use `add_months` for month arithmetic, and explicitly enumerate projected columns.
+
+Validation:
+- Rules were consolidated into delta-to-iceberg.md, jobs-to-huawei.md, and sql-to-dws.md with executable-shape examples; skill validation and GitHub mirror diff are run before publishing.

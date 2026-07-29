@@ -26,6 +26,51 @@ Iceberg rewrite:
 df.writeTo("iceberg_catalog.demo.orders_bronze").append()
 ```
 
+Do not treat the format token as the only required change. The target must be a
+real Iceberg table registered in the configured catalog, or a valid Iceberg
+table root containing Iceberg metadata.
+
+Delta overwrite with implicit schema replacement:
+
+```python
+(
+    df.write.format("delta")
+    .mode("overwrite")
+    .option("overwriteSchema", "true")
+    .save(delta_path)
+)
+```
+
+Iceberg migration direction:
+
+```python
+# Evolve the table schema explicitly first, for example:
+spark.sql("""
+  ALTER TABLE iceberg_catalog.demo.orders_bronze
+  ADD COLUMN source_system STRING
+""")
+
+# Then choose overwrite semantics deliberately.
+df.writeTo("iceberg_catalog.demo.orders_bronze").overwritePartitions()
+```
+
+There is no one-to-one Iceberg equivalent for Delta's
+`.option("overwriteSchema", "true")`. Choose the replacement from the intended
+semantics:
+
+- Schema-only evolution: use explicit `ALTER TABLE` statements supported by the
+  deployed MRS Spark/Iceberg version.
+- Dynamic partition replacement: use DataFrameWriterV2
+  `.overwritePartitions()`.
+- Full-table replacement: use a controlled `CREATE OR REPLACE TABLE ... USING
+  iceberg AS SELECT ...` only when supported, or recreate the table explicitly
+  during a safe maintenance window.
+- Row-level replacement: use `MERGE INTO` when the deployed Iceberg version
+  supports it, otherwise use the documented CDC fallback.
+
+Never silently keep `overwriteSchema`; an ignored or unsupported option can
+leave the old schema in place or change overwrite behavior.
+
 Delta table creation:
 
 ```sql
@@ -74,11 +119,11 @@ Check the MRS Spark/Iceberg version. If `MERGE INTO` is unavailable or unstable,
 
 Use this checklist when converting Databricks PySpark notebooks/scripts into MRS Spark + Iceberg scripts:
 
-- Replace `df.write.format("delta")` with Iceberg writes. Prefer table writes such as `writeTo(...).append()` or `saveAsTable(...)` over path-only writes for migrated demos.
-- Replace `spark.read.format("delta")` with Iceberg table reads. Prefer `spark.table("db.table")` or `spark.read.format("iceberg").load("db.table")` when the source config can hold table names.
+- Replace `df.write.format("delta")` with Iceberg writes. Prefer table writes such as `writeTo(...).append()` or `saveAsTable(...)` over path-only writes for migrated demos. A literal `.format("iceberg")` replacement is acceptable only when the catalog/table target is already valid.
+- Replace `spark.read.format("delta")` with Iceberg table reads. Prefer `spark.table("catalog.db.table")` or `spark.read.format("iceberg").load("catalog.db.table")` when the source config can hold table names.
 - Remove or rewrite Delta-only options such as `.option("overwriteSchema", "true")`. Use explicit Iceberg DDL evolution, `ALTER TABLE ADD COLUMN`, or controlled overwrite behavior instead.
-- Update source configuration files so format declarations change from `delta` to `iceberg`.
-- Convert Databricks storage paths such as `dbfs:/mnt/...` or mounted paths into the target table namespace or HDFS/OBS path used by the MRS demo.
+- Update every source/data-source configuration file so format declarations change from `delta` to `iceberg`; inspect CSV, JSON, YAML, properties files, and Python dictionaries rather than changing code only.
+- Convert Databricks storage paths such as `dbfs:/mnt/...`, `/mnt/...`, or mounted paths into a catalog table identifier or the HDFS/OBS Iceberg warehouse/table location used by MRS. Do not reuse a Delta directory as if it were an Iceberg table.
 - If a source CSV/config maps table names to paths, prefer changing path columns into `database.table` names for Iceberg tables. Path-style Iceberg reads can fail with missing metadata such as `version-hint.text` when the path is not a valid Iceberg table root.
 - For generated demo data, create missing Iceberg DDL explicitly before inserts. Do not assume source Databricks notebooks contain all required `CREATE TABLE` statements.
 
