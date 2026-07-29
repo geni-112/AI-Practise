@@ -80,6 +80,20 @@ PATTERNS = {
         r"Couldn't find .* in \[",
         r"\bLeftExistenceJoin\b",
     ],
+    "python_portability": [
+        r"^\s*#\s*Databricks notebook source\b",
+        r"^\s*#\s*MAGIC\b",
+        r"^\s*#\s*COMMAND\b",
+        r"\bsat_pypi_packages\b",
+        r"^\s*from\s+[\w.]+\s+import\s+\*",
+    ],
+    "post_migration_residual": [
+        r"\boverwriteSchema\b.*\bformat\s*\(\s*['\"]iceberg['\"]\s*\)",
+        r"\bformat\s*\(\s*['\"]iceberg['\"]\s*\).*\boverwriteSchema\b",
+    ],
+    "iceberg_path_attention": [
+        r"\bformat\s*\(\s*['\"]iceberg['\"]\s*\)\s*\.save\s*\(",
+    ],
 }
 
 

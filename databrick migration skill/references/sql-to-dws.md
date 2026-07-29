@@ -100,6 +100,9 @@ Some Databricks/Snowflake migrations pass through Spark SQL on MRS before data r
 - Avoid complex correlated `EXISTS` subqueries with non-equality predicates such as `<=` and `>=` when Spark Catalyst produces missing-attribute errors. Rewrite to `LEFT JOIN` plus `GROUP BY` or a staged CTE.
 - Rewrite SQL Server-style `DATEADD(month, 1, Periodo_inicio)` to Spark `add_months(Periodo_inicio, 1)`.
 - Rewrite `SELECT * EXCEPT(...)` by explicitly listing the projected columns. Spark SQL does not support this BigQuery/Snowflake-style shorthand natively.
+- Validate every CTE header. A Spark SQL CTE must use `cte_name AS (...)`
+  unless an explicit column-alias list appears before `AS`; a source fragment
+  such as `padron_completo(` followed directly by `SELECT` is incomplete.
 
 Example risky source:
 
@@ -163,6 +166,18 @@ Use a stable source primary key instead of the example `ROW_NUMBER()` whenever
 one exists. The rewrite avoids Catalyst's `LeftExistenceJoin` path for complex
 non-equality correlated predicates and prevents multiple RESICO matches from
 duplicating outer rows.
+
+Grouping only by all projected outer columns, as in:
+
+```sql
+GROUP BY A.EJERCICIO, A.PERIODO, A.Periodo_inicio, A.Perido_fin,
+         A.C_IDC_ICDOENN1, A.C_IDC_RFCEEOG1
+```
+
+is a reasonable small-demo fallback, but it can collapse duplicate outer rows
+that the original correlated `EXISTS` would preserve. For production-equivalent
+behavior, aggregate by a stable unique outer-row key and compare pre/post row
+counts and duplicate multiplicity.
 
 For the other observed Spark SQL incompatibilities:
 

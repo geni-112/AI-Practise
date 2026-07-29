@@ -28,7 +28,9 @@ Use this reference for Databricks Jobs JSON, notebooks, `%run` dependencies, tas
 ## Rewrite Steps
 
 1. Extract a task graph from job JSON/YAML or notebooks.
-2. Convert notebooks into executable `.py` scripts. Keep markdown narrative only in docs.
+2. Convert notebooks into executable `.py` scripts. Remove Databricks export
+   markers such as `# Databricks notebook source`, `# MAGIC`, and `# COMMAND`.
+   Keep useful markdown narrative only in docs.
 3. Replace `dbutils.fs` paths with OBS paths or local temp paths.
 4. Replace widgets with `argparse` parameters.
 5. Move cluster/library setup into MRS submit configuration.
@@ -105,6 +107,9 @@ For failures, prefer raising a custom exception or `sys.exit(1)` so MRS/Yarn sta
 - Convert notebook chains into Python packages and a launcher script.
 - Replace Databricks-only dependency imports such as `from sat_pypi_packages.mvp.padron_base import *` with explicit local-module imports, for example `from padron_base.main import run_padron_base`. Bundle those modules through `--py-files` or a packaged wheel.
 - Avoid wildcard imports during the rewrite. Explicit imports expose the actual runtime dependency and make missing MRS packages fail during packaging or smoke tests instead of deep inside the job.
+- Inventory names that were previously supplied implicitly by a wildcard import.
+  Standard-library symbols such as `typing.List` and project helpers such as
+  `parsea_tablas_dict` and `carga_tablas` need their own explicit imports.
 - Keep helper functions such as source-table parsing and output-path updates in shared utility modules.
 - For jobs needing custom Python packages, use `--archives hdfs:///tmp/python.zip#<alias>` and set `spark.pyspark.python`.
 - See `references/mrs-pyspark-iceberg-runbook.md` for complete spark-sql and spark-submit command patterns.

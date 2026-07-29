@@ -118,6 +118,18 @@ Adjust the business parameters for each demo and document their meaning in the r
 
 ## Validation
 
+- Run `python -m py_compile` on converted Python modules, but treat it only as a
+  Python syntax check. It does not parse SQL stored in strings, resolve packaged
+  imports, or validate Iceberg write semantics.
+- Run an import smoke test using the same `--py-files` or wheel that MRS will
+  receive so explicit local-module imports are proven available.
+- For functions with a test mode that returns generated SQL, submit every
+  returned statement to the target Spark session with `spark.sql(...)` and
+  `explain()` or a bounded execution. This catches malformed CTE headers and
+  unsupported functions hidden inside otherwise valid Python.
+- Re-run `migration_inventory.py` on the converted output and resolve
+  post-migration residuals such as `overwriteSchema`, notebook markers, and
+  Databricks-only package names.
 - Check the Yarn task status after submit.
 - Query all core output tables, for example `mvp_rec_padron_base`, `mvp_rec_padron_base_annual`, `mvp_rec_padron_base_periodo`, `padron_base_resico`, and `padron_base_resico_marcas`.
 - Confirm source configuration files such as `Fuentes_mvp.csv` were updated to Iceberg table references.

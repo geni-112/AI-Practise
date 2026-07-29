@@ -123,3 +123,18 @@ Huawei replacement:
 
 Validation:
 - Rules were consolidated into delta-to-iceberg.md, jobs-to-huawei.md, and sql-to-dws.md with executable-shape examples; skill validation and GitHub mirror diff are run before publishing.
+
+
+## 2026-07-29 - Padron Base source vs ICEBERG code comparison
+
+Source pattern:
+- A Databricks-exported Padron Base Python module was compared with its manually converted ICEBERG version. The target added explicit imports, removed notebook markers, changed Delta format tokens, repaired a missing CTE `AS`, rewrote DATEADD, converted a correlated EXISTS to LEFT JOIN plus GROUP BY, and replaced `SELECT * EXCEPT` with an explicit projection.
+
+Issue:
+- The converted file still contained five `overwriteSchema` options on Iceberg writes and path-based `.save(...)` calls whose Iceberg table-root validity was not demonstrated. Python compilation passed both files even though it cannot validate SQL strings, runtime package availability, or Iceberg semantics. Grouping by projected columns can also collapse duplicate outer rows.
+
+Huawei replacement:
+- Treat conversion as a two-pass process: implement portability rewrites, then scan the target for residual Delta/Databricks constructs. Use explicit local imports and packaged modules, validate CTE syntax and generated SQL in Spark, choose explicit Iceberg overwrite/schema-evolution behavior, and preserve correlated-EXISTS row multiplicity with a stable outer-row key.
+
+Validation:
+- Compared the complete Git diff, scanned both files for migration patterns, and ran `python -m py_compile` successfully on both. Runtime Spark/Iceberg execution was not available, so the five residual writes remain findings rather than verified replacements.

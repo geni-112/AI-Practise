@@ -71,6 +71,21 @@ semantics:
 Never silently keep `overwriteSchema`; an ignored or unsupported option can
 leave the old schema in place or change overwrite behavior.
 
+Post-conversion residual that must fail review:
+
+```python
+df.write.mode("overwrite") \
+  .option("overwriteSchema", "true") \
+  .format("iceberg") \
+  .save(target_path)
+```
+
+Changing only `delta` to `iceberg` does not make the write complete. Remove the
+Delta-only option, decide whether the operation is append, dynamic partition
+overwrite, full replacement, or schema evolution, and verify that `target_path`
+is an actual Iceberg table root. Prefer a catalog table identifier when
+possible.
+
 Delta table creation:
 
 ```sql
@@ -158,6 +173,11 @@ FROM (
 
 ## Validation Checklist
 
+- Scan the converted tree again, including files already labeled `ICEBERG`; a
+  target filename is not evidence that Delta-only options were removed.
+- Reject any Iceberg write that still contains `overwriteSchema`.
+- For `.format("iceberg").save(path)`, confirm the path is a valid Iceberg table
+  root with metadata, not merely the old Delta directory with a renamed format.
 - Confirm row counts by table and CDC operation.
 - Confirm delete semantics by checking missing deleted keys.
 - Confirm latest-version semantics for updated keys.
