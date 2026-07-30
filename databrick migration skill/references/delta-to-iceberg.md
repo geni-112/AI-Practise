@@ -41,7 +41,7 @@ Delta overwrite with implicit schema replacement:
 )
 ```
 
-Iceberg migration direction:
+Portable Iceberg migration direction:
 
 ```python
 # Evolve the table schema explicitly first, for example:
@@ -54,9 +54,8 @@ spark.sql("""
 df.writeTo("iceberg_catalog.demo.orders_bronze").overwritePartitions()
 ```
 
-There is no one-to-one Iceberg equivalent for Delta's
-`.option("overwriteSchema", "true")`. Choose the replacement from the intended
-semantics:
+Apache Iceberg's portable/documented direction is to make overwrite and schema
+evolution semantics explicit. Choose the operation from the intended semantics:
 
 - Schema-only evolution: use explicit `ALTER TABLE` statements supported by the
   deployed MRS Spark/Iceberg version.
@@ -68,10 +67,10 @@ semantics:
 - Row-level replacement: use `MERGE INTO` when the deployed Iceberg version
   supports it, otherwise use the documented CDC fallback.
 
-Never silently keep `overwriteSchema`; an ignored or unsupported option can
-leave the old schema in place or change overwrite behavior.
+### Validated MRS compatibility path
 
-Post-conversion residual that must fail review:
+The Padron Base migration has runtime-validated the following DataFrameWriter V1
+pattern in its target MRS Spark/Iceberg environment:
 
 ```python
 df.write.mode("overwrite") \
@@ -80,11 +79,23 @@ df.write.mode("overwrite") \
   .save(target_path)
 ```
 
-Changing only `delta` to `iceberg` does not make the write complete. Remove the
-Delta-only option, decide whether the operation is append, dynamic partition
-overwrite, full replacement, or schema evolution, and verify that `target_path`
-is an actual Iceberg table root. Prefer a catalog table identifier when
-possible.
+In that validated environment, `overwriteSchema` may be retained when converting
+the equivalent Delta write. Do not classify this combination as an automatic
+migration failure.
+
+Treat this as distribution- and version-specific compatibility, not a universal
+Iceberg guarantee. For another MRS/Spark/Iceberg version:
+
+1. Record the MRS, Spark, and Iceberg versions and catalog type.
+2. Execute an overwrite that adds, removes, or changes a test column as required
+   by the real workload.
+3. Verify the resulting Iceberg schema, row count, partition contents, and
+   snapshot.
+4. If it is not supported, use explicit DDL, `mergeSchema` with the required
+   table property, or DataFrameWriterV2 according to the target version.
+
+The independent path check still applies: `target_path` must be a valid Iceberg
+table root. Prefer a catalog table identifier when possible.
 
 Delta table creation:
 
@@ -136,7 +147,7 @@ Use this checklist when converting Databricks PySpark notebooks/scripts into MRS
 
 - Replace `df.write.format("delta")` with Iceberg writes. Prefer table writes such as `writeTo(...).append()` or `saveAsTable(...)` over path-only writes for migrated demos. A literal `.format("iceberg")` replacement is acceptable only when the catalog/table target is already valid.
 - Replace `spark.read.format("delta")` with Iceberg table reads. Prefer `spark.table("catalog.db.table")` or `spark.read.format("iceberg").load("catalog.db.table")` when the source config can hold table names.
-- Remove or rewrite Delta-only options such as `.option("overwriteSchema", "true")`. Use explicit Iceberg DDL evolution, `ALTER TABLE ADD COLUMN`, or controlled overwrite behavior instead.
+- For `.option("overwriteSchema", "true")`, retain it when the exact target MRS Spark/Iceberg environment has verified the required schema-overwrite behavior. Otherwise test it and fall back to explicit Iceberg DDL evolution, supported `mergeSchema`, or controlled DataFrameWriterV2 overwrite behavior.
 - Update every source/data-source configuration file so format declarations change from `delta` to `iceberg`; inspect CSV, JSON, YAML, properties files, and Python dictionaries rather than changing code only.
 - Convert Databricks storage paths such as `dbfs:/mnt/...`, `/mnt/...`, or mounted paths into a catalog table identifier or the HDFS/OBS Iceberg warehouse/table location used by MRS. Do not reuse a Delta directory as if it were an Iceberg table.
 - If a source CSV/config maps table names to paths, prefer changing path columns into `database.table` names for Iceberg tables. Path-style Iceberg reads can fail with missing metadata such as `version-hint.text` when the path is not a valid Iceberg table root.
@@ -175,7 +186,9 @@ FROM (
 
 - Scan the converted tree again, including files already labeled `ICEBERG`; a
   target filename is not evidence that Delta-only options were removed.
-- Reject any Iceberg write that still contains `overwriteSchema`.
+- Report Iceberg writes containing `overwriteSchema` as compatibility-sensitive,
+  not automatically invalid. Accept them when runtime evidence exists for the
+  target MRS/Spark/Iceberg version and required schema change.
 - For `.format("iceberg").save(path)`, confirm the path is a valid Iceberg table
   root with metadata, not merely the old Delta directory with a renamed format.
 - Confirm row counts by table and CDC operation.

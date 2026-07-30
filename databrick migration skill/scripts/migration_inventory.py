@@ -87,7 +87,7 @@ PATTERNS = {
         r"\bsat_pypi_packages\b",
         r"^\s*from\s+[\w.]+\s+import\s+\*",
     ],
-    "post_migration_residual": [
+    "iceberg_schema_overwrite_attention": [
         r"\boverwriteSchema\b.*\bformat\s*\(\s*['\"]iceberg['\"]\s*\)",
         r"\bformat\s*\(\s*['\"]iceberg['\"]\s*\).*\boverwriteSchema\b",
     ],

@@ -116,7 +116,7 @@ Source pattern:
 - Databricks PySpark used Delta format declarations, Delta overwriteSchema, DBFS or mounted storage paths, source-config format fields, a Databricks-only `sat_pypi_packages` import, and Spark SQL containing a correlated EXISTS with equality plus date-range predicates, SQL Server DATEADD, and `SELECT * EXCEPT`.
 
 Issue:
-- Mechanical token replacement is unsafe: Iceberg schema overwrite has no one-to-one `overwriteSchema` option, Delta directories are not Iceberg table roots, Databricks packages are unavailable on MRS, and Catalyst can fail while rewriting the complex correlated EXISTS to `LeftExistenceJoin` with a missing-attribute error such as `Couldn't find Fecha_Alta`.
+- Mechanical token replacement requires validation: Delta directories are not automatically Iceberg table roots, Databricks packages are unavailable on MRS, and Catalyst can fail while rewriting the complex correlated EXISTS to `LeftExistenceJoin` with a missing-attribute error such as `Couldn't find Fecha_Alta`. The initial assumption that Iceberg `overwriteSchema` must always be replaced was superseded by the verified 2026-07-30 Padron Base result below.
 
 Huawei replacement:
 - Use catalog-backed Iceberg reads/writes, explicit Iceberg schema evolution and intentional overwrite semantics, HDFS/OBS Iceberg table locations, `iceberg` in all source configurations, and explicit local imports packaged with the MRS job. Rewrite the EXISTS as `LEFT JOIN` plus aggregation at the unique outer-row grain, use `add_months` for month arithmetic, and explicitly enumerate projected columns.
@@ -131,10 +131,25 @@ Source pattern:
 - A Databricks-exported Padron Base Python module was compared with its manually converted ICEBERG version. The target added explicit imports, removed notebook markers, changed Delta format tokens, repaired a missing CTE `AS`, rewrote DATEADD, converted a correlated EXISTS to LEFT JOIN plus GROUP BY, and replaced `SELECT * EXCEPT` with an explicit projection.
 
 Issue:
-- The converted file still contained five `overwriteSchema` options on Iceberg writes and path-based `.save(...)` calls whose Iceberg table-root validity was not demonstrated. Python compilation passed both files even though it cannot validate SQL strings, runtime package availability, or Iceberg semantics. Grouping by projected columns can also collapse duplicate outer rows.
+- The converted file contained five initially unverified `overwriteSchema` options on Iceberg writes and path-based `.save(...)` calls whose Iceberg table-root validity was not demonstrated during static comparison. Python compilation passed both files even though it cannot validate SQL strings, runtime package availability, or Iceberg semantics. Grouping by projected columns can also collapse duplicate outer rows. The `overwriteSchema` concern was later resolved by runtime validation recorded in the 2026-07-30 entry below.
 
 Huawei replacement:
 - Treat conversion as a two-pass process: implement portability rewrites, then scan the target for residual Delta/Databricks constructs. Use explicit local imports and packaged modules, validate CTE syntax and generated SQL in Spark, choose explicit Iceberg overwrite/schema-evolution behavior, and preserve correlated-EXISTS row multiplicity with a stable outer-row key.
 
 Validation:
-- Compared the complete Git diff, scanned both files for migration patterns, and ran `python -m py_compile` successfully on both. Runtime Spark/Iceberg execution was not available, so the five residual writes remain findings rather than verified replacements.
+- Compared the complete Git diff, scanned both files for migration patterns, and ran `python -m py_compile` successfully on both. Runtime Spark/Iceberg execution was not available during this comparison, so the five writes were recorded as pending compatibility checks rather than rejected conversions.
+
+
+## 2026-07-30 - Padron Base Iceberg overwriteSchema runtime correction
+
+Source pattern:
+- The migrated Padron Base jobs use `.write.mode("overwrite").option("overwriteSchema", "true").format("iceberg").save(target_path)`.
+
+Issue:
+- Static comparison had classified the five occurrences as unsupported residuals because upstream Iceberg guidance favors explicit DataFrameWriterV2 operations or documented schema-merge behavior.
+
+Huawei replacement:
+- Retain the `overwriteSchema` option for the already validated Padron Base MRS Spark/Iceberg environment. For other MRS/Spark/Iceberg versions, classify the same pattern as a compatibility check and verify schema, data, partitions, and snapshot before accepting or replacing it.
+
+Validation:
+- User confirmed on 2026-07-30 that this exact overwriteSchema portion has been successfully validated in the target environment. The skill and scanner were corrected so it is no longer reported as an automatic migration failure.

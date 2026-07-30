@@ -128,8 +128,11 @@ Adjust the business parameters for each demo and document their meaning in the r
   `explain()` or a bounded execution. This catches malformed CTE headers and
   unsupported functions hidden inside otherwise valid Python.
 - Re-run `migration_inventory.py` on the converted output and resolve
-  post-migration residuals such as `overwriteSchema`, notebook markers, and
-  Databricks-only package names.
+  post-migration findings. Treat `overwriteSchema` on an Iceberg write as a
+  version-sensitive compatibility check: it is supported in the validated
+  Padron Base MRS environment, while other distributions should run the same
+  schema-change smoke test before accepting it. Notebook markers and
+  Databricks-only package names remain portability findings.
 - Check the Yarn task status after submit.
 - Query all core output tables, for example `mvp_rec_padron_base`, `mvp_rec_padron_base_annual`, `mvp_rec_padron_base_periodo`, `padron_base_resico`, and `padron_base_resico_marcas`.
 - Confirm source configuration files such as `Fuentes_mvp.csv` were updated to Iceberg table references.
