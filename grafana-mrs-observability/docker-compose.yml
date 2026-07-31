@@ -1,0 +1,126 @@
+services:
+  grafana:
+    image: grafana/grafana:12.4.0
+    container_name: bigdata-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: ${GRAFANA_ANONYMOUS_ENABLED:-false}
+      GF_AUTH_ANONYMOUS_ORG_ROLE: ${GRAFANA_ANONYMOUS_ROLE:-Viewer}
+      GF_USERS_DEFAULT_THEME: light
+      GF_SERVER_ROOT_URL: ${PUBLIC_SCHEME:-https}://${PUBLIC_DOMAIN}/
+      GF_SERVER_DOMAIN: ${PUBLIC_DOMAIN}
+      GF_LOG_MODE: console
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks: [monitoring]
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: bigdata-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks: [monitoring]
+
+  loki:
+    image: grafana/loki:3.5.0
+    container_name: bigdata-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks: [monitoring]
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    container_name: bigdata-node-exporter
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    networks: [monitoring]
+
+  huawei-exporter:
+    build: ./exporter
+    container_name: huawei-cloud-exporter
+    restart: unless-stopped
+    env_file: /etc/bigdata-monitor/huawei.env
+    environment:
+      COLLECT_INTERVAL_SECONDS: "60"
+      MAX_CES_METRICS: "450"
+      MAX_MRS_JOBS: "2000"
+    networks: [monitoring]
+
+  dataarts-log-collector:
+    build: ./dataarts-log-collector
+    container_name: dataarts-log-collector
+    restart: unless-stopped
+    env_file: /etc/bigdata-monitor/huawei.env
+    environment:
+      LOKI_PUSH_URL: http://loki:3100/loki/api/v1/push
+      SYNC_INTERVAL_SECONDS: "600"
+      DATAARTS_HISTORY_DAYS: "180"
+      MAX_DATAARTS_LOG_OBJECTS: "20000"
+      MAX_DATAARTS_LOG_FILE_BYTES: "10485760"
+      DATAARTS_LOG_INGESTION_VERSION: "2"
+      DATAARTS_LOG_TIMEZONE_OFFSET_HOURS: "${DATAARTS_LOG_TIMEZONE_OFFSET_HOURS:-0}"
+      DATAARTS_INSTANCE_MATCH_WINDOW_SECONDS: "1200"
+      DATAARTS_LOG_DOWNLOAD_WORKERS: "8"
+      STATE_PATH: /state/dataarts-log-state.json
+    volumes:
+      - dataarts-log-state:/state
+    depends_on:
+      - loki
+    networks: [monitoring]
+
+  mrs-dump-exporter:
+    build: ./mrs-dump-exporter
+    container_name: mrs-dump-exporter
+    restart: unless-stopped
+    environment:
+      MRS_DUMP_PATH: /data/mrs-dump
+    volumes:
+      - /srv/mrs-dump:/data/mrs-dump:ro
+    networks: [monitoring]
+
+  caddy:
+    image: caddy:2.10.0-alpine
+    container_name: bigdata-caddy
+    restart: unless-stopped
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [monitoring]
+
+networks:
+  monitoring:
+
+volumes:
+  grafana-data:
+  prometheus-data:
+  caddy-data:
+  caddy-config:
+  loki-data:
+  dataarts-log-state:
