@@ -1,0 +1,7 @@
+interface:
+  display_name: "Huawei Cloud BigData"
+  short_description: "Build and observe Huawei big-data stacks."
+  default_prompt: "Use $huawei-cloud-bigdata to design, automate, or monitor Huawei Cloud MRS and DataArts workflows with Grafana, Prometheus, and Loki while keeping secrets outside generated and committed files."
+
+policy:
+  allow_implicit_invocation: true
