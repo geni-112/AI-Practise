@@ -1,0 +1,274 @@
+{
+  "annotations": {"list": []},
+  "description": "Databricks-inspired Huawei Cloud big-data observability across infrastructure, MRS components, and jobs.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Job execution traceability",
+      "type": "link",
+      "url": "/d/huawei-mrs-job-traceability/huawei-mrs-job-execution-traceability"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Unified big-data logs",
+      "type": "link",
+      "url": "/d/huawei-unified-bigdata-logs/huawei-big-data-unified-logs"
+    }
+  ],
+  "liveNow": true,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "markdown",
+        "content": "# Huawei Big Data Observability\nCompute health · MRS services · Jobs & pipelines · Cloud infrastructure"
+      },
+      "transparent": true
+    },
+    {
+      "type": "stat",
+      "title": "Cluster health",
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "max(huawei_mrs_cluster_state{cluster_name=~\"$cluster\"})", "refId": "A"}],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [{"options": {"0": {"color": "red", "text": "Needs attention"}, "1": {"color": "green", "text": "Running"}}, "type": "value"}],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      },
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "textMode": "value_and_name"}
+    },
+    {
+      "type": "stat",
+      "title": "Healthy nodes",
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "sum(huawei_mrs_node_state{cluster_id=~\"$cluster_id\"})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"fixedColor": "blue", "mode": "fixed"}, "unit": "short"}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Successful / running jobs",
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "sum(huawei_mrs_job_state{cluster_id=~\"$cluster_id\"})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"fixedColor": "green", "mode": "fixed"}, "unit": "short"}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Jobs needing attention",
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "count(huawei_mrs_job_state{cluster_id=~\"$cluster_id\"} == 0)", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "row",
+      "title": "Compute metrics",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 8},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU utilization by node",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 9},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{
+        "expr": "huawei_cloud_eye_value{namespace=~\"SYS.ECS|AGT.ECS\",metric_name=~\"cpu_util|cpu_usage|cpu_usedPercent\",resource=~\"$node\"}",
+        "legendFormat": "{{resource}} · {{metric_name}}",
+        "refId": "A"
+      }],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "smooth", "lineWidth": 2, "showPoints": "never"}, "min": 0, "max": 100, "unit": "percent"}, "overrides": []},
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory utilization by node",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 9},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{
+        "expr": "huawei_cloud_eye_value{namespace=~\"SYS.ECS|AGT.ECS\",metric_name=~\".*(mem|memory).*(util|usage|usedPercent).*\",resource=~\"$node\"}",
+        "legendFormat": "{{resource}} · {{metric_name}}",
+        "refId": "A"
+      }],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "smooth", "lineWidth": 2, "showPoints": "never"}, "min": 0, "max": 100, "unit": "percent"}, "overrides": []},
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Network throughput",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{
+        "expr": "huawei_cloud_eye_value{namespace=~\"SYS.ECS|SYS.VPC\",metric_name=~\".*(network|bandwidth).*(rate|bytes).*\",resource=~\"$node\"}",
+        "legendFormat": "{{resource}} · {{metric_name}}",
+        "refId": "A"
+      }],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}, "unit": "Bps"}, "overrides": []},
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Disk throughput and IOPS",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{
+        "expr": "huawei_cloud_eye_value{namespace=~\"SYS.EVS|AGT.ECS\",metric_name=~\".*(disk|read|write|iops).*\",resource=~\"$node\"}",
+        "legendFormat": "{{resource}} · {{metric_name}}",
+        "refId": "A"
+      }],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}}, "overrides": []},
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "row",
+      "title": "MRS services and Spark",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 25},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "FusionInsight component metrics",
+      "description": "Populated after MRS Manager SFTP performance-data export is enabled.",
+      "gridPos": {"h": 10, "w": 16, "x": 0, "y": 26},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{
+        "expr": "huawei_mrs_manager_metric{cluster_name=~\"$cluster\",service=~\"$service\"}",
+        "legendFormat": "{{service}} · {{display_name}} · {{host}}",
+        "refId": "A"
+      }],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "line", "fillOpacity": 8, "lineWidth": 1, "showPoints": "never"}}, "overrides": []},
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "stat",
+      "title": "Component metric series",
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 26},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "huawei_mrs_manager_series_count", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"fixedColor": "purple", "mode": "fixed"}, "unit": "short"}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Collector freshness",
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 31},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "time() - huawei_exporter_last_collection_timestamp_seconds", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 180}, {"color": "red", "value": 600}]}, "unit": "s"}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto"}
+    },
+    {
+      "type": "row",
+      "title": "Jobs & pipelines",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 36},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Recent MRS job state",
+      "gridPos": {"h": 10, "w": 16, "x": 0, "y": 37},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "huawei_mrs_job_state{cluster_id=~\"$cluster_id\"}", "format": "table", "instant": true, "refId": "A"}],
+      "fieldConfig": {"defaults": {"custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true}}, "overrides": []},
+      "options": {"cellHeight": "sm", "showHeader": true}
+    },
+    {
+      "type": "timeseries",
+      "title": "Job duration",
+      "gridPos": {"h": 10, "w": 8, "x": 16, "y": 37},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "huawei_mrs_job_duration_seconds{cluster_id=~\"$cluster_id\"}", "legendFormat": "{{job_name}} · {{state}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"drawStyle": "bars", "fillOpacity": 50, "lineWidth": 1}, "unit": "s"}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "type": "table",
+      "title": "DataArts job catalog",
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 47},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [{"expr": "huawei_dataarts_job_info", "format": "table", "instant": true, "refId": "A"}],
+      "fieldConfig": {"defaults": {"custom": {"align": "auto", "cellOptions": {"type": "auto"}, "filterable": true}}, "overrides": []},
+      "options": {"cellHeight": "sm", "showHeader": true}
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 40,
+  "tags": ["huawei-cloud", "mrs", "big-data", "databricks-inspired"],
+  "templating": {
+    "list": [
+      {
+        "name": "cluster",
+        "label": "Compute",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_cluster_state, cluster_name)", "refId": "cluster-var"},
+        "current": {"text": "mrs_sat", "value": "mrs_sat"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "cluster_id",
+        "label": "Cluster ID",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_cluster_state{cluster_name=~\"$cluster\"}, cluster_id)", "refId": "cluster-id-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "node",
+        "label": "Node",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_cloud_eye_value{namespace=~\"SYS.ECS|AGT.ECS\"}, resource)", "refId": "node-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "service",
+        "label": "Service",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_manager_metric, service)", "refId": "service-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Huawei Big Data · Compute & Jobs",
+  "uid": "huawei-bigdata-observability",
+  "version": 1
+}

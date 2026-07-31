@@ -1,0 +1,406 @@
+{
+  "annotations": {"list": []},
+  "description": "Databricks-style MRS job execution traceability: user, parameters, application IDs, node correlation, logs, and history.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "arrow-left",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Compute & services overview",
+      "type": "link",
+      "url": "/d/huawei-bigdata-observability/huawei-big-data-compute-jobs"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Unified big-data logs",
+      "type": "link",
+      "url": "/d/huawei-unified-bigdata-logs/huawei-big-data-unified-logs"
+    }
+  ],
+  "liveNow": true,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "markdown",
+        "content": "# Job Execution Traceability\nExecution history · submitting user · parameters · YARN/Spark application · assigned nodes · success/failure logs"
+      },
+      "transparent": true
+    },
+    {
+      "type": "stat",
+      "title": "Executions in history",
+      "gridPos": {"h": 5, "w": 5, "x": 0, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "sum(huawei_mrs_job_history_total{cluster_id=~\"$cluster_id\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "blue", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Failed / killed",
+      "gridPos": {"h": 5, "w": 5, "x": 5, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "count(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\",job_name=~\"$job\",user=~\"$executor\",job_type=~\"$job_type\",job_result=~\"FAILED|KILLED\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Log links available",
+      "gridPos": {"h": 5, "w": 5, "x": 10, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "sum(huawei_mrs_job_log_link_available{cluster_id=~\"$cluster_id\",job_name=~\"$job\",job_result=~\"$result\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "green", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Submitting users",
+      "gridPos": {"h": 5, "w": 4, "x": 15, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "count(count by (user) (huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\",job_name=~\"$job\",user=~\"$executor\"}))",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "purple", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Verified node links",
+      "description": "ApplicationMaster/driver or executor hostnames verified by a source API. A zero value means YARN/FusionInsight node enrichment is still required.",
+      "gridPos": {"h": 5, "w": 5, "x": 19, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "count(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\",job_name=~\"$job\",assigned_node!=\"\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "orange", "value": null}, {"color": "green", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto"}
+    },
+    {
+      "type": "row",
+      "title": "Execution explorer",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 8},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Historical executions, parameters, nodes and logs",
+      "description": "Click a non-empty Log URL to open the MRS/YARN/Spark execution page through the no-referrer launcher. Sign in to FusionInsight Manager when prompted. Sensitive-looking parameter values are masked by the exporter.",
+      "gridPos": {"h": 18, "w": 24, "x": 0, "y": 9},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\",job_name=~\"$job\",user=~\"$executor\",job_type=~\"$job_type\",job_result=~\"$result\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto"},
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Log"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "data-links"}},
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Open success/failure log",
+                    "url": "${__value.raw}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Parameters"},
+            "properties": [{"id": "custom.width", "value": 420}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Properties"},
+            "properties": [{"id": "custom.width", "value": 300}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Job"},
+            "properties": [{"id": "custom.width", "value": 260}]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "enablePagination": true, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true
+      },
+      "transformations": [
+        {"id": "labelsToFields", "options": {"mode": "columns"}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "cluster_name": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "submitted_at": 0,
+              "finished_at": 1,
+              "job_name": 2,
+              "job_result": 3,
+              "job_state": 4,
+              "user": 5,
+              "job_type": 6,
+              "queue": 7,
+              "job_id": 8,
+              "app_id": 9,
+              "launcher_id": 10,
+              "assigned_node": 11,
+              "executor_nodes": 12,
+              "node_source": 13,
+              "tracking_url": 14,
+              "arguments": 15,
+              "properties": 16,
+              "cluster_id": 17,
+              "log_status": 18,
+              "started_at": 19
+            },
+            "renameByName": {
+              "app_id": "Application ID",
+              "arguments": "Parameters",
+              "assigned_node": "AM / Driver node",
+              "cluster_id": "Cluster ID",
+              "executor_nodes": "Executor nodes",
+              "finished_at": "Finished",
+              "job_id": "Execution ID",
+              "job_name": "Job",
+              "job_result": "Result",
+              "job_state": "State",
+              "job_type": "Type",
+              "launcher_id": "Launcher ID",
+              "log_status": "Log status",
+              "node_source": "Node source",
+              "properties": "Properties",
+              "queue": "Queue",
+              "started_at": "Started",
+              "submitted_at": "Submitted",
+              "tracking_url": "Log",
+              "user": "Executed by"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Execution results",
+      "gridPos": {"h": 9, "w": 8, "x": 0, "y": 27},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "count by (job_result) (huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\",job_name=~\"$job\",user=~\"$executor\",job_type=~\"$job_type\",job_result=~\"$result\"})",
+          "instant": true,
+          "legendFormat": "{{job_result}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayLabels": ["name", "percent", "value"],
+        "legend": {"displayMode": "table", "placement": "right", "showLegend": true},
+        "pieType": "donut",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "tooltip": {"hideZeros": false, "mode": "single", "sort": "none"}
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Longest executions",
+      "gridPos": {"h": 9, "w": 10, "x": 8, "y": 27},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "topk(15, huawei_mrs_job_duration_seconds{cluster_id=~\"$cluster_id\",job_name=~\"$job\"})",
+          "instant": true,
+          "legendFormat": "{{job_name}} · {{job_id}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "continuous-GrYlRd"},
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      }
+    },
+    {
+      "type": "text",
+      "title": "Node correlation status",
+      "gridPos": {"h": 9, "w": 6, "x": 18, "y": 27},
+      "options": {
+        "mode": "markdown",
+        "content": "### Assigned-node semantics\n\n**AM / Driver node** is the verified YARN ApplicationMaster or Spark driver host. **Executor nodes** are listed separately because a distributed job can use multiple nodes.\n\nThe public MRS job API does not return node hostnames. Until YARN/Spark History or FusionInsight enrichment is enabled, the table displays `unavailable_pending_yarn_or_fusioninsight` instead of guessing."
+      }
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 40,
+  "tags": ["huawei-cloud", "mrs", "jobs", "traceability", "databricks-inspired"],
+  "templating": {
+    "list": [
+      {
+        "name": "cluster_id",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_job_execution_info, cluster_id)", "refId": "cluster-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\"}, job_name)", "refId": "job-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "executor",
+        "label": "Executed by",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\"}, user)", "refId": "executor-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "job_type",
+        "label": "Type",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\"}, job_type)", "refId": "type-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "result",
+        "label": "Result",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {"query": "label_values(huawei_mrs_job_execution_info{cluster_id=~\"$cluster_id\"}, job_result)", "refId": "result-var"},
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      }
+    ]
+  },
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Huawei MRS · Job Execution Traceability",
+  "uid": "huawei-mrs-job-traceability",
+  "version": 1
+}

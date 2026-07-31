@@ -1,0 +1,4 @@
+paramiko>=3.5,<6
+huaweicloudsdkcore>=3.1.197,<4
+huaweicloudsdkecs>=3.1.197,<4
+huaweicloudsdkvpc>=3.1.197,<4

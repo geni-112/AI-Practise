@@ -1,0 +1,554 @@
+{
+  "annotations": {"list": []},
+  "description": "Unified searchable Huawei big-data logs: DataArts node logs from OBS plus MRS/YARN/Spark execution log links.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "arrow-left",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Compute & services overview",
+      "type": "link",
+      "url": "/d/huawei-bigdata-observability/huawei-big-data-compute-jobs"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "MRS execution traceability",
+      "type": "link",
+      "url": "/d/huawei-mrs-job-traceability/huawei-mrs-job-execution-traceability"
+    }
+  ],
+  "liveNow": true,
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 3, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "markdown",
+        "content": "# Unified Big Data Logs\nDataArts Factory node logs · OBS history · MRS/YARN/Spark execution links · secret-safe full-text search"
+      },
+      "transparent": true
+    },
+    {
+      "type": "stat",
+      "title": "DataArts log files",
+      "gridPos": {"h": 5, "w": 5, "x": 0, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_dataarts_log_files_total",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "blue", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "DataArts log volume",
+      "gridPos": {"h": 5, "w": 5, "x": 5, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_dataarts_log_bytes_total",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "purple", "mode": "fixed"}, "unit": "bytes"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Executions with DataArts logs",
+      "gridPos": {"h": 5, "w": 5, "x": 10, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "count(huawei_dataarts_execution_log_files)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "green", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "MRS log links",
+      "gridPos": {"h": 5, "w": 5, "x": 15, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "sum(huawei_mrs_job_log_link_available)",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"color": {"fixedColor": "orange", "mode": "fixed"}, "unit": "short"},
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "DataArts log sync",
+      "description": "Latest OBS-to-Loki synchronization state.",
+      "gridPos": {"h": 5, "w": 4, "x": 20, "y": 3},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_dataarts_log_sync_success",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "red", "text": "Needs attention"},
+                "1": {"color": "green", "text": "Healthy"}
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "textMode": "value_and_name"}
+    },
+    {
+      "type": "row",
+      "title": "Search log content",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 8},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "logs",
+      "title": "DataArts node logs",
+      "description": "Log content is read from the configured DataArts OBS log roots and masked before it is sent to Loki.",
+      "gridPos": {"h": 18, "w": 24, "x": 0, "y": 9},
+      "datasource": {"type": "loki", "uid": "huawei-loki"},
+      "targets": [
+        {
+          "expr": "{source=\"dataarts\",ingestion_version=\"2\",job_name=~\"$job\",status=~\"$status\",node_name=~\"$node\"} |~ \"(?i)$search\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    },
+    {
+      "type": "row",
+      "title": "DataArts log catalog",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "DataArts executions, nodes and OBS log objects",
+      "gridPos": {"h": 16, "w": 24, "x": 0, "y": 28},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_dataarts_log_object_info{job_name=~\"$job\",status=~\"$status\",node_name=~\"$node\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto"},
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "OBS log path"},
+            "properties": [{"id": "custom.width", "value": 520}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Job"},
+            "properties": [{"id": "custom.width", "value": 280}]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "transformations": [
+        {"id": "labelsToFields", "options": {"mode": "columns"}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "execution_time": 0,
+              "job_name": 1,
+              "status": 2,
+              "node_name": 3,
+              "executed_by": 4,
+              "instance_id": 5,
+              "file_type": 6,
+              "log_path": 7
+            },
+            "renameByName": {
+              "executed_by": "Owner / executed by",
+              "execution_time": "Execution time",
+              "file_type": "Log type",
+              "instance_id": "Instance ID",
+              "job_name": "Job",
+              "log_path": "OBS log path",
+              "node_name": "Node",
+              "status": "Status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "MRS, YARN and Spark log entry points",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 44},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "MRS job success/failure log links",
+      "description": "Click a non-empty Log URL. The no-referrer launcher prevents FusionInsight/YARN from rejecting the Grafana-originated navigation; sign in to Manager when prompted.",
+      "gridPos": {"h": 15, "w": 24, "x": 0, "y": 45},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_mrs_job_execution_info{job_name=~\"$mrs_job\",job_result=~\"$mrs_result\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto"},
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Log"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "data-links"}},
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Open YARN / Spark log",
+                    "url": "${__value.raw}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "transformations": [
+        {"id": "labelsToFields", "options": {"mode": "columns"}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "arguments": true,
+              "assigned_node": true,
+              "cluster_id": true,
+              "cluster_name": true,
+              "executor_nodes": true,
+              "instance": true,
+              "job": true,
+              "job_state": true,
+              "log_status": true,
+              "node_source": true,
+              "properties": true,
+              "queue": true,
+              "started_at": true,
+              "submitted_at": true
+            },
+            "indexByName": {
+              "finished_at": 0,
+              "job_name": 1,
+              "job_result": 2,
+              "user": 3,
+              "job_type": 4,
+              "job_id": 5,
+              "app_id": 6,
+              "launcher_id": 7,
+              "tracking_url": 8
+            },
+            "renameByName": {
+              "app_id": "Application ID",
+              "finished_at": "Finished",
+              "job_id": "Execution ID",
+              "job_name": "Job",
+              "job_result": "Result",
+              "job_type": "Type",
+              "launcher_id": "Launcher ID",
+              "tracking_url": "Log",
+              "user": "Executed by"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "DataArts ownership and parameters",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 60},
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "DataArts job definitions",
+      "description": "Sensitive-looking values in job parameters are masked before export.",
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 61},
+      "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+      "targets": [
+        {
+          "expr": "huawei_dataarts_job_definition_info{job_name=~\"$job\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto"},
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Parameters"},
+            "properties": [{"id": "custom.width", "value": 520}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Log root"},
+            "properties": [{"id": "custom.width", "value": 420}]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": true,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "transformations": [
+        {"id": "labelsToFields", "options": {"mode": "columns"}},
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "job_name": 0,
+              "job_type": 1,
+              "status": 2,
+              "owner": 3,
+              "created_by": 4,
+              "parameters": 5,
+              "log_root": 6
+            },
+            "renameByName": {
+              "created_by": "Created by",
+              "job_name": "Job",
+              "job_type": "Type",
+              "log_root": "Log root",
+              "owner": "Owner",
+              "parameters": "Parameters",
+              "status": "Status"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 40,
+  "tags": [
+    "huawei-cloud",
+    "dataarts",
+    "mrs",
+    "logs",
+    "loki",
+    "databricks-inspired"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "label": "DataArts job",
+        "type": "query",
+        "datasource": {"type": "loki", "uid": "huawei-loki"},
+        "query": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, job_name)",
+        "definition": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, job_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "status",
+        "label": "DataArts status",
+        "type": "query",
+        "datasource": {"type": "loki", "uid": "huawei-loki"},
+        "query": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, status)",
+        "definition": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, status)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "node",
+        "label": "DataArts node",
+        "type": "query",
+        "datasource": {"type": "loki", "uid": "huawei-loki"},
+        "query": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, node_name)",
+        "definition": "label_values({source=\"dataarts\",ingestion_version=\"2\"}, node_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "search",
+        "label": "Text contains",
+        "type": "textbox",
+        "query": "",
+        "current": {"selected": true, "text": "", "value": ""}
+      },
+      {
+        "name": "mrs_job",
+        "label": "MRS job",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {
+          "query": "label_values(huawei_mrs_job_execution_info, job_name)",
+          "refId": "mrs-job-var"
+        },
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      },
+      {
+        "name": "mrs_result",
+        "label": "MRS result",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "huawei-prometheus"},
+        "query": {
+          "query": "label_values(huawei_mrs_job_execution_info, job_result)",
+          "refId": "mrs-result-var"
+        },
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 1
+      }
+    ]
+  },
+  "time": {"from": "now-30d", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Huawei Big Data · Unified Logs",
+  "uid": "huawei-unified-bigdata-logs",
+  "version": 1
+}
