@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="30.2.6">
+  <diagram id="agentic-tax-flow" name="业务全流程">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1280" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="Agentic Tax Bigdata Demo：从业务 Prompt 到结果与云执行" style="text;html=1;align=left;verticalAlign=middle;fontSize=24;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="850" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_ai" value="AI / MaaS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="25" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_rule" value="确定性程序" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="25" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_human" value="治理 / 人工" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="25" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_cloud" value="云服务 / 数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1f2937;" vertex="1" parent="1">
+          <mxGeometry x="1590" y="25" width="150" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane_experience" value="1. 业务入口与体验层" style="swimlane;startSize=34;horizontal=1;rounded=0;html=1;fillColor=#f8f9fa;strokeColor=#c5cbd3;fontSize=15;fontStyle=1;fontColor=#374151;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1820" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="user" value="业务用户&#xa;自然语言 Prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_experience">
+          <mxGeometry x="60" y="55" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" value="Chat-first 前台&#xa;Agentic Tax Bigdata Demo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_experience">
+          <mxGeometry x="390" y="45" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="safety" value="默认安全边界&#xa;不上传直接 RFC / 密钥&#xa;不自动创建或执行云资源" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_experience">
+          <mxGeometry x="830" y="45" width="360" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="workspace" value="结果工作台&#xa;ChatBI / 流程 / 制品 / 数据 / 治理 / 云环境" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_experience">
+          <mxGeometry x="1380" y="45" width="350" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane_agents" value="2. Agent 控制与开发层" style="swimlane;startSize=34;horizontal=1;rounded=0;html=1;fillColor=#f8fbff;strokeColor=#b6c8dd;fontSize=15;fontStyle=1;fontColor=#374151;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="1820" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="router" value="意图路由&#xa;查询结果，还是开发任务？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="50" y="120" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="semantic_parser" value="ChatBI 语义解析&#xa;已知表达：本地规则&#xa;陌生表达：GLM-5.2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="340" y="35" width="270" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="query_contract" value="查询合约&#xa;指标、维度、筛选、Top N" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="680" y="35" width="250" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="safe_sql" value="受控 SQL 编译器&#xa;白名单 + 参数化 + 只读" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="1000" y="35" width="250" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="gold_snapshot" value="当前查询执行&#xa;读取已发布的 MRS Gold 快照&#xa;不扫描原始身份字段" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="1320" y="25" width="330" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="data_context" value="数据上下文 Agent&#xa;Schema、目录、脱敏合成数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="330" y="205" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_agent" value="业务合约 Agent&#xa;MaaS 草稿 + 本地兜底&#xa;目标、粒度、指标、隐私" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="640" y="195" width="250" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_audit" value="合约审计&#xa;Schema / 字段 / 指标白名单&#xa;确定性检查" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="950" y="195" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="artifact_agents" value="专业职责 Agents&#xa;架构 / PySpark / SQL / DataArts DAG&#xa;质量 / 安全 / Lineage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="1250" y="185" width="290" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="local_validation" value="本地验证&#xa;语法、策略、样例运行&#xa;指标对账" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_agents">
+          <mxGeometry x="1590" y="195" width="190" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane_governance" value="3. 治理、审批与发布层" style="swimlane;startSize=34;horizontal=1;rounded=0;html=1;fillColor=#fcfaf5;strokeColor=#d8c69a;fontSize=15;fontStyle=1;fontColor=#374151;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="590" width="1820" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_catalog" value="语义目录与安全策略&#xa;指标口径、隐私分级、最小权限" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="50" y="60" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="governance_checks" value="质量 / 安全 / Lineage 检查&#xa;空值、行数、对账、敏感字段、血缘" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="370" y="50" width="290" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="human_review" value="人工审批&#xa;PySpark / SQL / DAG&#xa;逐项批准或驳回" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="720" y="50" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="release_gate" value="全部通过？" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="1040" y="45" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="blocked" value="阻塞执行&#xa;返回修改 / 重试" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;fontStyle=1;fontColor=#7f1d1d;" vertex="1" parent="lane_governance">
+          <mxGeometry x="1280" y="25" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="release" value="冻结发布包&#xa;文件 Hash + 审批记录" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="1280" y="100" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cloud_probe" value="只读云探测&#xa;绑定、权限、网络、配额" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_governance">
+          <mxGeometry x="1560" y="100" width="210" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane_cloud" value="4. 华为云受控执行层（必须显式授权）" style="swimlane;startSize=34;horizontal=1;rounded=0;html=1;fillColor=#f7fbf8;strokeColor=#a8c5af;fontSize=15;fontStyle=1;fontColor=#374151;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="790" width="1820" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="dataarts" value="DataArts Factory&#xa;调度与业务编排" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="70" y="65" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="obs_raw" value="OBS Raw&#xa;受控源数据" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="390" y="140" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="mrs" value="MRS Spark&#xa;PySpark 批处理与质量规则" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="680" y="65" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="obs_gold" value="OBS Gold&#xa;聚合结果 / 发布快照" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="1000" y="65" width="250" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="dws" value="GaussDB(DWS)&#xa;可选：交互式 SQL 服务" style="shape=cylinder3;whiteSpace=wrap;html=1;dashed=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="1310" y="65" width="250" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="cloud_evidence" value="Cloud API / 日志&#xa;作业 ID、状态、行数、耗时" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_cloud">
+          <mxGeometry x="1610" y="65" width="170" height="85" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lane_evidence" value="5. 结果、证据与反馈层" style="swimlane;startSize=34;horizontal=1;rounded=0;html=1;fillColor=#f8f7fb;strokeColor=#b9afca;fontSize=15;fontStyle=1;fontColor=#374151;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1050" width="1820" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="audit_evidence" value="不可变运行证据&#xa;日志、质量、审批、Lineage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_evidence">
+          <mxGeometry x="80" y="50" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="bi_result" value="ChatBI 结果&#xa;KPI、排名、明细、口径、受控 SQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_evidence">
+          <mxGeometry x="510" y="50" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="artifact_result" value="开发工作台结果&#xa;流程状态、代码、DAG、数据、治理、云证据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_evidence">
+          <mxGeometry x="930" y="40" width="370" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="feedback" value="继续追问 / 修订 Prompt / 重试&#xa;形成下一轮可审计任务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontColor=#1f2937;" vertex="1" parent="lane_evidence">
+          <mxGeometry x="1430" y="50" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="提出需求" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="user" target="frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="提交" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="frontend" target="router">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="580" y="230" /><mxPoint x="205" y="230" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="只看结果" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="router" target="semantic_parser">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="结构化" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="semantic_parser" target="query_contract">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="校验通过" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="query_contract" target="safe_sql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="只读查询" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="safe_sql" target="gold_snapshot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="开发任务" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="router" target="data_context">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="字段上下文" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="data_context" target="contract_agent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="合约草稿" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="contract_agent" target="contract_audit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="审计通过" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="contract_audit" target="artifact_agents">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="制品" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="artifact_agents" target="local_validation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="政策约束" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;strokeColor=#9673a6;fontSize=12;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="policy_catalog" target="contract_audit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="验证结果" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="local_validation" target="governance_checks">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1725" y="580" /><mxPoint x="700" y="580" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" value="检查通过" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#666666;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="governance_checks" target="human_review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="审批结论" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#d6b656;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="human_review" target="release_gate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#b85450;fontSize=12;exitX=1;exitY=0.3;entryX=0;entryY=0.5;" edge="1" parent="1" source="release_gate" target="blocked">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9673a6;fontSize=12;exitX=1;exitY=0.7;entryX=0;entryY=0.5;" edge="1" parent="1" source="release_gate" target="release">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" value="修订" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;strokeColor=#b85450;fontSize=12;exitX=0.5;exitY=0;entryX=0.75;entryY=1;" edge="1" parent="1" source="blocked" target="artifact_agents">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1430" y="580" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" value="冻结" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9673a6;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="release" target="cloud_probe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="显式授权后执行" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cloud_probe" target="dataarts">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1705" y="780" /><mxPoint x="235" y="780" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e21" value="调度" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="dataarts" target="mrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="读取" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0.25;entryY=1;" edge="1" parent="1" source="obs_raw" target="mrs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="发布" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="mrs" target="obs_gold">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" value="可选装载" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="obs_gold" target="dws">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" value="运行状态" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#82b366;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="dws" target="cloud_evidence">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" value="运行证据" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9673a6;fontSize=12;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="cloud_evidence" target="audit_evidence">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1735" y="1040" /><mxPoint x="440" y="1040" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e27" value="聚合结果" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="gold_snapshot" target="bi_result">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1880" y="370" /><mxPoint x="1880" y="1035" /><mxPoint x="700" y="1035" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e28" value="审计与制品" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#9673a6;fontSize=12;exitX=0.5;exitY=0;entryX=0.25;entryY=0;" edge="1" parent="1" source="audit_evidence" target="artifact_result">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="270" y="1080" /><mxPoint x="1060" y="1080" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" value="呈现" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#d6b656;fontSize=12;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="artifact_result" target="feedback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" value="继续追问" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#d6b656;fontSize=12;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="bi_result" target="feedback">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="700" y="1190" /><mxPoint x="1620" y="1190" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e31" value="统一展示" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;strokeColor=#6c8ebf;fontSize=12;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="feedback" target="workspace">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1830" y="1135" /><mxPoint x="1830" y="165" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e32" value="策略" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;strokeColor=#9673a6;fontSize=12;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1" source="safety" target="policy_catalog">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1050" y="230" /><mxPoint x="220" y="230" /><mxPoint x="220" y="580" /></Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

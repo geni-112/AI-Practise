@@ -1,0 +1,44 @@
+{
+  "version": "tax-gold-v1",
+  "dataset": "tax_gold.taxpayer_regime_year",
+  "description": "Published Tax taxpayer annual Gold aggregate without direct RFC identifiers.",
+  "dimensions": {
+    "year": {
+      "column": "year",
+      "label": "年份"
+    },
+    "region": {
+      "column": "region",
+      "label": "地区"
+    },
+    "regime": {
+      "column": "regime",
+      "label": "税制"
+    },
+    "resico_flag": {
+      "column": "resico_flag",
+      "label": "RESICO 状态"
+    }
+  },
+  "metrics": {
+    "taxpayer_count": {
+      "label": "纳税人数量",
+      "aggregation": "sum",
+      "source_columns": ["taxpayer_count"]
+    },
+    "annual_income_total": {
+      "label": "收入合计",
+      "aggregation": "sum",
+      "source_columns": ["annual_income_total"]
+    },
+    "annual_income_avg": {
+      "label": "人均收入",
+      "aggregation": "ratio",
+      "source_columns": ["annual_income_total", "taxpayer_count"]
+    }
+  },
+  "privacy": {
+    "direct_identifiers_available": false,
+    "blocked_fields": ["rfc", "taxpayer_name", "address"]
+  }
+}

@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic Tax Bigdata Demo</title>
+    <link rel="stylesheet" href="/static/styles.css?v=i18n-audit-v5-20260727" />
+  </head>
+  <body>
+    <main id="appShell" class="app-shell" data-view="compose">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>Agentic Tax Bigdata Demo</span>
+        </div>
+        <div class="topbar-actions">
+          <a class="topbar-link is-active" href="/" data-app-nav="workbench">数据工作台</a>
+          <a class="topbar-link" href="/metadata" data-app-nav="metadata">元数据中心</a>
+          <div class="language-switch" role="group" aria-label="Language" data-i18n-ignore>
+            <button type="button" data-locale="zh" aria-pressed="false">中文</button>
+            <button type="button" data-locale="en" aria-pressed="false">EN</button>
+          </div>
+          <span id="healthBadge" class="status-indicator muted">正在连接</span>
+          <button id="newTaskButton" class="text-button is-hidden" type="button">新建任务</button>
+        </div>
+      </header>
+
+      <section id="composeView" class="app-view compose-view is-active" aria-label="创建数据任务">
+        <div class="compose-center">
+          <div class="welcome-copy">
+            <h1>今天想了解什么？</h1>
+            <p>直接查询业务结果，或描述一个数据开发任务。</p>
+          </div>
+
+          <section class="composer-panel" aria-label="业务需求输入">
+            <label class="sr-only" for="prompt">业务需求</label>
+            <textarea
+              id="prompt"
+              rows="4"
+              placeholder="例如：2025 年各地区收入合计排名"
+            ></textarea>
+            <div class="composer-footer">
+              <details class="composer-options">
+                <summary title="任务设置">设置</summary>
+                <div class="options-popover">
+                  <div class="option-row">
+                    <label for="scenario">业务场景</label>
+                    <select id="scenario">
+                      <option value="tax_taxpayer_annual_base">Tax 纳税人年度基础表</option>
+                      <option value="tax_resico_control">RESICO 纳税人控制</option>
+                      <option value="tax_regime_reconciliation">Tax 税制核对</option>
+                    </select>
+                  </div>
+                  <div class="option-row">
+                    <label for="templateSelect">需求模板</label>
+                    <select id="templateSelect">
+                      <option value="">正在加载模板...</option>
+                    </select>
+                  </div>
+                  <div class="option-actions">
+                    <button id="applyTemplate" class="secondary compact-button" type="button">套用模板</button>
+                    <button id="sampleButton" class="secondary compact-button" type="button">准备样例数据</button>
+                    <button id="testMaaS" class="secondary compact-button" type="button">测试 MaaS</button>
+                  </div>
+                  <label class="toggle">
+                    <input id="useMaaS" type="checkbox" />
+                    <span>使用 MaaS 生成草稿</span>
+                    <span id="maasBadge" class="badge muted">检查中</span>
+                  </label>
+                  <div id="templateSummary" class="option-note">选择模板后可自动补齐规范化需求。</div>
+                  <details class="template-details">
+                    <summary>模板参数</summary>
+                    <div id="templateFields" class="template-fields"></div>
+                  </details>
+                  <div id="templateWarnings" class="template-warnings"></div>
+                  <div id="maasStatus" class="option-note">正在读取 MaaS 状态。</div>
+                  <div id="maasTestResult" class="maas-test-result is-empty">尚未测试 MaaS。</div>
+                </div>
+              </details>
+              <span class="composer-safety">默认仅生成与验证，不创建云资源</span>
+              <button id="runButton" class="send-button" type="button" aria-label="发送需求" title="发送需求" disabled>↑</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="chatbiView" class="app-view chatbi-view" aria-label="ChatBI 查询结果">
+        <div class="chatbi-shell">
+          <div id="chatbiConversation" class="chatbi-conversation" aria-live="polite"></div>
+          <form id="chatbiComposer" class="chatbi-composer">
+            <label class="sr-only" for="chatbiPrompt">继续查询</label>
+            <textarea id="chatbiPrompt" rows="2" placeholder="继续追问这份数据"></textarea>
+            <button id="chatbiSend" class="send-button" type="submit" aria-label="发送查询" title="发送查询">↑</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="progressView" class="app-view progress-view" aria-label="任务执行进度">
+        <div class="progress-stage">
+          <header class="run-heading">
+            <div>
+              <span class="page-kicker">正在生成</span>
+              <h1>Agent 正在构建数据任务</h1>
+              <p id="progressPrompt">正在读取业务需求。</p>
+            </div>
+            <span id="runId" class="badge muted">准备中</span>
+          </header>
+
+          <div class="progress-summary">
+            <div class="progress-summary-copy">
+              <strong id="processProgressLabel">正在准备执行流程</strong>
+              <span id="processCount">0 / 8</span>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="processProgressBar"></span></div>
+            <p id="processOutcome">每一步都会显示状态、输入和输出。</p>
+            <div id="progressFailureActions" class="progress-failure-actions is-hidden">
+              <button id="retryRunButton" type="button">重试</button>
+              <button id="returnToPromptButton" class="secondary" type="button">返回输入</button>
+            </div>
+          </div>
+
+          <article id="userMessage" class="prompt-summary is-hidden">
+            <span>业务需求</span>
+            <p id="userPromptMessage"></p>
+          </article>
+
+          <div id="progressProcessHost"></div>
+        </div>
+      </section>
+
+      <section id="resultView" class="app-view result-view" aria-label="任务结果工作台">
+        <header class="result-header">
+          <div>
+            <div class="breadcrumb">数据任务 / <span id="resultRunId">最新运行</span></div>
+            <h1 id="resultTitle">数据任务结果</h1>
+            <p id="resultPrompt">业务需求已经转换为可审阅的工程产物。</p>
+          </div>
+          <div class="result-header-status">
+            <span class="status-indicator ready">生成完成</span>
+            <span class="status-indicator blocked">生产待审批</span>
+          </div>
+        </header>
+
+        <div class="result-layout">
+          <nav class="result-nav" aria-label="结果分类">
+            <button class="result-nav-button is-active" type="button" data-result-tab="overview">概览</button>
+            <button class="result-nav-button" type="button" data-result-tab="workflow">执行流程</button>
+            <button class="result-nav-button" type="button" data-result-tab="artifacts">代码与产物</button>
+            <button class="result-nav-button" type="button" data-result-tab="data">数据结果</button>
+            <button class="result-nav-button" type="button" data-result-tab="governance">质量与治理</button>
+            <button class="result-nav-button" type="button" data-result-tab="cloud">云环境</button>
+            <button class="result-nav-button" type="button" data-open-metadata>元数据中心</button>
+          </nav>
+
+          <div class="result-content">
+            <section class="result-tab-panel is-active" data-result-panel="overview">
+              <div class="content-heading">
+                <div><span class="page-kicker">Overview</span><h2>运行概览</h2></div>
+                <span id="overviewRunId" class="badge ready">已完成</span>
+              </div>
+
+              <article id="statusMessage" class="decision-box">
+                <strong>运行决策</strong>
+                <span id="decisionBox">尚未开始执行。</span>
+              </article>
+
+              <article id="resultMessage" class="overview-stack">
+                <div id="metricGrid" class="metric-grid"></div>
+                <details class="workspace-section" open>
+                  <summary><span>业务合约</span><span class="summary-hint">目标、来源、维度与指标</span></summary>
+                  <div id="contractSummary" class="parameter-grid"></div>
+                </details>
+                <details class="workspace-section" open>
+                  <summary><span>生成包</span><span class="summary-hint">本地文件和清单</span></summary>
+                  <div id="packageBox" class="package-box">
+                    <strong>尚未生成文件包</strong>
+                    <span>提交业务需求后，产物将保存到 generated/。</span>
+                  </div>
+                </details>
+              </article>
+            </section>
+
+            <section class="result-tab-panel" data-result-panel="workflow">
+              <div class="content-heading">
+                <div><span class="page-kicker">Workflow</span><h2>执行流程</h2></div>
+                <span id="processBadge" class="badge muted">等待</span>
+              </div>
+              <p class="section-description">点击任一步骤，查看该步骤接收的输入和产生的输出。</p>
+              <div id="resultProcessHost"></div>
+            </section>
+
+            <section class="result-tab-panel" data-result-panel="artifacts">
+              <div class="content-heading">
+                <div><span class="page-kicker">Artifacts</span><h2>代码与产物</h2></div>
+                <span class="badge blocked">需人工审阅</span>
+              </div>
+              <section id="reviewPanel" class="artifact-workspace is-hidden">
+                <div class="artifact-browser">
+                  <div class="artifact-toolbar">
+                    <label for="artifactSelect">选择产物</label>
+                    <select id="artifactSelect"></select>
+                    <a id="artifactOpen" href="#" target="_blank" rel="noreferrer">在新窗口打开</a>
+                  </div>
+                  <div id="artifactReviewState" class="review-state">尚未选择产物。</div>
+                  <pre id="artifactPreview">尚未选择产物。</pre>
+                  <div class="artifact-actions">
+                    <button id="approveArtifact" type="button">通过</button>
+                    <button id="rejectArtifact" class="secondary danger" type="button">驳回</button>
+                  </div>
+                </div>
+
+                <details class="workspace-section" open>
+                  <summary><span>发布候选包</span><span class="summary-hint">审批与发布前检查</span></summary>
+                  <div id="releaseBox" class="release-box blocked">
+                    <strong>发布候选包未就绪</strong>
+                    <span>通过 PySpark、SQL 和 DataArts DAG 后可生成。</span>
+                    <button id="generateRelease" class="secondary" type="button" disabled>生成发布包</button>
+                  </div>
+                  <div id="preflightBox" class="preflight-box blocked">
+                    <strong>发布前检查未运行</strong>
+                    <span>生成发布包后检查目标环境、OBS 分层、安全策略和执行锁。</span>
+                  </div>
+                </details>
+
+                <details class="workspace-section">
+                  <summary><span>云参数与 DataArts</span><span class="summary-hint">绑定、标准化和导入复核</span></summary>
+                  <div id="bindingBox" class="binding-box blocked">
+                    <strong>云参数绑定未开始</strong>
+                    <span>先生成本地模拟绑定，不连接云服务。</span>
+                    <button id="simulateBinding" class="secondary" type="button" disabled>本地模拟绑定</button>
+                  </div>
+                  <div id="dataArtsStandardBox" class="binding-box blocked">
+                    <strong>DataArts 标准包未生成</strong>
+                    <span>将预览包规范化为稳定的导入结构。</span>
+                    <button id="standardizeDataArts" class="secondary" type="button" disabled>标准化 DataArts</button>
+                  </div>
+                  <div id="cloudProbeBox" class="binding-box blocked">
+                    <strong>云资源只读验证未开始</strong>
+                    <span>只检查资源和访问状态，不创建、不修改、不执行。</span>
+                    <button id="runCloudProbe" class="secondary" type="button" disabled>验证云资源</button>
+                  </div>
+                  <div id="importReviewBox" class="import-box blocked">
+                    <strong>导入复核未开始</strong>
+                    <span>参数绑定通过后生成操作员交接包。</span>
+                    <button id="generateImportReview" class="secondary" type="button" disabled>生成导入复核</button>
+                  </div>
+                </details>
+              </section>
+            </section>
+
+            <section class="result-tab-panel" data-result-panel="data">
+              <div class="content-heading">
+                <div><span class="page-kicker">Data</span><h2>数据结果</h2></div>
+                <div class="inline-badges"><span id="rowCount" class="badge muted">0 行</span><span id="goldRowCount" class="badge muted">0 gold</span></div>
+              </div>
+              <section id="supportPanel" class="is-hidden">
+                <details class="workspace-section" open>
+                  <summary><span>Gold 聚合结果</span><span class="summary-hint">本地等价试运行</span></summary>
+                  <div class="table-wrap"><table id="goldTable"></table></div>
+                </details>
+                <details class="workspace-section">
+                  <summary><span>脱敏样例数据</span><span class="summary-hint">仅用于本地验证</span></summary>
+                  <div class="table-wrap"><table id="dataTable"></table></div>
+                </details>
+              </section>
+
+              <details class="workspace-section" open>
+                <summary><span>真实云 Gold 查询</span><span class="summary-hint">OBS / MRS 执行证据</span></summary>
+                <div class="cloud-query-controls">
+                  <label><span>年份</span><select id="cloudGoldYear"></select></label>
+                  <label><span>地区</span><select id="cloudGoldRegion"></select></label>
+                  <label><span>税制</span><select id="cloudGoldRegime"></select></label>
+                  <label><span>RESICO</span><select id="cloudGoldResico"><option value="">全部</option><option value="true">是</option><option value="false">否</option></select></label>
+                  <button id="queryCloudGold" class="secondary" type="button">查询</button>
+                </div>
+                <div id="cloudGoldQuerySummary" class="metric-grid compact-metrics"></div>
+                <div class="table-wrap"><table id="cloudGoldQueryTable"></table></div>
+              </details>
+            </section>
+
+            <section class="result-tab-panel" data-result-panel="governance">
+              <div class="content-heading">
+                <div><span class="page-kicker">Governance</span><h2>质量与治理</h2></div>
+                <span class="badge ready">已审计</span>
+              </div>
+              <details class="workspace-section" open>
+                <summary><span>质量门禁</span><span class="summary-hint">规则、状态和原因</span></summary>
+                <div id="gateList" class="gate-list"></div>
+              </details>
+              <details class="workspace-section">
+                <summary><span>Agent 输出</span><span class="summary-hint">各子任务的执行结果</span></summary>
+                <div id="agentGrid" class="agent-grid"><div class="empty-state">尚未生成 Agent 输出。</div></div>
+              </details>
+              <details class="workspace-section">
+                <summary><span>数据血缘</span><span class="summary-hint">来源、目标和控制点</span></summary>
+                <div id="lineageList" class="lineage-list"></div>
+              </details>
+              <details class="workspace-section">
+                <summary><span>稳定性评测</span><span class="summary-hint">本地、MaaS 与失败回放</span></summary>
+                <div class="evaluation-panel">
+                  <div class="tool-heading"><div><strong>本地评测集</strong><span>批量验证 prompt 到交接包。</span></div><button id="runEvaluation" class="secondary compact-button" type="button">运行评测</button></div>
+                  <div id="evaluationResult" class="evaluation-result is-empty">尚未运行评测。</div>
+                </div>
+                <div class="comparison-panel">
+                  <div class="tool-heading"><div><strong>Local vs MaaS</strong><span>使用同一组 prompt 对比产物质量。</span></div><button id="runComparison" class="secondary compact-button" type="button">运行对照</button></div>
+                  <div id="comparisonResult" class="comparison-result is-empty">尚未运行对照评测。</div>
+                </div>
+                <div class="strategy-panel">
+                  <div class="tool-heading"><div><strong>策略与失败回放</strong><span>验证修复是否产生回归。</span></div><div class="inline-actions"><button id="refreshFailures" class="secondary compact-button" type="button">刷新样本</button><button id="replayFailures" class="secondary compact-button" type="button">回放失败</button></div></div>
+                  <div id="strategyResult" class="strategy-result is-empty">正在读取策略库。</div>
+                  <div id="failureResult" class="strategy-result is-empty">正在读取失败样本。</div>
+                </div>
+              </details>
+            </section>
+
+            <section class="result-tab-panel" data-result-panel="cloud">
+              <div class="content-heading">
+                <div><span class="page-kicker">Cloud</span><h2>云环境</h2></div>
+                <span class="badge blocked">受控执行</span>
+              </div>
+              <details class="workspace-section" open>
+                <summary><span>真实云执行证据</span><span id="cloudEvidenceBadge" class="badge muted">未运行</span></summary>
+                <div id="cloudEvidenceSummary" class="section-description">正在读取真实 Huawei Cloud E2E 证据。</div>
+                <div id="cloudEvidenceMeta" class="metric-grid"></div>
+                <div class="table-wrap"><table id="cloudEvidenceTable"></table></div>
+                <button id="refreshCloudEvidence" class="secondary" type="button">刷新执行证据</button>
+              </details>
+              <details class="workspace-section">
+                <summary><span>云环境准备度</span><span id="cloudReadinessBadge" class="badge muted">检查中</span></summary>
+                <div id="cloudReadinessSummary" class="section-description">正在读取准备度报告。</div>
+                <div id="cloudReadinessPolicy" class="readiness-policy"></div>
+                <div id="cloudReadinessGates" class="readiness-gates"></div>
+                <div id="cloudReadinessCommands" class="readiness-commands"></div>
+                <button id="refreshCloudReadiness" class="secondary" type="button">刷新准备度</button>
+              </details>
+              <details id="runtimePanel" class="workspace-section is-hidden">
+                <summary><span>运行环境</span><a id="codeServerLink" href="http://127.0.0.1:8080" target="_blank" rel="noreferrer">code-server</a></summary>
+                <div id="runtimeStrip" class="runtime-strip"><span>本地编排</span><span>MaaS 可选</span><span>云执行受控</span></div>
+              </details>
+              <details class="workspace-section">
+                <summary><span>真实资源创建门禁</span><span class="summary-hint">创建前八项检查</span></summary>
+                <div class="tool-heading"><div><strong>创建真实资源前准备包</strong><span>检查环境、合规、蓝图、成本、IAM、IaC state 和 dry-run。</span></div><button id="runPreExecution" class="secondary compact-button" type="button">生成准备包</button></div>
+                <div id="preExecutionResult" class="pre-execution-result is-empty">完成发布包和只读验证后可生成。</div>
+              </details>
+              <details class="workspace-section" open>
+                <summary><span>生产控制中心</span><span class="summary-hint">身份、发布哈希与云执行申请</span></summary>
+                <div id="productionAuthSummary" class="production-control-status blocked">
+                  <strong>正在检查生产身份</strong>
+                  <span>生产模式下，审批和执行操作需要经过认证的角色。</span>
+                </div>
+                <div id="productionRunState" class="production-control-status is-empty">
+                  <strong>尚未读取生产状态</strong>
+                  <span>生成任务后会显示不可变发布哈希、审批状态和执行记录。</span>
+                </div>
+                <div class="production-action-grid">
+                  <label>
+                    <span>执行配置</span>
+                    <select id="executionProfile" disabled>
+                      <option value="">没有可用配置</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>幂等键</span>
+                    <input id="executionIdempotencyKey" type="text" maxlength="160" placeholder="自动生成" />
+                  </label>
+                  <div class="production-action-buttons">
+                    <button id="requestExecution" class="secondary" type="button" disabled>申请云执行</button>
+                    <button id="approveExecution" type="button" disabled>批准并入队</button>
+                    <button id="cancelExecution" class="secondary danger" type="button" disabled>取消执行</button>
+                  </div>
+                </div>
+                <div id="productionExecutionList" class="production-execution-list">
+                  <div class="empty-state">暂无执行申请。</div>
+                </div>
+              </details>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="metadataView" class="app-view metadata-view" aria-label="元数据中心">
+        <div class="metadata-page">
+          <header class="metadata-heading">
+            <div>
+              <span class="page-kicker">Catalog</span>
+              <h1>元数据中心</h1>
+              <p>统一查看数据资产、字段、业务指标、隐私策略、血缘与 Iceberg 快照。</p>
+            </div>
+            <div class="metadata-heading-actions">
+              <span id="metadataStatus" class="status-indicator muted">正在加载</span>
+              <button id="refreshMetadata" class="secondary compact-button" type="button">刷新元数据</button>
+            </div>
+          </header>
+
+          <section id="metadataSummary" class="metadata-summary" aria-label="元数据概览"></section>
+
+          <div class="metadata-layout">
+            <aside class="asset-browser" aria-label="Catalog 浏览器">
+              <div class="asset-browser-heading">
+                <div>
+                  <span class="page-kicker">Catalog explorer</span>
+                  <strong>数据目录</strong>
+                </div>
+                <span id="assetCount" class="badge muted">0</span>
+              </div>
+              <label class="sr-only" for="assetSearch">搜索数据资产</label>
+              <input id="assetSearch" type="search" placeholder="搜索 catalog、schema 或表" />
+              <div id="assetList" class="catalog-tree" role="tree" aria-label="Catalog 树"></div>
+            </aside>
+
+            <section class="asset-detail" aria-live="polite">
+              <header class="asset-detail-heading">
+                <div>
+                  <div class="inline-badges">
+                    <span id="assetLayer" class="badge muted">-</span>
+                    <span id="assetFormat" class="badge muted">-</span>
+                    <span id="assetStatus" class="badge muted">-</span>
+                  </div>
+                  <h2 id="assetTitle">选择一个数据资产</h2>
+                  <p id="assetQualifiedName" class="technical-value">-</p>
+                </div>
+              </header>
+
+              <nav class="metadata-tabs" aria-label="元数据详情">
+                <button type="button" class="metadata-tab is-active" data-metadata-tab="overview">概览</button>
+                <button type="button" class="metadata-tab" data-metadata-tab="schema">字段</button>
+                <button type="button" class="metadata-tab" data-metadata-tab="semantics">指标与维度</button>
+                <button type="button" class="metadata-tab" data-metadata-tab="lineage">血缘</button>
+                <button type="button" class="metadata-tab" data-metadata-tab="snapshots">快照</button>
+              </nav>
+
+              <div class="metadata-panels">
+                <section id="metadataOverview" class="metadata-panel is-active" data-metadata-panel="overview"></section>
+                <section id="metadataSchema" class="metadata-panel" data-metadata-panel="schema"></section>
+                <section id="metadataSemantics" class="metadata-panel" data-metadata-panel="semantics"></section>
+                <section id="metadataLineage" class="metadata-panel" data-metadata-panel="lineage"></section>
+                <section id="metadataSnapshots" class="metadata-panel" data-metadata-panel="snapshots"></section>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="processWorkspace" class="process-workspace">
+        <div id="processFlow" class="process-flow"><div class="empty-state">提交需求后显示执行步骤。</div></div>
+      </section>
+    </main>
+    <script src="/static/i18n.js?v=i18n-audit-v5-20260727"></script>
+    <script src="/static/app.js?v=i18n-audit-v5-20260727"></script>
+    <script src="/static/metadata.js?v=i18n-audit-v5-20260727"></script>
+  </body>
+</html>
