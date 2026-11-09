@@ -2,6 +2,45 @@
 
 把 NEXO Data Agent 的方案、完整源码和可重复演示封装为标准 Agent Skill。支持 GitHub Copilot、Codex、Claude Code；无需华为云账号即可先运行本地演示。
 
+## 整体架构
+
+前端把问数、目录、流程和任务放在同一工作台；Python 后端负责身份校验、Agent 编排、元数据及任务执行。下面是完整集成模式的概览，纯浏览器演示仅运行前端与合成数据。
+
+```mermaid
+flowchart TB
+    UI["统一工作台 · React / TypeScript<br/>ChatBI · 数据目录 · 流程画布 · 任务 · 分权分域"]
+    API["Python 后端 · FastAPI<br/>身份 / 租户 / 角色 / 业务域校验"]
+    AGENT["openJiuwen Workflow<br/>检索目录 → 生成计划 → 受控执行"]
+    MODEL["可配置模型<br/>Huawei MaaS GLM-5.3 / 其他兼容模型"]
+    MCP["包内 MCP 适配服务 · FastMCP<br/>权限复核 · 计划校验 · 参数化 SQL"]
+    DWS[("华为云 DWS<br/>私网 · 只读查询")]
+    SQLITE[("SQLite<br/>本地合成数据替身")]
+    META["统一元数据模块<br/>OpenMetadata 目录 / 字段 / 血缘<br/>Iceberg 初始化历史快照"]
+    TEMPORAL["Temporal + Python Worker<br/>持久化任务 / 调度 / 质量检查"]
+    OUTPUT[("独立 SQLite sandbox<br/>幂等保存任务结果")]
+
+    UI <-->|"HTTP JSON / 对外 HTTPS"| API
+    API --> AGENT
+    AGENT <-->|"HTTPS · OpenAI-compatible"| MODEL
+    AGENT <-->|"MCP · stdio 子进程"| MCP
+    MCP -->|"psycopg2 · SQL / TLS"| DWS
+    MCP -->|"sqlite3 · 只读"| SQLITE
+    API <-->|"Python 模块 · REST / PyIceberg"| META
+    API <-->|"gRPC · Workflow / Schedule"| TEMPORAL
+    TEMPORAL <-->|"MCP · stdio"| MCP
+    TEMPORAL -->|"Python 元数据模块 · REST 血缘登记"| META
+    MCP -->|"publish_result"| OUTPUT
+
+    classDef app fill:#FFF2EE,stroke:#FF6040,color:#292524;
+    classDef store fill:#F5F5F5,stroke:#A8A29E,color:#292524;
+    class UI,API,AGENT,MODEL,MCP,META,TEMPORAL app;
+    class DWS,SQLITE,OUTPUT store;
+```
+
+MCP 是 Agent 的工具调用协议，DWS 实际通过 Python 驱动连接；当前可选择 SQLite 或 DWS 后端。业务源表保留在原库，统一管理目录与血缘，任务输出写入独立 sandbox。Snowflake / Redshift、跨库联邦查询及 DWS 写回仍是扩展项。
+
+查看 [详细架构图、组件清单及连接协议](data-agent-practice/references/architecture.md)，其中包含问数时序、元数据存储关系、任务链路和三种运行模式的区别。
+
 ## 安装到你的项目
 
 需要 Python 3.12。克隆仓库后，从仓库根目录运行：
