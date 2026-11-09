@@ -1,0 +1,2395 @@
+{
+  "ChatBI 分析": [
+    "ChatBI Analytics",
+    "Análisis ChatBI"
+  ],
+  "数据目录": [
+    "Data catalog",
+    "Catálogo de datos"
+  ],
+  "流程编排": [
+    "Workflow builder",
+    "Diseño de flujos"
+  ],
+  "任务中心": [
+    "Task center",
+    "Centro de tareas"
+  ],
+  "分权分域": [
+    "Access & domains",
+    "Acceso y dominios"
+  ],
+  "连接与模型": [
+    "Connections & models",
+    "Conexiones y modelos"
+  ],
+  "地区销售表现": [
+    "Regional sales performance",
+    "Ventas por región"
+  ],
+  "分析 10 月各地区销售额": [
+    "Analyze October sales by region",
+    "Analiza las ventas de octubre por región"
+  ],
+  "销售额、订单量与地区贡献": [
+    "Revenue, orders and regional contribution",
+    "Ventas, pedidos y contribución regional"
+  ],
+  "广告投放回报": [
+    "Advertising return",
+    "Retorno publicitario"
+  ],
+  "分析 10 月各广告平台的 ROAS": [
+    "Analyze October ROAS by advertising platform",
+    "Analiza el ROAS de octubre por plataforma publicitaria"
+  ],
+  "连接业务表现与投放数据": [
+    "Connect business performance with ad spend",
+    "Relaciona los resultados con la inversión publicitaria"
+  ],
+  "库存健康检查": [
+    "Inventory health check",
+    "Estado del inventario"
+  ],
+  "检查低于补货阈值的库存": [
+    "Check inventory below the reorder threshold",
+    "Revisa el inventario por debajo del punto de reposición"
+  ],
+  "识别短缺与数据质量异常": [
+    "Identify shortages and data quality issues",
+    "Detecta faltantes y problemas de calidad"
+  ],
+  "排队中": [
+    "Queued",
+    "En cola"
+  ],
+  "运行中": [
+    "Running",
+    "En ejecución"
+  ],
+  "已完成": [
+    "Completed",
+    "Completado"
+  ],
+  "失败": [
+    "Failed",
+    "Fallido"
+  ],
+  "已取消": [
+    "Canceled",
+    "Cancelado"
+  ],
+  "暂无记录": [
+    "No records",
+    "Sin registros"
+  ],
+  "当前筛选或授权范围内没有匹配的数据。": [
+    "No data matches the current filters or access scope.",
+    "No hay datos que coincidan con los filtros o el alcance de acceso."
+  ],
+  "演示数据加载失败": [
+    "Could not load demo data",
+    "No se pudieron cargar los datos de demostración"
+  ],
+  "后端会话切换失败，已明确切换至浏览器演示。": [
+    "The backend session could not be switched. Browser demo mode is now active.",
+    "No se pudo cambiar la sesión del servidor. Se ha activado la demostración en el navegador."
+  ],
+  "分析失败": [
+    "Analysis failed",
+    "El análisis ha fallado"
+  ],
+  "这份分析已经在看板中。": [
+    "This analysis is already on your dashboard.",
+    "Este análisis ya está en tu panel."
+  ],
+  "已保存到当前租户的分析看板。": [
+    "Saved to the current tenant's dashboard.",
+    "Guardado en el panel del inquilino actual."
+  ],
+  "当前角色没有导出权限。": [
+    "Your role cannot export data.",
+    "Tu rol no permite exportar datos."
+  ],
+  "服务器拒绝导出：当前身份没有导出权限。": [
+    "The server denied the export: your identity does not have export permission.",
+    "El servidor rechazó la exportación: tu identidad no tiene ese permiso."
+  ],
+  "流程已保存为 v{0}。": [
+    "Workflow saved as v{0}.",
+    "Flujo guardado como v{0}."
+  ],
+  "当前角色没有数据处理执行权限。可切换“数据工程师”演示身份。": [
+    "Your role cannot run data processing tasks. Switch to the Data Engineer demo identity.",
+    "Tu rol no permite ejecutar tareas de datos. Cambia a la identidad de demostración de Ingeniería de datos."
+  ],
+  "任务下发失败": [
+    "Could not submit the task",
+    "No se pudo enviar la tarea"
+  ],
+  "浏览器演示不执行后台定时任务，请选择“手动运行”。真实调度需要启动后端与 Temporal。": [
+    "Browser demos cannot run scheduled jobs. Select Manual run. Persistent scheduling requires the backend and Temporal.",
+    "La demostración en el navegador no ejecuta tareas programadas. Elige Ejecución manual. La programación persistente requiere el servidor y Temporal."
+  ],
+  "浏览器演示任务已排队；关闭页面后不承诺后台执行。": [
+    "Browser demo task queued. Background execution is not guaranteed after closing the page.",
+    "Tarea de demostración en cola. La ejecución en segundo plano no está garantizada al cerrar la página."
+  ],
+  "处理任务已提交至后端。": [
+    "Processing task submitted to the backend.",
+    "Tarea de procesamiento enviada al servidor."
+  ],
+  "已创建浏览器演示任务。": [
+    "Browser demo task created.",
+    "Tarea de demostración creada en el navegador."
+  ],
+  "演示处理完成：生成 {0} 行汇总结果；仅保存于本浏览器，未写入 DWS。": [
+    "Demo complete: {0} summary rows created. Saved only in this browser; no DWS writes.",
+    "Demostración completada: se crearon {0} filas de resumen. Solo se guardaron en este navegador, sin escribir en DWS."
+  ],
+  "执行节点：{0}（演示）": [
+    "Executing node: {0} (demo)",
+    "Ejecutando nodo: {0} (demostración)"
+  ],
+  "当前角色没有取消任务的权限。": [
+    "Your role cannot cancel tasks.",
+    "Tu rol no permite cancelar tareas."
+  ],
+  "任务取消失败。": [
+    "Could not cancel the task.",
+    "No se pudo cancelar la tarea."
+  ],
+  "用户请求取消任务。": [
+    "The user requested cancellation.",
+    "El usuario solicitó la cancelación."
+  ],
+  "已提交取消请求。": [
+    "Cancellation requested.",
+    "Cancelación solicitada."
+  ],
+  "数据未能加载": [
+    "Data could not be loaded",
+    "No se pudieron cargar los datos"
+  ],
+  "重新加载": [
+    "Reload",
+    "Volver a cargar"
+  ],
+  "正在准备你的数据工作空间…": [
+    "Preparing your data workspace…",
+    "Preparando tu espacio de datos…"
+  ],
+  "NEXO 首页": [
+    "NEXO home",
+    "Inicio de NEXO"
+  ],
+  "工作空间": [
+    "Workspace",
+    "Espacio de trabajo"
+  ],
+  "管理与治理": [
+    "Management & governance",
+    "Gestión y gobierno"
+  ],
+  "探索你的数据可能": [
+    "Discover what your data can do",
+    "Descubre el potencial de tus datos"
+  ],
+  "从业务问题出发，": [
+    "Start with a business question,",
+    "Parte de una pregunta de negocio,"
+  ],
+  "连接数据与行动。": [
+    "connect data with action.",
+    "conecta los datos con la acción."
+  ],
+  "快速上手": [
+    "Get started",
+    "Primeros pasos"
+  ],
+  "使用指南": [
+    "User guide",
+    "Guía de uso"
+  ],
+  "身份设置": [
+    "Identity settings",
+    "Configuración de identidad"
+  ],
+  "合成数据演示": [
+    "Synthetic data demo",
+    "Demostración con datos sintéticos"
+  ],
+  "搜索资产": [
+    "Search assets",
+    "Buscar activos"
+  ],
+  "切换租户": [
+    "Switch tenant",
+    "Cambiar de inquilino"
+  ],
+  "从洞察，到行动": [
+    "From insight to action",
+    "Del análisis a la acción"
+  ],
+  "探索业务数据，让每一个问题都有清晰的下一步。": [
+    "Explore your business data and find a clear next step for every question.",
+    "Explora los datos de tu negocio y encuentra el siguiente paso para cada pregunta."
+  ],
+  "我的看板": [
+    "My dashboards",
+    "Mis paneles"
+  ],
+  "我的分析看板": [
+    "My analysis dashboards",
+    "Mis paneles de análisis"
+  ],
+  "当前租户 · 当前演示身份": [
+    "Current tenant · Current demo identity",
+    "Inquilino actual · Identidad de demostración actual"
+  ],
+  "删除看板": [
+    "Delete dashboard",
+    "Eliminar panel"
+  ],
+  "把有价值的分析留在这里": [
+    "Keep useful insights here",
+    "Guarda aquí los análisis útiles"
+  ],
+  "完成一次问数后，点击“保存到看板”，随时继续探索。": [
+    "After an analysis, select Save to dashboard to return to it anytime.",
+    "Después de un análisis, selecciona Guardar en el panel para consultarlo cuando quieras."
+  ],
+  "开始第一次分析": [
+    "Start your first analysis",
+    "Inicia tu primer análisis"
+  ],
+  "分析结果": [
+    "Analysis results",
+    "Resultados del análisis"
+  ],
+  "业务表现概览": [
+    "Business overview",
+    "Resumen del negocio"
+  ],
+  "分析时间范围": [
+    "Analysis period",
+    "Período de análisis"
+  ],
+  "2026 年 10 月": [
+    "October 2026",
+    "Octubre de 2026"
+  ],
+  "2026 年 9 月": [
+    "September 2026",
+    "Septiembre de 2026"
+  ],
+  "全部时间": [
+    "All time",
+    "Todo el período"
+  ],
+  "净销售额": [
+    "Net revenue",
+    "Ventas netas"
+  ],
+  "排除已取消订单": [
+    "Canceled orders excluded",
+    "Se excluyen los pedidos cancelados"
+  ],
+  "有效订单": [
+    "Valid orders",
+    "Pedidos válidos"
+  ],
+  "按订单粒度去重统计": [
+    "Distinct orders only",
+    "Se cuentan los pedidos únicos"
+  ],
+  "平均客单价": [
+    "Average order value",
+    "Valor medio del pedido"
+  ],
+  "净销售额 / 有效订单": [
+    "Net revenue / valid orders",
+    "Ventas netas / pedidos válidos"
+  ],
+  "商品毛利率": [
+    "Product gross margin",
+    "Margen bruto del producto"
+  ],
+  "未扣物流与广告费用": [
+    "Before shipping and advertising costs",
+    "Antes de los gastos de envío y publicidad"
+  ],
+  "导出结果": [
+    "Export results",
+    "Exportar resultados"
+  ],
+  "导出分析结果": [
+    "Export analysis results",
+    "Exportar resultados del análisis"
+  ],
+  "保存到看板": [
+    "Save to dashboard",
+    "Guardar en el panel"
+  ],
+  "可视化": [
+    "Visualization",
+    "Visualización"
+  ],
+  "结果数据": [
+    "Result data",
+    "Datos del resultado"
+  ],
+  "查询计划": [
+    "Query plan",
+    "Plan de consulta"
+  ],
+  "浏览器聚合": [
+    "Browser aggregation",
+    "Agregación en el navegador"
+  ],
+  "openJiuwen · 规则演示": [
+    "openJiuwen · Rule-based demo",
+    "openJiuwen · Demostración con reglas"
+  ],
+  "个结果 ·": [
+    "results ·",
+    "resultados ·"
+  ],
+  "授权地区": [
+    "Authorized regions",
+    "Regiones autorizadas"
+  ],
+  "柱状图": [
+    "Bar chart",
+    "Gráfico de barras"
+  ],
+  "折线图": [
+    "Line chart",
+    "Gráfico de líneas"
+  ],
+  "环形图": [
+    "Donut chart",
+    "Gráfico de anillo"
+  ],
+  "只看 {0}，按品类分析销售额": [
+    "For {0} only, analyze sales by category",
+    "Solo para {0}, analiza las ventas por categoría"
+  ],
+  "参数化执行计划 · 浏览器演示中 SQL 仅供查看": [
+    "Parameterized plan · SQL is read-only in the browser demo",
+    "Plan parametrizado · El SQL solo se muestra en la demostración del navegador"
+  ],
+  "SQL 已复制。": [
+    "SQL copied.",
+    "SQL copiado."
+  ],
+  "复制": [
+    "Copy",
+    "Copiar"
+  ],
+  "处理流程": [
+    "Processing workflow",
+    "Flujo de procesamiento"
+  ],
+  "已创建流程草稿，执行前可调整节点与输出。": [
+    "Workflow draft created. Review its nodes and output before running.",
+    "Se creó un borrador del flujo. Revisa los nodos y la salida antes de ejecutarlo."
+  ],
+  "转为处理流程": [
+    "Create processing workflow",
+    "Crear flujo de procesamiento"
+  ],
+  "销售额趋势": [
+    "Revenue trend",
+    "Tendencia de ventas"
+  ],
+  "Apr – Oct 2026 · 净销售额": [
+    "Apr–Oct 2026 · Net revenue",
+    "Abr–oct de 2026 · Ventas netas"
+  ],
+  "统一业务口径": [
+    "Consistent metric definitions",
+    "Definiciones de métricas uniformes"
+  ],
+  "· 含当前租户授权地区": [
+    "· Includes the tenant's authorized regions",
+    "· Incluye las regiones autorizadas del inquilino"
+  ],
+  "分析所有月份的销售额趋势": [
+    "Analyze the sales trend across all months",
+    "Analiza la tendencia de ventas de todos los meses"
+  ],
+  "探索趋势": [
+    "Explore trend",
+    "Explorar tendencia"
+  ],
+  "品类贡献": [
+    "Category contribution",
+    "Contribución por categoría"
+  ],
+  "探索品类": [
+    "Explore categories",
+    "Explorar categorías"
+  ],
+  "10 月按品类分析销售额": [
+    "Analyze October sales by category",
+    "Analiza las ventas de octubre por categoría"
+  ],
+  "地区表现": [
+    "Regional performance",
+    "Resultados por región"
+  ],
+  "个地区": [
+    "regions",
+    "regiones"
+  ],
+  "从一个问题开始": [
+    "Start with a question",
+    "Empieza con una pregunta"
+  ],
+  "探索更多业务场景": [
+    "Explore more business scenarios",
+    "Explora más casos de negocio"
+  ],
+  "全部为虚构英文数据 · 当前租户": [
+    "Fictional English data · Current tenant",
+    "Datos ficticios en inglés · Inquilino actual"
+  ],
+  "仅 {0}": [
+    "{0} only",
+    "Solo {0}"
+  ],
+  "按角色授权范围显示": [
+    "Displayed within the role's access scope",
+    "Se muestran los datos autorizados para el rol"
+  ],
+  "服务端执行模式": [
+    "Server execution mode",
+    "Ejecución en el servidor"
+  ],
+  "浏览器交互演示，非生产权限隔离": [
+    "Browser demo; not production tenant isolation",
+    "Demostración en el navegador; sin aislamiento de producción"
+  ],
+  "GLM5.3 已配置": [
+    "GLM5.3 configured",
+    "GLM5.3 configurado"
+  ],
+  "规则演示 · GLM5.3 待连接": [
+    "Rule-based demo · GLM5.3 not connected",
+    "Demostración con reglas · GLM5.3 sin conectar"
+  ],
+  "新建对话": [
+    "New conversation",
+    "Nueva conversación"
+  ],
+  "已开启新的分析对话。": [
+    "New analysis conversation started.",
+    "Se ha iniciado una nueva conversación de análisis."
+  ],
+  "今天，想了解什么？": [
+    "What would you like to explore?",
+    "¿Qué te gustaría explorar?"
+  ],
+  "告诉我你的业务问题。我会结合数据目录和指标口径，帮助你探索、分析，并规划下一步。": [
+    "Ask a business question. I'll use the catalog and metric definitions to help you explore, analyze and plan your next step.",
+    "Haz una pregunta de negocio. Usaré el catálogo y las definiciones de métricas para ayudarte a explorar, analizar y planificar el siguiente paso."
+  ],
+  "个可见资产": [
+    "visible assets",
+    "activos visibles"
+  ],
+  "授权业务域": [
+    "Authorized domains",
+    "Dominios autorizados"
+  ],
+  "你可以试着问": [
+    "Try asking",
+    "Prueba con estas preguntas"
+  ],
+  "10 月哪个地区销售额最高？": [
+    "Which region had the highest October sales?",
+    "¿Qué región tuvo más ventas en octubre?"
+  ],
+  "按品类进一步拆解销售额": [
+    "Break down sales further by category",
+    "Desglosa las ventas por categoría"
+  ],
+  "分析广告投放的 ROAS": [
+    "Analyze advertising ROAS",
+    "Analiza el ROAS publicitario"
+  ],
+  "查看分析结果": [
+    "View analysis results",
+    "Ver resultados del análisis"
+  ],
+  "正在检索上下文并生成分析…": [
+    "Retrieving context and preparing the analysis…",
+    "Recuperando el contexto y preparando el análisis…"
+  ],
+  "可在数据目录中选择资产并发起分析。": [
+    "Choose an asset in the catalog to start an analysis.",
+    "Elige un activo del catálogo para iniciar un análisis."
+  ],
+  "引用资产": [
+    "Reference asset",
+    "Usar activo"
+  ],
+  "向 Agent 提问": [
+    "Ask the agent",
+    "Preguntar al agente"
+  ],
+  "用自然语言探索你的数据…": [
+    "Explore your data in natural language…",
+    "Explora tus datos en lenguaje natural…"
+  ],
+  "发送问题": [
+    "Send question",
+    "Enviar pregunta"
+  ],
+  "Enter 发送 · Shift + Enter 换行": [
+    "Enter to send · Shift + Enter for a new line",
+    "Intro para enviar · Mayús + Intro para una nueva línea"
+  ],
+  "在统一业务上下文中发现、理解和复用数据资产。": [
+    "Discover, understand and reuse data assets with shared business context.",
+    "Descubre, comprende y reutiliza activos de datos con un contexto de negocio común."
+  ],
+  "下载合成数据": [
+    "Download synthetic data",
+    "Descargar datos sintéticos"
+  ],
+  "可见数据资产": [
+    "Visible data assets",
+    "Activos de datos visibles"
+  ],
+  "外部场景数据集": [
+    "External scenario datasets",
+    "Conjuntos de datos externos"
+  ],
+  "合成数据 · English": [
+    "Synthetic data · English",
+    "Datos sintéticos · Inglés"
+  ],
+  "业务目录": [
+    "Business catalog",
+    "Catálogo de negocio"
+  ],
+  "全部可见资产": [
+    "All visible assets",
+    "Todos los activos visibles"
+  ],
+  "物理位置可以不同，": [
+    "Data can live in different platforms,",
+    "Los datos pueden estar en distintas plataformas,"
+  ],
+  "业务上下文始终一致。": [
+    "with consistent business context.",
+    "con un contexto de negocio uniforme."
+  ],
+  "搜索资产、字段或业务含义…": [
+    "Search assets, fields or business meaning…",
+    "Busca activos, campos o su significado de negocio…"
+  ],
+  "清除搜索": [
+    "Clear search",
+    "Borrar búsqueda"
+  ],
+  "数据来源筛选": [
+    "Filter by data source",
+    "Filtrar por origen de datos"
+  ],
+  "全部来源": [
+    "All sources",
+    "Todos los orígenes"
+  ],
+  "内部数据": [
+    "Internal data",
+    "Datos internos"
+  ],
+  "外部场景": [
+    "External scenarios",
+    "Escenarios externos"
+  ],
+  "资产名称": [
+    "Asset name",
+    "Nombre del activo"
+  ],
+  "业务域": [
+    "Business domain",
+    "Dominio de negocio"
+  ],
+  "记录数": [
+    "Records",
+    "Registros"
+  ],
+  "质量": [
+    "Quality",
+    "Calidad"
+  ],
+  "负责人": [
+    "Owner",
+    "Responsable"
+  ],
+  "没有找到匹配资产": [
+    "No matching assets",
+    "No hay activos coincidentes"
+  ],
+  "尝试其他关键词，或调整业务域和来源筛选。": [
+    "Try another keyword or change the domain and source filters.",
+    "Prueba otra palabra o cambia los filtros de dominio y origen."
+  ],
+  "个可见资产 ·": [
+    "visible assets ·",
+    "activos visibles ·"
+  ],
+  "OpenMetadata 实时目录": [
+    "Live OpenMetadata catalog",
+    "Catálogo de OpenMetadata en vivo"
+  ],
+  "合成数据目录镜像": [
+    "Synthetic catalog mirror",
+    "Réplica del catálogo sintético"
+  ],
+  "OpenMetadata 接入状态": [
+    "OpenMetadata connection status",
+    "Estado de conexión con OpenMetadata"
+  ],
+  "用自然语言定义处理过程，让每一步都可见、可改、可追踪。": [
+    "Define a processing workflow in natural language. View, edit and trace each step.",
+    "Define un proceso con lenguaje natural. Visualiza, modifica y rastrea cada paso."
+  ],
+  "保存 v": [
+    "Save v",
+    "Guardar v"
+  ],
+  "下发任务": [
+    "Run task",
+    "Ejecutar tarea"
+  ],
+  "让 Agent 帮你定义过程": [
+    "Let the agent draft your workflow",
+    "Deja que el agente proponga un flujo"
+  ],
+  "库存质量检查流程": [
+    "Inventory quality workflow",
+    "Flujo de calidad del inventario"
+  ],
+  "地区销售汇总流程": [
+    "Regional sales summary",
+    "Resumen de ventas por región"
+  ],
+  "按品类汇总": [
+    "Group by category",
+    "Agrupar por categoría"
+  ],
+  "首版流程模板支持订单处理。库存场景可在 ChatBI 中分析，尚未生成库存执行流程。": [
+    "The first workflow template supports orders. Analyze inventory in ChatBI; inventory workflows are not yet supported.",
+    "La primera plantilla procesa pedidos. Puedes analizar el inventario en ChatBI; todavía no se admiten flujos de inventario."
+  ],
+  "已根据模板规则生成流程草稿，尚未调用模型。": [
+    "Workflow draft generated from template rules; no model was called.",
+    "Se generó un borrador con reglas de plantilla, sin llamar al modelo."
+  ],
+  "执行设置": [
+    "Execution settings",
+    "Configuración de ejecución"
+  ],
+  "触发方式": [
+    "Trigger",
+    "Activador"
+  ],
+  "手动运行": [
+    "Manual run",
+    "Ejecución manual"
+  ],
+  "每天 08:00（需后端调度）": [
+    "Daily at 08:00 (backend scheduling required)",
+    "Cada día a las 08:00 (requiere programación en el servidor)"
+  ],
+  "执行时区": [
+    "Execution time zone",
+    "Zona horaria de ejecución"
+  ],
+  "输出策略": [
+    "Output policy",
+    "Política de salida"
+  ],
+  "按时间分区替换 · 幂等写入": [
+    "Replace time partition · Idempotent writes",
+    "Sustituir partición temporal · Escrituras idempotentes"
+  ],
+  "当前角色允许执行，后端仍会逐节点校验。": [
+    "Your role can execute tasks. The backend still checks each node.",
+    "Tu rol permite ejecutar tareas. El servidor comprueba cada nodo."
+  ],
+  "当前角色可编辑草稿；执行需数据工程师权限。": [
+    "Your role can edit drafts. Execution requires Data Engineer permissions.",
+    "Tu rol permite editar borradores. La ejecución requiere permisos de Ingeniería de datos."
+  ],
+  "导出流程定义": [
+    "Export workflow definition",
+    "Exportar definición del flujo"
+  ],
+  "跟踪处理过程、检查运行结果，保持每一次交付可追溯。": [
+    "Track processing, inspect results and keep every delivery traceable.",
+    "Sigue el procesamiento, revisa los resultados y conserva la trazabilidad de cada entrega."
+  ],
+  "创建处理任务": [
+    "Create processing task",
+    "Crear tarea de procesamiento"
+  ],
+  "全部任务": [
+    "All tasks",
+    "Todas las tareas"
+  ],
+  "失败 / 取消": [
+    "Failed / canceled",
+    "Fallidas / canceladas"
+  ],
+  "全部": [
+    "All",
+    "Todas"
+  ],
+  "进行中": [
+    "In progress",
+    "En curso"
+  ],
+  "异常": [
+    "Issues",
+    "Incidencias"
+  ],
+  "后端任务状态自动刷新": [
+    "Backend task status refreshes automatically",
+    "El estado de las tareas se actualiza automáticamente"
+  ],
+  "浏览器演示 · 非后台调度": [
+    "Browser demo · No background scheduling",
+    "Demostración en el navegador · Sin programación en segundo plano"
+  ],
+  "任务 / 运行 ID": [
+    "Task / run ID",
+    "Tarea / ID de ejecución"
+  ],
+  "状态": [
+    "Status",
+    "Estado"
+  ],
+  "进度": [
+    "Progress",
+    "Progreso"
+  ],
+  "流程版本": [
+    "Workflow version",
+    "Versión del flujo"
+  ],
+  "提交时间": [
+    "Submitted at",
+    "Fecha de envío"
+  ],
+  "你的下一次数据交付，从这里开始": [
+    "Your next data delivery starts here",
+    "Tu próxima entrega de datos empieza aquí"
+  ],
+  "在流程编排中定义处理过程，下发后即可查看每个节点的运行状态。": [
+    "Define a workflow, submit it and follow the status of each node.",
+    "Define un flujo, envíalo y sigue el estado de cada nodo."
+  ],
+  "打开流程编排": [
+    "Open workflow builder",
+    "Abrir diseño de flujos"
+  ],
+  "每次执行绑定一个确定的流程版本。真实环境中由 Temporal 管理持久化调度，浏览器演示只在页面打开时推进任务。": [
+    "Each execution uses a fixed workflow version. Temporal manages persistent scheduling in the integrated backend. Browser demo tasks advance only while the page is open.",
+    "Cada ejecución usa una versión concreta del flujo. Temporal gestiona la programación persistente en el servidor. Las tareas del navegador avanzan mientras la página está abierta."
+  ],
+  "以业务域组织资产，以明确的权限连接人员、数据和行动。": [
+    "Organize assets by business domain, with clear access to people, data and actions.",
+    "Organiza los activos por dominio de negocio, con permisos claros para acceder a datos y realizar acciones."
+  ],
+  "切换演示身份": [
+    "Switch demo identity",
+    "Cambiar identidad de demostración"
+  ],
+  "当前租户：": [
+    "Current tenant:",
+    "Inquilino actual:"
+  ],
+  "· 地区范围：": [
+    "· Region scope:",
+    "· Alcance regional:"
+  ],
+  "已授权地区": [
+    "Authorized regions",
+    "Regiones autorizadas"
+  ],
+  "可管理销售域演示策略": [
+    "Can manage demo sales-domain policies",
+    "Puede gestionar las políticas de demostración del dominio de ventas"
+  ],
+  "管理权限与数据访问权分别授予": [
+    "Management and data access are granted separately",
+    "La gestión y el acceso a los datos se autorizan por separado"
+  ],
+  "已应用演示范围": [
+    "Demo scope applied",
+    "Alcance de demostración aplicado"
+  ],
+  "已授权": [
+    "Authorized",
+    "Autorizado"
+  ],
+  "· 权限矩阵": [
+    "· Permission matrix",
+    "· Matriz de permisos"
+  ],
+  "发现、查询、导出与执行是不同的权限。": [
+    "Discovery, querying, export and execution have separate permissions.",
+    "Descubrimiento, consulta, exportación y ejecución tienen permisos independientes."
+  ],
+  "配置演示策略": [
+    "Configure demo policy",
+    "Configurar política de demostración"
+  ],
+  "角色": [
+    "Role",
+    "Rol"
+  ],
+  "目录发现": [
+    "Discover assets",
+    "Descubrir activos"
+  ],
+  "查询分析": [
+    "Query & analyze",
+    "Consultar y analizar"
+  ],
+  "数据导出": [
+    "Export data",
+    "Exportar datos"
+  ],
+  "处理执行": [
+    "Run processing",
+    "Ejecutar procesos"
+  ],
+  "域治理": [
+    "Domain governance",
+    "Gobierno del dominio"
+  ],
+  "数据范围": [
+    "Data scope",
+    "Alcance de datos"
+  ],
+  "当前": [
+    "You",
+    "Actual"
+  ],
+  "授权域内全部地区": [
+    "All regions in authorized domains",
+    "Todas las regiones de los dominios autorizados"
+  ],
+  "未授权": [
+    "Not authorized",
+    "No autorizado"
+  ],
+  "客户联系方式对非工程师身份脱敏；浏览器数据为合成样本。": [
+    "Customer contact details are masked for non-engineers. Browser data is synthetic.",
+    "Los datos de contacto se ocultan para los roles sin permisos de ingeniería. Los datos del navegador son sintéticos."
+  ],
+  "操作审计": [
+    "Audit log",
+    "Registro de auditoría"
+  ],
+  "演示记录": [
+    "Demo records",
+    "Registros de demostración"
+  ],
+  "时间": [
+    "Time",
+    "Hora"
+  ],
+  "操作人": [
+    "Actor",
+    "Usuario"
+  ],
+  "操作": [
+    "Action",
+    "Acción"
+  ],
+  "目标": [
+    "Target",
+    "Destino"
+  ],
+  "结果": [
+    "Result",
+    "Resultado"
+  ],
+  "允许": [
+    "Allowed",
+    "Permitido"
+  ],
+  "拒绝": [
+    "Denied",
+    "Denegado"
+  ],
+  "操作会留下清晰的记录": [
+    "Every action leaves a clear record",
+    "Cada acción deja un registro claro"
+  ],
+  "发起分析、导出数据或下发任务后，可在这里查看演示审计记录。": [
+    "Analyze data, export results or submit tasks to see demo audit records here.",
+    "Analiza datos, exporta resultados o envía tareas para ver aquí los registros de auditoría."
+  ],
+  "统一接入数据与智能能力，清楚呈现每一个组件的真实状态。": [
+    "Connect data platforms and AI services, with the actual state of each component.",
+    "Conecta plataformas de datos y servicios de IA y consulta el estado real de cada componente."
+  ],
+  "已刷新后端连接状态。": [
+    "Backend connection status refreshed.",
+    "Estado de las conexiones actualizado."
+  ],
+  "当前为浏览器演示，后端未连接。": [
+    "Browser demo mode; the backend is not connected.",
+    "Demostración en el navegador; el servidor no está conectado."
+  ],
+  "刷新状态": [
+    "Refresh status",
+    "Actualizar estado"
+  ],
+  "目标部署区域：LA-Mexico City2": [
+    "Deployment region: LA-Mexico City2",
+    "Región de despliegue: LA-Mexico City2"
+  ],
+  "la-north-2 · 云端应用已部署，DWS 通过私网访问。全部业务数据均为合成样本。": [
+    "la-north-2 · Cloud application deployed. DWS uses a private network. All business data is synthetic.",
+    "la-north-2 · Aplicación desplegada en la nube. DWS usa una red privada. Todos los datos de negocio son sintéticos."
+  ],
+  "la-north-2 · 此页面尚未连接墨西哥云端后端。": [
+    "la-north-2 · This page is not connected to the Mexico cloud backend yet.",
+    "la-north-2 · Esta página aún no está conectada al servidor de la nube en México."
+  ],
+  "云端已部署": [
+    "Deployed to cloud",
+    "Desplegado en la nube"
+  ],
+  "等待云端连接": [
+    "Waiting for cloud connection",
+    "Esperando conexión con la nube"
+  ],
+  "模型服务": [
+    "Model service",
+    "Servicio de modelos"
+  ],
+  "供应商、地址与模型 ID 可独立配置": [
+    "Configure provider, endpoint and model ID independently",
+    "Configura por separado el proveedor, la dirección y el ID del modelo"
+  ],
+  "已配置": [
+    "Configured",
+    "Configurado"
+  ],
+  "待配置凭据": [
+    "Credentials required",
+    "Se requieren credenciales"
+  ],
+  "API 地址由后端环境配置；没有在浏览器保存密钥。": [
+    "The backend configures the API endpoint. No keys are stored in the browser.",
+    "La dirección de la API se configura en el servidor. No se guardan claves en el navegador."
+  ],
+  "配置模型": [
+    "Configure model",
+    "Configurar modelo"
+  ],
+  "数据与平台组件": [
+    "Data & platform components",
+    "Componentes de datos y plataforma"
+  ],
+  "演示状态与真实服务状态分开展示": [
+    "Demo and live-service states are shown separately",
+    "Los estados de demostración y de servicios reales se muestran por separado"
+  ],
+  "数据执行": [
+    "Data execution",
+    "Ejecución de datos"
+  ],
+  "已连接": [
+    "Connected",
+    "Conectado"
+  ],
+  "未连接": [
+    "Not connected",
+    "Sin conectar"
+  ],
+  "经 MCP 在 DWS 中执行受控查询，使用 10,000 条合成样本。": [
+    "Run controlled DWS queries through MCP against 10,000 synthetic records.",
+    "Ejecuta consultas controladas en DWS mediante MCP sobre 10.000 registros sintéticos."
+  ],
+  "通过 MCP 访问 DWS；浏览器模式使用合成数据镜像。": [
+    "Access DWS through MCP. Browser mode uses a synthetic data mirror.",
+    "Accede a DWS mediante MCP. El modo navegador usa una réplica de datos sintéticos."
+  ],
+  "Agent 框架": [
+    "Agent framework",
+    "Framework del agente"
+  ],
+  "已运行": [
+    "Running",
+    "En funcionamiento"
+  ],
+  "源码已提供": [
+    "Source included",
+    "Código fuente incluido"
+  ],
+  "规划与执行代码包含真实 openJiuwen Workflow 和 MCP 客户端。": [
+    "Planning and execution use an actual openJiuwen Workflow and MCP client.",
+    "La planificación y la ejecución usan un Workflow real de openJiuwen y un cliente MCP."
+  ],
+  "统一目录": [
+    "Unified catalog",
+    "Catálogo unificado"
+  ],
+  "待接入": [
+    "Not integrated yet",
+    "Pendiente de integración"
+  ],
+  "开源资产目录已连接，资产发现受服务端业务域权限约束。": [
+    "Open-source asset catalog connected. Server-side domain policies govern asset discovery.",
+    "Catálogo de activos de código abierto conectado. Las políticas de dominio del servidor controlan el descubrimiento de activos."
+  ],
+  "开源资产目录；浏览器模式使用目录镜像。": [
+    "Open-source asset catalog. Browser mode uses a catalog mirror.",
+    "Catálogo de activos de código abierto. El modo navegador usa una réplica del catálogo."
+  ],
+  "持久化任务": [
+    "Persistent tasks",
+    "Tareas persistentes"
+  ],
+  "负责后台调度与重试；浏览器演示不执行真实定时任务。": [
+    "Handles background scheduling and retries. Browser demos do not run real schedules.",
+    "Gestiona la programación en segundo plano y los reintentos. La demostración en el navegador no ejecuta programas reales."
+  ],
+  "Iceberg 历史表": [
+    "Iceberg history table",
+    "Historial de Iceberg"
+  ],
+  "历史与湖表目录": [
+    "History & lakehouse catalog",
+    "Historial y catálogo del lago de datos"
+  ],
+  "历史表可用": [
+    "History table available",
+    "Tabla de historial disponible"
+  ],
+  "Iceberg 保存元数据历史快照；当前使用单机目录，Polaris 服务待接入。": [
+    "Iceberg stores metadata snapshots. The current catalog is local; Polaris integration is pending.",
+    "Iceberg guarda instantáneas de metadatos. El catálogo actual es local; la integración con Polaris está pendiente."
+  ],
+  "身份与权限": [
+    "Identity & access",
+    "Identidad y acceso"
+  ],
+  "待生产集成": [
+    "Production integration pending",
+    "Integración de producción pendiente"
+  ],
+  "当前提供显式演示身份与服务端范围校验，不等同完整 IAM。": [
+    "Explicit demo identities and server-side scope checks are available. Full IAM is not deployed.",
+    "Hay identidades de demostración explícitas y controles de alcance en el servidor. El IAM completo no está desplegado."
+  ],
+  "把 demo 带到你的环境": [
+    "Run the demo in your environment",
+    "Ejecuta la demostración en tu entorno"
+  ],
+  "源码、后端启动配置、10,000 条英文数据与接入说明。": [
+    "Source code, backend setup, 10,000 English records and integration notes.",
+    "Código fuente, configuración del servidor, 10.000 registros en inglés e instrucciones de integración."
+  ],
+  "下载源码": [
+    "Download source",
+    "Descargar código"
+  ],
+  "下载数据集": [
+    "Download dataset",
+    "Descargar conjunto de datos"
+  ],
+  "云端后端已连接": [
+    "Cloud backend connected",
+    "Servidor de la nube conectado"
+  ],
+  "本地后端已连接": [
+    "Local backend connected",
+    "Servidor local conectado"
+  ],
+  "关闭资产详情": [
+    "Close asset details",
+    "Cerrar detalles del activo"
+  ],
+  "记录数 · 当前范围": [
+    "Records · Current scope",
+    "Registros · Alcance actual"
+  ],
+  "数据粒度": [
+    "Data grain",
+    "Granularidad de los datos"
+  ],
+  "物理执行状态": [
+    "Execution state",
+    "Estado de ejecución"
+  ],
+  "问数连接 DWS · 预览为合成镜像": [
+    "DWS for analysis · Synthetic mirror for previews",
+    "DWS para análisis · Réplica sintética para vistas previas"
+  ],
+  "演示镜像 · DWS 未连接": [
+    "Demo mirror · DWS not connected",
+    "Réplica de demostración · DWS sin conectar"
+  ],
+  "字段": [
+    "Fields",
+    "Campos"
+  ],
+  "数据预览": [
+    "Data preview",
+    "Vista previa de datos"
+  ],
+  "血缘": [
+    "Lineage",
+    "Linaje"
+  ],
+  "受限字段": [
+    "Restricted field",
+    "Campo restringido"
+  ],
+  "最多展示 8 条 · 应用演示租户及角色范围": [
+    "Up to 8 rows · Demo tenant and role scope applied",
+    "Hasta 8 filas · Se aplica el alcance del inquilino y del rol de demostración"
+  ],
+  "演示质量规则通过率": [
+    "Demo quality-rule pass rate",
+    "Tasa de aprobación de las reglas de calidad"
+  ],
+  "全量数据包含 6 条负库存异常，用于测试质量检查和失败处理。": [
+    "The full dataset contains 6 negative-inventory anomalies to test quality checks and failure handling.",
+    "El conjunto completo contiene 6 anomalías de inventario negativo para probar la calidad y la gestión de errores."
+  ],
+  "全量数据包含 18 条缺失联系方式记录。非工程师身份的联系方式已脱敏。": [
+    "The full dataset contains 18 missing-contact records. Contact details are masked for non-engineer roles.",
+    "El conjunto completo contiene 18 registros sin datos de contacto. Estos datos se ocultan para los roles sin permisos de ingeniería."
+  ],
+  "主键、租户绑定和关联完整性通过生成器校验。": [
+    "The generator validates primary keys, tenant links and referential integrity.",
+    "El generador valida las claves primarias, los vínculos de inquilino y la integridad referencial."
+  ],
+  "此处为演示来源关系；真实执行血缘由后端登记到 OpenMetadata。": [
+    "This is a demo source relationship. The backend records execution lineage in OpenMetadata.",
+    "Esta es una relación de origen de demostración. El servidor registra el linaje de ejecución en OpenMetadata."
+  ],
+  "导出样本": [
+    "Export sample",
+    "Exportar muestra"
+  ],
+  "检查库存健康": [
+    "Check inventory health",
+    "Revisa el estado del inventario"
+  ],
+  "分析评论情感": [
+    "Analyze review sentiment",
+    "Analiza el sentimiento de las reseñas"
+  ],
+  "分析广告ROAS": [
+    "Analyze advertising ROAS",
+    "Analiza el ROAS publicitario"
+  ],
+  "分析退款原因": [
+    "Analyze refund reasons",
+    "Analiza los motivos de reembolso"
+  ],
+  "分析竞品价格": [
+    "Analyze competitor pricing",
+    "Analiza los precios de la competencia"
+  ],
+  "分析10月各地区销售额": [
+    "Analyze October sales by region",
+    "Analiza las ventas de octubre por región"
+  ],
+  "用 Agent 分析": [
+    "Analyze with agent",
+    "Analizar con el agente"
+  ],
+  "关闭任务详情": [
+    "Close task details",
+    "Cerrar detalles de la tarea"
+  ],
+  "执行日志": [
+    "Execution logs",
+    "Registros de ejecución"
+  ],
+  "产出结果 ·": [
+    "Output ·",
+    "Salida ·"
+  ],
+  "行": [
+    "rows",
+    "filas"
+  ],
+  "取消任务": [
+    "Cancel task",
+    "Cancelar tarea"
+  ],
+  "打开流程": [
+    "Open workflow",
+    "Abrir flujo"
+  ],
+  "关闭窗口": [
+    "Close dialog",
+    "Cerrar ventana"
+  ],
+  "选择一个视角，探索数据": [
+    "Choose a perspective to explore data",
+    "Elige una perspectiva para explorar los datos"
+  ],
+  "这是演示身份切换器，不是生产登录或真实租户认证。": [
+    "These are demo identities, not production login or actual tenant authentication.",
+    "Estas son identidades de demostración, no un inicio de sesión de producción ni una autenticación real de inquilinos."
+  ],
+  "Sales · 目录治理": [
+    "Sales · Catalog governance",
+    "Ventas · Gobierno del catálogo"
+  ],
+  "授权域查询与处理执行": [
+    "Authorized-domain queries and processing",
+    "Consultas y procesos en dominios autorizados"
+  ],
+  "授权域分析与导出": [
+    "Authorized-domain analysis and export",
+    "Análisis y exportación en dominios autorizados"
+  ],
+  "模型接入配置": [
+    "Model connection settings",
+    "Configuración de conexión del modelo"
+  ],
+  "此处保存非敏感的接入草稿。真实调用配置通过后端环境变量管理；不在浏览器输入密钥。": [
+    "Save a non-sensitive connection draft here. Actual model credentials are managed by backend environment variables; never enter keys in the browser.",
+    "Guarda aquí un borrador sin datos sensibles. Las credenciales reales se gestionan mediante variables de entorno del servidor; no introduzcas claves en el navegador."
+  ],
+  "供应商": [
+    "Provider",
+    "Proveedor"
+  ],
+  "模型 ID": [
+    "Model ID",
+    "ID del modelo"
+  ],
+  "API Base URL（可选草稿）": [
+    "API base URL (optional draft)",
+    "URL base de la API (borrador opcional)"
+  ],
+  "以账号中的实际调用地址为准": [
+    "Use the actual API endpoint from your account",
+    "Usa la dirección real de la API de tu cuenta"
+  ],
+  "请填写模型 ID。": [
+    "Enter a model ID.",
+    "Introduce un ID de modelo."
+  ],
+  "请填写 HTTPS 基础地址，不要包含账号、密钥或查询参数。": [
+    "Enter an HTTPS base URL without credentials, keys or query parameters.",
+    "Introduce una URL base HTTPS sin credenciales, claves ni parámetros de consulta."
+  ],
+  "模型接入草稿已保存；尚未修改后端或发起模型调用。": [
+    "Connection draft saved. Backend settings and model calls have not changed.",
+    "Borrador de conexión guardado. No se modificó el servidor ni se llamó al modelo."
+  ],
+  "保存接入草稿": [
+    "Save connection draft",
+    "Guardar borrador de conexión"
+  ],
+  "销售域演示策略": [
+    "Demo sales-domain policy",
+    "Política de demostración de ventas"
+  ],
+  "销售域管理员可调整本租户销售经理的演示导出权限。其他域及生产权限不会改变。": [
+    "Sales-domain stewards can adjust the sales manager's demo export permission in their tenant. Other domains and production permissions are unchanged.",
+    "Los responsables de ventas pueden ajustar el permiso de exportación del gerente de ventas en su inquilino de demostración. Los demás dominios y permisos de producción no cambian."
+  ],
+  "目标角色": [
+    "Target role",
+    "Rol de destino"
+  ],
+  "区域销售经理": [
+    "Regional Sales Manager",
+    "Gerente regional de ventas"
+  ],
+  "允许导出已授权的销售数据": [
+    "Allow export of authorized sales data",
+    "Permitir exportar los datos de ventas autorizados"
+  ],
+  "地区范围仍为 Mexico City；联系方式继续脱敏。此设置在浏览器演示中生效，后端模式以服务器授权为准。": [
+    "The region remains Mexico City and contacts stay masked. This setting applies to the browser demo; the backend enforces its own policies.",
+    "La región sigue siendo Mexico City y los contactos permanecen ocultos. Esta opción se aplica a la demostración del navegador; el servidor aplica sus propias políticas."
+  ],
+  "本租户演示策略已更新。": [
+    "This tenant's demo policy was updated.",
+    "Se actualizó la política de demostración de este inquilino."
+  ],
+  "完成配置": [
+    "Done",
+    "Listo"
+  ],
+  "欢迎来到 NEXO": [
+    "Welcome to NEXO",
+    "Te damos la bienvenida a NEXO"
+  ],
+  "用同一个工作空间，体验从数据发现到任务交付的完整过程。": [
+    "Explore the full journey from discovering data to delivering a task in one workspace.",
+    "Explora todo el proceso, desde descubrir datos hasta entregar una tarea, en un único espacio de trabajo."
+  ],
+  "提出问题": [
+    "Ask a question",
+    "Haz una pregunta"
+  ],
+  "在 ChatBI 输入中文或英文问题，查看实际聚合的合成数据。": [
+    "Ask in Chinese, English or Spanish in ChatBI and explore aggregated synthetic data.",
+    "Pregunta en chino, inglés o español en ChatBI y explora los datos sintéticos agregados."
+  ],
+  "理解数据": [
+    "Understand the data",
+    "Comprende los datos"
+  ],
+  "展开业务目录，检查字段、来源、粒度和访问范围。": [
+    "Expand the catalog to review fields, sources, grain and access scope.",
+    "Expande el catálogo para revisar campos, orígenes, granularidad y alcance de acceso."
+  ],
+  "定义过程": [
+    "Define a process",
+    "Define un proceso"
+  ],
+  "在流程画布中配置节点，切换数据工程师身份后下发任务。": [
+    "Configure workflow nodes, then switch to Data Engineer to submit a task.",
+    "Configura los nodos del flujo y cambia a Ingeniería de datos para enviar una tarea."
+  ],
+  "验证治理": [
+    "Verify governance",
+    "Comprueba el gobierno de datos"
+  ],
+  "切换区域经理、分析师和域管理员，比较可见资产与操作权限。": [
+    "Switch between manager, analyst and steward to compare visible assets and permissions.",
+    "Alterna entre gerente, analista y responsable para comparar los activos visibles y los permisos."
+  ],
+  "当前为合成数据交互演示。云资源、GLM5.3 及开源服务的实际连接状态请查看“连接与模型”。": [
+    "This is an interactive synthetic-data demo. Check Connections & models for the actual state of cloud services, GLM5.3 and open-source components.",
+    "Esta es una demostración interactiva con datos sintéticos. Consulta Conexiones y modelos para ver el estado real de los servicios de nube, GLM5.3 y los componentes de código abierto."
+  ],
+  "开始探索": [
+    "Start exploring",
+    "Empezar a explorar"
+  ],
+  "关闭提示": [
+    "Dismiss notification",
+    "Cerrar aviso"
+  ],
+  "质量检查": [
+    "Quality check",
+    "Control de calidad"
+  ],
+  "聚合计算": [
+    "Aggregation",
+    "Agregación"
+  ],
+  "过滤与标准化": [
+    "Filter & standardize",
+    "Filtrar y normalizar"
+  ],
+  "点击配置处理规则": [
+    "Select to configure processing rules",
+    "Selecciona para configurar las reglas de procesamiento"
+  ],
+  "已插入处理节点，可在右侧修改配置。": [
+    "Processing node inserted. Edit its settings in the inspector.",
+    "Se insertó un nodo de procesamiento. Modifica sus opciones en el panel de configuración."
+  ],
+  "流程名称": [
+    "Workflow name",
+    "Nombre del flujo"
+  ],
+  "新增节点类型": [
+    "New node type",
+    "Tipo de nodo nuevo"
+  ],
+  "过滤处理": [
+    "Filter",
+    "Filtro"
+  ],
+  "添加节点": [
+    "Add node",
+    "Agregar nodo"
+  ],
+  "校验流程": [
+    "Validate workflow",
+    "Validar flujo"
+  ],
+  "流程校验通过：节点连通，依赖无循环。": [
+    "Workflow valid: all nodes are connected and dependencies are acyclic.",
+    "Flujo válido: todos los nodos están conectados y no hay dependencias cíclicas."
+  ],
+  "原始字号 · 拖动画布浏览": [
+    "Original text size · Drag to explore",
+    "Tamaño original · Arrastra para explorar"
+  ],
+  "元数据驱动": [
+    "Metadata-driven",
+    "Basado en metadatos"
+  ],
+  "计算下推": [
+    "Query pushdown",
+    "Cálculo en origen"
+  ],
+  "版本化流程": [
+    "Versioned workflow",
+    "Flujo con versiones"
+  ],
+  "节点配置": [
+    "Node settings",
+    "Configuración del nodo"
+  ],
+  "节点名称": [
+    "Node name",
+    "Nombre del nodo"
+  ],
+  "输入资产": [
+    "Input asset",
+    "Activo de entrada"
+  ],
+  "处理日期范围": [
+    "Processing period",
+    "Período de procesamiento"
+  ],
+  "分组维度": [
+    "Group by",
+    "Agrupar por"
+  ],
+  "region · 地区": [
+    "region · Region",
+    "region · Región"
+  ],
+  "category · 品类": [
+    "category · Category",
+    "category · Categoría"
+  ],
+  "channel · 渠道": [
+    "channel · Channel",
+    "channel · Canal"
+  ],
+  "计算指标": [
+    "Metric",
+    "Métrica"
+  ],
+  "输出数据集": [
+    "Output dataset",
+    "Conjunto de datos de salida"
+  ],
+  "写入方式": [
+    "Write mode",
+    "Modo de escritura"
+  ],
+  "检查规则": [
+    "Validation rule",
+    "Regla de validación"
+  ],
+  "结果非空且值非负": [
+    "Non-empty results with non-negative values",
+    "Resultados no vacíos con valores no negativos"
+  ],
+  "强制失败（测试）": [
+    "Force failure (test)",
+    "Forzar error (prueba)"
+  ],
+  "失败处理": [
+    "On failure",
+    "En caso de error"
+  ],
+  "停止发布": [
+    "Stop publishing",
+    "Detener publicación"
+  ],
+  "处理规则": [
+    "Processing rule",
+    "Regla de procesamiento"
+  ],
+  "排除取消及无效金额": [
+    "Exclude canceled orders and invalid amounts",
+    "Excluir pedidos cancelados e importes inválidos"
+  ],
+  "只保留 Completed 订单": [
+    "Completed orders only",
+    "Solo pedidos con estado Completed"
+  ],
+  "执行身份与租户范围由后端解析，不能在节点参数中扩大权限。": [
+    "The backend determines identity and tenant scope. Node settings cannot expand permissions.",
+    "El servidor determina la identidad y el alcance del inquilino. Los nodos no pueden ampliar los permisos."
+  ],
+  "移除节点": [
+    "Remove node",
+    "Eliminar nodo"
+  ],
+  "选择画布中的节点查看配置。": [
+    "Select a node on the canvas to view its settings.",
+    "Selecciona un nodo del lienzo para ver su configuración."
+  ],
+  "输入数据保留原位 ·": [
+    "Input data stays in place ·",
+    "Los datos de entrada permanecen en origen ·"
+  ],
+  "个节点 ·": [
+    "nodes ·",
+    "nodos ·"
+  ],
+  "条依赖": [
+    "dependencies",
+    "dependencias"
+  ],
+  "流程定义、展示与执行共用一个版本": [
+    "Definition, display and execution share one version",
+    "La definición, la vista y la ejecución comparten una versión"
+  ],
+  "处理 10 月订单，排除取消订单，按地区汇总销售额，检查后发布数据集。": [
+    "Process October orders, exclude canceled orders, summarize sales by region, validate and publish the dataset.",
+    "Procesa los pedidos de octubre, excluye los cancelados, resume las ventas por región, valida y publica el conjunto de datos."
+  ],
+  "描述数据处理过程": [
+    "Describe the data process",
+    "Describe el proceso de datos"
+  ],
+  "当前使用可解释的模板规则": [
+    "Using explainable template rules",
+    "Se usan reglas de plantilla explicables"
+  ],
+  "生成流程草稿": [
+    "Generate workflow draft",
+    "Generar borrador del flujo"
+  ],
+  "业务分析师": [
+    "Business Analyst",
+    "Analista de negocio"
+  ],
+  "数据工程师": [
+    "Data Engineer",
+    "Ingeniería de datos"
+  ],
+  "销售域管理员": [
+    "Sales Domain Steward",
+    "Responsable del dominio de ventas"
+  ],
+  "销售域": [
+    "Sales",
+    "Ventas"
+  ],
+  "市场域": [
+    "Marketing",
+    "Marketing"
+  ],
+  "供应链域": [
+    "Supply chain",
+    "Cadena de suministro"
+  ],
+  "财务域": [
+    "Finance",
+    "Finanzas"
+  ],
+  "平台域": [
+    "Platform",
+    "Plataforma"
+  ],
+  "订单主表": [
+    "Orders",
+    "Pedidos"
+  ],
+  "订单明细": [
+    "Order items",
+    "Líneas de pedido"
+  ],
+  "客户档案": [
+    "Customer profiles",
+    "Perfiles de clientes"
+  ],
+  "商品目录": [
+    "Product catalog",
+    "Catálogo de productos"
+  ],
+  "库存快照": [
+    "Inventory snapshots",
+    "Instantáneas de inventario"
+  ],
+  "物流履约": [
+    "Shipping & fulfillment",
+    "Envíos y entregas"
+  ],
+  "退款与退货": [
+    "Returns & refunds",
+    "Devoluciones y reembolsos"
+  ],
+  "营销活动": [
+    "Campaigns",
+    "Campañas"
+  ],
+  "广告投放表现": [
+    "Advertising performance",
+    "Resultados publicitarios"
+  ],
+  "竞品价格观察": [
+    "Competitor price observations",
+    "Observaciones de precios de la competencia"
+  ],
+  "市场评论": [
+    "Market reviews",
+    "Reseñas del mercado"
+  ],
+  "销售额": [
+    "Revenue",
+    "Ventas"
+  ],
+  "订单量": [
+    "Order count",
+    "Número de pedidos"
+  ],
+  "客单价": [
+    "Average order value",
+    "Valor medio del pedido"
+  ],
+  "退款分析": [
+    "Refund analysis",
+    "Análisis de reembolsos"
+  ],
+  "库存补货分析": [
+    "Inventory replenishment analysis",
+    "Análisis de reposición de inventario"
+  ],
+  "市场评论分析": [
+    "Market review analysis",
+    "Análisis de reseñas"
+  ],
+  "竞品价格分析": [
+    "Competitor pricing analysis",
+    "Análisis de precios de la competencia"
+  ],
+  "地区": [
+    "Region",
+    "Región"
+  ],
+  "品类": [
+    "Category",
+    "Categoría"
+  ],
+  "渠道": [
+    "Channel",
+    "Canal"
+  ],
+  "月份": [
+    "Month",
+    "Mes"
+  ],
+  "各月": [
+    "All months",
+    "Todos los meses"
+  ],
+  "9 月": [
+    "September",
+    "Septiembre"
+  ],
+  "10 月": [
+    "October",
+    "Octubre"
+  ],
+  "当前规则演示支持销售、退款、广告、库存、评论和竞品分析。更开放的自然语言理解需接通 GLM5.3。": [
+    "The rule-based demo supports sales, refunds, advertising, inventory, reviews and competitor analysis. Connect GLM5.3 for broader natural-language support.",
+    "La demostración con reglas admite ventas, reembolsos, publicidad, inventario, reseñas y competencia. Conecta GLM5.3 para un lenguaje natural más amplio."
+  ],
+  "当前角色没有{0}的数据访问权限。可以切换演示身份，或在分权分域中查看授权范围。": [
+    "Your role cannot access {0}. Switch demo identity or review domain permissions.",
+    "Tu rol no permite acceder a {0}. Cambia de identidad o revisa los permisos de dominio."
+  ],
+  "请求的地区超出当前角色授权范围。当前仅可访问 Mexico City。": [
+    "The requested region is outside your access scope. Only Mexico City is authorized.",
+    "La región solicitada está fuera de tu alcance de acceso. Solo se autoriza Mexico City."
+  ],
+  "当前授权范围内共有 {0} 笔非取消订单，净销售额为 {1}。{2}金额统一为 USD；此结果来自合成数据的实际聚合。": [
+    "Your access scope contains {0} non-canceled orders with net revenue of {1}. {2}All amounts are USD. These results aggregate actual synthetic records.",
+    "Tu alcance de acceso contiene {0} pedidos no cancelados con ventas netas de {1}. {2}Todos los importes están en USD. Los resultados agregan registros sintéticos reales."
+  ],
+  "{0} 的{1}最高，为 {2}。": [
+    "{0} has the highest {1} at {2}. ",
+    "{0} tiene el mayor valor de {1}, con {2}. "
+  ],
+  "当前范围内有 {0} 条退货记录，涉及退款 {1}。最高退款原因是 {2}；金额包含不同审批状态，不能直接等同已支付退款。": [
+    "The current scope contains {0} return records totaling {1}. The leading reason is {2}. Amounts include multiple approval states and do not equal paid refunds.",
+    "El alcance actual contiene {0} devoluciones por un total de {1}. El motivo principal es {2}. Los importes incluyen distintos estados de aprobación y no equivalen a reembolsos pagados."
+  ],
+  "暂无": [
+    "None",
+    "Ninguno"
+  ],
+  "{0} 广告支出 {1}，归因收入 {2}，整体 ROAS 为 {3}×。归因收入来自演示广告口径，不与订单净销售额直接相加。": [
+    "{0} ad spend: {1}; attributed revenue: {2}; overall ROAS: {3}×. Attribution uses demo advertising definitions and is not added to order revenue.",
+    "Inversión publicitaria de {0}: {1}; ingresos atribuidos: {2}; ROAS total: {3}×. La atribución usa las definiciones de la demostración y no se suma a las ventas de pedidos."
+  ],
+  "当前时间范围": [
+    "The current period",
+    "El período actual"
+  ],
+  "当前租户共有 {0} 条低于补货阈值的库存记录，其中 {1} 条为预置的负库存质量异常。应先核验异常，再生成补货计划。": [
+    "This tenant has {0} inventory records below the reorder threshold, including {1} predefined negative-stock anomalies. Verify anomalies before planning replenishment.",
+    "Este inquilino tiene {0} registros de inventario por debajo del punto de reposición, incluidas {1} anomalías de inventario negativo. Verifica las anomalías antes de planificar la reposición."
+  ],
+  "共 {0} 条英文合成评论，正面评论占比 {1}%。情感标签由数据生成器预置；当前未调用 GLM5.3 进行情感推理。": [
+    "{0} synthetic English reviews; {1}% positive. Sentiment labels are predefined by the generator. GLM5.3 was not used for sentiment inference.",
+    "{0} reseñas sintéticas en inglés; {1}% positivas. Las etiquetas las define el generador. No se usó GLM5.3 para inferir el sentimiento."
+  ],
+  "比较 {0} 条合成竞品观察记录。图中数值为竞品相对本方标价的平均差异百分比，负值表示竞品更便宜；这些品牌与报价均为虚构。": [
+    "Compared {0} synthetic competitor observations. Values show the average percentage price difference from our list price. Negative values mean cheaper competitors; all brands and prices are fictional.",
+    "Se compararon {0} observaciones sintéticas de competidores. Los valores muestran la diferencia porcentual media frente a nuestro precio. Los valores negativos indican precios menores; todas las marcas y los precios son ficticios."
+  ],
+  "识别当前租户与角色": [
+    "Resolve current tenant and role",
+    "Identificar el inquilino y el rol actuales"
+  ],
+  "检索统一指标与资产": [
+    "Retrieve shared metrics and assets",
+    "Recuperar métricas y activos comunes"
+  ],
+  "解析粒度、筛选与关联": [
+    "Resolve grain, filters and joins",
+    "Resolver granularidad, filtros y relaciones"
+  ],
+  "应用域及地区访问范围": [
+    "Apply domain and regional access scope",
+    "Aplicar el alcance de dominio y región"
+  ],
+  "聚合演示数据并生成图表": [
+    "Aggregate demo data and render charts",
+    "Agregar los datos y generar gráficos"
+  ],
+  "读取订单": [
+    "Read orders",
+    "Leer pedidos"
+  ],
+  "有效订单 · 金额校验": [
+    "Valid orders · Amount validation",
+    "Pedidos válidos · Validación de importes"
+  ],
+  "按地区汇总": [
+    "Group by region",
+    "Agrupar por región"
+  ],
+  "数据质量检查": [
+    "Data quality check",
+    "Control de calidad de datos"
+  ],
+  "结果非空 · 销售额非负": [
+    "Non-empty results · Non-negative sales",
+    "Resultados no vacíos · Ventas no negativas"
+  ],
+  "发布数据集": [
+    "Publish dataset",
+    "Publicar conjunto de datos"
+  ],
+  "节点 ID 重复": [
+    "Duplicate node IDs",
+    "IDs de nodo duplicados"
+  ],
+  "流程至少需要输入和输出节点": [
+    "A workflow needs at least an input and an output node",
+    "El flujo requiere al menos un nodo de entrada y uno de salida"
+  ],
+  "当前演示流程需要且仅支持一个输入节点": [
+    "This demo requires exactly one input node",
+    "Esta demostración requiere exactamente un nodo de entrada"
+  ],
+  "流程需要且仅支持一个发布节点": [
+    "A workflow requires exactly one publish node",
+    "El flujo requiere exactamente un nodo de publicación"
+  ],
+  "连线引用了不存在的节点": [
+    "An edge references a missing node",
+    "Una conexión hace referencia a un nodo inexistente"
+  ],
+  "存在未连接的节点，请连接到输入流程": [
+    "A node is disconnected. Connect it to the input workflow",
+    "Hay un nodo desconectado. Conéctalo al flujo de entrada"
+  ],
+  "流程包含循环依赖": [
+    "The workflow contains a dependency cycle",
+    "El flujo contiene una dependencia cíclica"
+  ],
+  "发布数据集必须是最后一个节点": [
+    "The publish node must be last",
+    "El nodo de publicación debe ser el último"
+  ],
+  "首版执行器支持顺序流程，请保持单链路": [
+    "The first executor supports sequential workflows. Keep a single chain",
+    "El ejecutor inicial admite flujos secuenciales. Mantén una única cadena"
+  ],
+  "首版流程需要且仅支持一个聚合节点": [
+    "The first workflow requires exactly one aggregation node",
+    "El flujo inicial requiere exactamente un nodo de agregación"
+  ],
+  "过滤节点必须位于聚合前，质量检查必须位于聚合后": [
+    "Filter before aggregation; check quality after aggregation",
+    "Filtra antes de agregar y comprueba la calidad después"
+  ],
+  "当前流程执行器仅支持 orders 输入资产": [
+    "This executor supports only the orders input asset",
+    "Este ejecutor solo admite orders como activo de entrada"
+  ],
+  "请填写有效的输出数据集名称": [
+    "Enter a valid output dataset name",
+    "Introduce un nombre válido para el conjunto de salida"
+  ],
+  "不支持的聚合配置": [
+    "Unsupported aggregation settings",
+    "Configuración de agregación no admitida"
+  ],
+  "质量检查未通过，已停止发布。": [
+    "Quality check failed. Publishing has stopped.",
+    "El control de calidad ha fallado. Se ha detenido la publicación."
+  ],
+  "切换语言": [
+    "Switch language",
+    "Cambiar idioma"
+  ],
+  "在 ChatBI 输入中文、英文或西班牙文问题，查看实际聚合的合成数据。": [
+    "Ask in Chinese, English or Spanish in ChatBI and explore aggregated synthetic data.",
+    "Pregunta en chino, inglés o español en ChatBI y explora los datos sintéticos agregados."
+  ],
+  "DATA AGENT": [
+    "DATA AGENT",
+    "AGENTE DE DATOS",
+    "DATA AGENT"
+  ],
+  "Commerce workspace": [
+    "Commerce workspace",
+    "Espacio comercial",
+    "电商工作空间"
+  ],
+  "YOUR DATA, IN CONTEXT": [
+    "YOUR DATA, IN CONTEXT",
+    "TUS DATOS EN CONTEXTO",
+    "数据，自有上下文"
+  ],
+  "ANALYSIS RESULT": [
+    "ANALYSIS RESULT",
+    "RESULTADO DEL ANÁLISIS",
+    "分析结果"
+  ],
+  "Net revenue": [
+    "Net revenue",
+    "Ventas netas",
+    "净销售额"
+  ],
+  "NEXO Agent": [
+    "NEXO Agent",
+    "Agente NEXO",
+    "NEXO Agent"
+  ],
+  "YOUR ANALYTICAL PARTNER": [
+    "YOUR ANALYTICAL PARTNER",
+    "TU ASISTENTE DE ANÁLISIS",
+    "你的数据分析伙伴"
+  ],
+  "KNOW YOUR DATA": [
+    "KNOW YOUR DATA",
+    "CONOCE TUS DATOS",
+    "理解你的数据"
+  ],
+  "DESIGN THE NEXT STEP": [
+    "DESIGN THE NEXT STEP",
+    "DISEÑA EL SIGUIENTE PASO",
+    "设计下一步"
+  ],
+  "FROM PLAN TO DELIVERY": [
+    "FROM PLAN TO DELIVERY",
+    "DEL PLAN A LA ENTREGA",
+    "从规划到交付"
+  ],
+  "TRUST AT EVERY STEP": [
+    "TRUST AT EVERY STEP",
+    "CONFIANZA EN CADA PASO",
+    "每一步，皆可信"
+  ],
+  "CONNECTED BY DESIGN": [
+    "CONNECTED BY DESIGN",
+    "CONECTADO DESDE EL DISEÑO",
+    "连接，自设计开始"
+  ],
+  "· OpenAI-compatible API": [
+    "· OpenAI-compatible API",
+    "· API compatible con OpenAI",
+    "· OpenAI 兼容 API"
+  ],
+  "10,000 synthetic records · English data · v0.1": [
+    "10,000 synthetic records · English data · v0.1",
+    "10.000 registros sintéticos · Datos en inglés · v0.1",
+    "10,000 条合成记录 · 英文数据 · v0.1"
+  ],
+  "DATA ASSET": [
+    "DATA ASSET",
+    "ACTIVO DE DATOS",
+    "数据资产"
+  ],
+  "Synthetic commerce generator": [
+    "Synthetic commerce generator",
+    "Generador de comercio sintético",
+    "合成电商数据生成器"
+  ],
+  "ChatBI / Processing workflow": [
+    "ChatBI / Processing workflow",
+    "ChatBI / Flujo de procesamiento",
+    "ChatBI / 数据处理流程"
+  ],
+  "WORKFLOW EXECUTION": [
+    "WORKFLOW EXECUTION",
+    "EJECUCIÓN DEL FLUJO",
+    "流程执行"
+  ],
+  "Other OpenAI-compatible": [
+    "Other OpenAI-compatible",
+    "Otro proveedor compatible con OpenAI",
+    "其他 OpenAI 兼容服务"
+  ],
+  "PROCESS DESIGNER": [
+    "PROCESS DESIGNER",
+    "DISEÑADOR DE PROCESOS",
+    "流程设计器"
+  ],
+  "October 2026": [
+    "October 2026",
+    "Octubre de 2026",
+    "2026 年 10 月"
+  ],
+  "September 2026": [
+    "September 2026",
+    "Septiembre de 2026",
+    "2026 年 9 月"
+  ],
+  "Replace partition": [
+    "Replace partition",
+    "Sustituir partición",
+    "替换分区"
+  ],
+  "Internal": [
+    "Internal",
+    "Interno",
+    "内部"
+  ],
+  "External": [
+    "External",
+    "Externo",
+    "外部"
+  ],
+  "Internal commerce": [
+    "Internal commerce",
+    "Comercio interno",
+    "内部电商"
+  ],
+  "External scenario": [
+    "External scenario",
+    "Escenario externo",
+    "外部场景"
+  ],
+  "Core asset": [
+    "Core asset",
+    "Activo principal",
+    "核心资产"
+  ],
+  "PII-free": [
+    "PII-free",
+    "Sin datos personales",
+    "不含个人信息"
+  ],
+  "Restricted": [
+    "Restricted",
+    "Restringido",
+    "受限"
+  ],
+  "Shared dimension": [
+    "Shared dimension",
+    "Dimensión compartida",
+    "共享维度"
+  ],
+  "Quality check": [
+    "Quality check",
+    "Control de calidad",
+    "质量检查"
+  ],
+  "Operations": [
+    "Operations",
+    "Operaciones",
+    "运营"
+  ],
+  "Financial": [
+    "Financial",
+    "Finanzas",
+    "财务"
+  ],
+  "Synthetic feed": [
+    "Synthetic feed",
+    "Fuente sintética",
+    "合成数据源"
+  ],
+  "Analyze": [
+    "Analyze",
+    "Analizar",
+    "分析"
+  ],
+  "Export": [
+    "Export",
+    "Exportar",
+    "导出"
+  ],
+  "Save dashboard": [
+    "Save dashboard",
+    "Guardar panel",
+    "保存看板"
+  ],
+  "Save workflow": [
+    "Save workflow",
+    "Guardar flujo",
+    "保存流程"
+  ],
+  "Run workflow": [
+    "Run workflow",
+    "Ejecutar flujo",
+    "执行流程"
+  ],
+  "Cancel job": [
+    "Cancel job",
+    "Cancelar tarea",
+    "取消任务"
+  ],
+  "Update demo policy": [
+    "Update demo policy",
+    "Actualizar política de demostración",
+    "更新演示策略"
+  ],
+  "SOURCE": [
+    "SOURCE",
+    "ENTRADA",
+    "输入"
+  ],
+  "TRANSFORM": [
+    "TRANSFORM",
+    "TRANSFORMACIÓN",
+    "转换"
+  ],
+  "AGGREGATE": [
+    "AGGREGATE",
+    "AGREGACIÓN",
+    "聚合"
+  ],
+  "QUALITY": [
+    "QUALITY",
+    "CALIDAD",
+    "质量"
+  ],
+  "PUBLISH": [
+    "PUBLISH",
+    "PUBLICACIÓN",
+    "发布"
+  ],
+  "Apr": [
+    "Apr",
+    "Abr",
+    "4 月"
+  ],
+  "May": [
+    "May",
+    "May",
+    "5 月"
+  ],
+  "Jun": [
+    "Jun",
+    "Jun",
+    "6 月"
+  ],
+  "Jul": [
+    "Jul",
+    "Jul",
+    "7 月"
+  ],
+  "Aug": [
+    "Aug",
+    "Ago",
+    "8 月"
+  ],
+  "Sep": [
+    "Sep",
+    "Sep",
+    "9 月"
+  ],
+  "Oct": [
+    "Oct",
+    "Oct",
+    "10 月"
+  ],
+  "已通过 openJiuwen → MCP 在 {0} 执行受控查询，返回 {1} 个分组。": [
+    "Executed a controlled query in {0} through openJiuwen → MCP and returned {1} groups.",
+    "Se ejecutó una consulta controlada en {0} mediante openJiuwen → MCP y se obtuvieron {1} grupos."
+  ],
+  "首项为 {0}，数值 {1}。": [
+    "The leading result is {0}, with a value of {1}.",
+    "El primer resultado es {0}, con un valor de {1}."
+  ],
+  "当前使用合成数据；规则演示模式未调用大模型。": [
+    "This uses synthetic data. The rule-based demo did not call a language model.",
+    "Se usan datos sintéticos. La demostración con reglas no llamó a un modelo de lenguaje."
+  ],
+  "分析计划由已配置模型生成，SQL 由受控编译器生成。": [
+    "The configured model produced the analysis plan; a controlled compiler generated the SQL.",
+    "El modelo configurado generó el plan de análisis; un compilador controlado generó el SQL."
+  ],
+  "解析服务端身份与租户": [
+    "Resolve server identity and tenant",
+    "Resolver la identidad y el inquilino del servidor"
+  ],
+  "通过 MCP 检索可见资产": [
+    "Retrieve visible assets through MCP",
+    "Recuperar activos visibles mediante MCP"
+  ],
+  "生成并校验结构化计划": [
+    "Generate and validate a structured plan",
+    "Generar y validar un plan estructurado"
+  ],
+  "按域与地区范围编译 SQL": [
+    "Compile SQL within domain and regional scope",
+    "Compilar SQL dentro del alcance de dominio y región"
+  ],
+  "通过 MCP 执行并返回结果": [
+    "Execute through MCP and return results",
+    "Ejecutar mediante MCP y devolver resultados"
+  ],
+  "有效订单量": [
+    "Valid order count",
+    "Número de pedidos válidos"
+  ],
+  "退款原因分析": [
+    "Refund reason analysis",
+    "Análisis de motivos de reembolso"
+  ],
+  "库存健康": [
+    "Inventory health",
+    "Estado del inventario"
+  ],
+  "评论情感": [
+    "Review sentiment",
+    "Sentimiento de las reseñas"
+  ],
+  "竞品价格差异": [
+    "Competitor price difference",
+    "Diferencia de precios de la competencia"
+  ],
+  "销售分析": [
+    "Sales analysis",
+    "Análisis de ventas"
+  ],
+  "请先登录演示环境": [
+    "Please sign in to the demo",
+    "Inicia sesión en la demostración"
+  ],
+  "当前角色不能执行此操作": [
+    "Your role cannot perform this action",
+    "Tu rol no puede realizar esta acción"
+  ],
+  "Order-level transactions, net revenue, channels and regional performance.": [
+    "Order-level transactions, net revenue, channels and regional performance.",
+    "Transacciones por pedido, ventas netas, canales y resultados regionales.",
+    "订单粒度的交易、净销售额、渠道和地区表现。"
+  ],
+  "Product-level order lines with quantity, price and discount.": [
+    "Product-level order lines with quantity, price and discount.",
+    "Líneas de pedido por producto, con cantidad, precio y descuento.",
+    "商品粒度的订单明细，包含数量、价格与折扣。"
+  ],
+  "Fictional customer profiles, segments and geography. Contact fields are restricted.": [
+    "Fictional customer profiles, segments and geography. Contact fields are restricted.",
+    "Perfiles, segmentos y ubicaciones de clientes ficticios. Los campos de contacto están restringidos.",
+    "虚构客户档案、分群和地理位置，联系方式字段受限。"
+  ],
+  "Product catalog, categories, brands and unit economics.": [
+    "Product catalog, categories, brands and unit economics.",
+    "Catálogo de productos, categorías, marcas y costes unitarios.",
+    "商品目录、品类、品牌与单位经济指标。"
+  ],
+  "Warehouse stock snapshots, reorder points and anomaly scenarios.": [
+    "Warehouse stock snapshots, reorder points and anomaly scenarios.",
+    "Instantáneas de existencias, puntos de reposición y escenarios de anomalías.",
+    "仓库库存快照、补货阈值和异常场景。"
+  ],
+  "Delivered shipments, carrier performance and promised delivery windows.": [
+    "Delivered shipments, carrier performance and promised delivery windows.",
+    "Envíos entregados, resultados de transportistas y plazos de entrega previstos.",
+    "物流履约、承运商表现和承诺送达时间。"
+  ],
+  "Return reasons, refund amounts and approval status.": [
+    "Return reasons, refund amounts and approval status.",
+    "Motivos de devolución, importes de reembolso y estado de aprobación.",
+    "退货原因、退款金额和审批状态。"
+  ],
+  "Paid media campaign definitions, budgets and channels.": [
+    "Paid media campaign definitions, budgets and channels.",
+    "Definiciones de campañas de pago, presupuestos y canales.",
+    "付费营销活动定义、预算和渠道。"
+  ],
+  "Synthetic daily advertising impressions, clicks, spend and attributed revenue.": [
+    "Synthetic daily advertising impressions, clicks, spend and attributed revenue.",
+    "Impresiones, clics, inversión e ingresos atribuidos diarios sintéticos.",
+    "每日合成广告曝光、点击、花费和归因收入。"
+  ],
+  "Fictional competitor prices for price positioning analysis.": [
+    "Fictional competitor prices for price positioning analysis.",
+    "Precios ficticios de competidores para analizar el posicionamiento.",
+    "用于定价分析的虚构竞品价格。"
+  ],
+  "Synthetic English marketplace reviews, ratings and labeled sentiment.": [
+    "Synthetic English marketplace reviews, ratings and labeled sentiment.",
+    "Reseñas sintéticas en inglés, valoraciones y etiquetas de sentimiento.",
+    "合成英文市场评论、评分和情感标签。"
+  ],
+  "One row per order": [
+    "One row per order",
+    "Una fila por pedido",
+    "每个订单一行"
+  ],
+  "One row per order line": [
+    "One row per order line",
+    "Una fila por línea de pedido",
+    "每个订单明细一行"
+  ],
+  "One row per customer": [
+    "One row per customer",
+    "Una fila por cliente",
+    "每个客户一行"
+  ],
+  "One row per product": [
+    "One row per product",
+    "Una fila por producto",
+    "每个商品一行"
+  ],
+  "One row per SKU and warehouse": [
+    "One row per SKU and warehouse",
+    "Una fila por SKU y almacén",
+    "每个SKU 和仓库一行"
+  ],
+  "One row per shipment": [
+    "One row per shipment",
+    "Una fila por envío",
+    "每个物流记录一行"
+  ],
+  "One row per return": [
+    "One row per return",
+    "Una fila por devolución",
+    "每个退货一行"
+  ],
+  "One row per campaign": [
+    "One row per campaign",
+    "Una fila por campaña",
+    "每个活动一行"
+  ],
+  "One row per campaign and day": [
+    "One row per campaign and day",
+    "Una fila por campaña y día",
+    "每个活动和日期一行"
+  ],
+  "One row per product and observation": [
+    "One row per product and observation",
+    "Una fila por producto y observación",
+    "每个商品和观察记录一行"
+  ],
+  "One row per review": [
+    "One row per review",
+    "Una fila por reseña",
+    "每个评论一行"
+  ],
+  "登录演示环境": [
+    "Sign in to the demo",
+    "Iniciar sesión en la demo"
+  ],
+  "设置演示访问密码": [
+    "Set your demo password",
+    "Configura tu contraseña de la demo"
+  ],
+  "输入你为此演示环境设置的访问密码。": [
+    "Enter the access password you set for this demo.",
+    "Introduce la contraseña que configuraste para esta demostración."
+  ],
+  "邀请链接只能使用一次。设置密码后即可进入工作台。": [
+    "This invitation can be used once. Set a password to open your workspace.",
+    "La invitación solo se puede usar una vez. Configura una contraseña para abrir el espacio de trabajo."
+  ],
+  "访问密码（至少 12 个字符）": [
+    "Access password (at least 12 characters)",
+    "Contraseña de acceso (mínimo 12 caracteres)"
+  ],
+  "再次输入密码": [
+    "Confirm password",
+    "Confirmar contraseña"
+  ],
+  "继续": [
+    "Continue",
+    "Continuar"
+  ],
+  "这是独立的演示访问密码。请使用新密码，不要填写华为云密码、API Key 或 Google 密码。演示中可切换的租户与角色均为合成数据场景。": [
+    "Use a separate, new demo password. Do not enter your Huawei Cloud password, API key or Google password. Tenant and role switches represent synthetic demo scenarios.",
+    "Usa una contraseña nueva e independiente para esta demostración. No introduzcas tu contraseña de Huawei Cloud, clave de API ni contraseña de Google. Los inquilinos y roles son escenarios de demostración sintéticos."
+  ],
+  "两次输入的密码不一致": [
+    "The passwords do not match",
+    "Las contraseñas no coinciden"
+  ],
+  "请检查输入后重试": [
+    "Check your input and try again",
+    "Revisa los datos e inténtalo de nuevo"
+  ],
+  "密码不正确": [
+    "Incorrect password",
+    "Contraseña incorrecta"
+  ],
+  "请使用首次访问邀请链接设置密码": [
+    "Use your first-access invitation to set a password",
+    "Usa la invitación de primer acceso para configurar una contraseña"
+  ],
+  "邀请已使用、失效或不正确": [
+    "The invitation is used, expired or invalid",
+    "La invitación ya se usó, ha caducado o no es válida"
+  ],
+  "邀请已使用": [
+    "This invitation has already been used",
+    "Esta invitación ya se ha utilizado"
+  ],
+  "尝试次数过多，请五分钟后再试": [
+    "Too many attempts. Try again in five minutes",
+    "Demasiados intentos. Vuelve a intentarlo dentro de cinco minutos"
+  ],
+  "登录 · NEXO Data Agent": [
+    "Sign in · NEXO Data Agent",
+    "Iniciar sesión · NEXO Agente de datos"
+  ],
+  "图表数据：{0}": [
+    "Chart data: {0}",
+    "Datos del gráfico: {0}"
+  ],
+  "Sales · {0}": [
+    "Sales · {0}",
+    "Ventas · {0}",
+    "销售域 · {0}"
+  ],
+  "放大": [
+    "Zoom in",
+    "Acercar"
+  ],
+  "缩小": [
+    "Zoom out",
+    "Alejar"
+  ],
+  "适应画布": [
+    "Fit view",
+    "Ajustar vista"
+  ]
+}

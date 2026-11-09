@@ -1,0 +1,22 @@
+name: nexo-execution-demo
+services:
+  temporal-init:
+    image: temporalio/temporal:1.4.1
+    user: '0:0'
+    entrypoint: [sh, -c]
+    command: ['chown -R 1000:1000 /data']
+    network_mode: none
+    volumes: [temporal_data:/data]
+    restart: 'no'
+  temporal:
+    image: temporalio/temporal:1.4.1
+    command: [server, start-dev, --ip, 0.0.0.0, --ui-port, '8233', --db-filename, /data/temporal.db]
+    environment:
+      NO_PROXY: '${NO_PROXY:-localhost,127.0.0.1},0.0.0.0,temporal'
+    depends_on:
+      temporal-init:
+        condition: service_completed_successfully
+    ports: ['127.0.0.1:7233:7233', '127.0.0.1:8233:8233']
+    volumes: [temporal_data:/data]
+volumes:
+  temporal_data: {}

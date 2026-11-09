@@ -1,0 +1,8 @@
+NEXO Data Agent reusable source template
+Template source: 201cee5ac7de77d36b018ebaa89f5e6bb0185a98
+Packaged as data-agent-practice v1.0.0.
+
+No existing cloud resource state, account credentials, invitations or deployment URL is bundled.
+Generate 10,000 synthetic rows locally; the browser profile requires no cloud account or model key.
+Integrated service and cloud readiness must be verified in each new installation.
+See README.md and the skill references for setup and acceptance checks.

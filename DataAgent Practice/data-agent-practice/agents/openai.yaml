@@ -1,0 +1,4 @@
+interface:
+  display_name: "Data Agent Practice"
+  short_description: "Build NEXO with openJiuwen, ChatBI, MCP and DWS"
+  default_prompt: "Use $data-agent-practice to build or extend a runnable NEXO Data Agent with unified metadata, workflow tasks, scoped permissions, and Chinese, US English, and Spanish interfaces. Start locally unless cloud integration is requested."
