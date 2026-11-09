@@ -1,0 +1,4 @@
+interface:
+  display_name: "企业通用洞察"
+  short_description: "面向任意企业的战略变化、经营影响、风险判断与行动机会研究"
+  default_prompt: "Use $company-intelligence to research this enterprise, identify what changed and why it matters, and recommend evidence-based next actions."
