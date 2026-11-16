@@ -1,0 +1,20 @@
+{$SITE_DOMAIN} {
+  encode zstd gzip
+  request_body {
+    max_size 3100000
+  }
+  reverse_proxy app:3000
+}
+
+drawio.{$SITE_DOMAIN} {
+  encode zstd gzip
+  root * /srv/drawio
+  @write not method GET HEAD
+  respond @write 405
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+    Content-Security-Policy "default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' blob: data:; img-src 'self' data: blob:; frame-ancestors https://{$SITE_DOMAIN}; object-src 'none'; form-action 'none'"
+  }
+  file_server
+}

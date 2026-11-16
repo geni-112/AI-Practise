@@ -1,0 +1,16 @@
+node_modules
+.git
+.openai
+.data
+.tools
+secrets
+dist
+artifacts
+test-results
+playwright-report
+.env*
+**/*.local.*
+deploy/cloud_*.py
+data
+**/secrets
+!.env.example

@@ -1,0 +1,27 @@
+.practice-detail .practice-citations{margin:.45rem 0 0;font:normal 15px/1.5 Arial,'Microsoft YaHei',sans-serif;color:#344b60}
+.practice-citations>summary{display:list-item;cursor:pointer;color:#375c7a;font-weight:500}
+.practice-citations>summary:focus-visible{outline:2px solid #497397;outline-offset:3px}
+.practice-citations>ul{background:#f0f5f9;border-radius:6px;padding:.5rem .75rem;list-style:none;margin:.4rem 0 0}
+.practice-citations>ul>li{margin:0;padding:.35rem 0;overflow-wrap:anywhere}
+.practice-citations li+li{border-top:1px solid #dce5ed}
+.practice-citations li small{display:block;margin:.1rem 0 0;color:#506479;font-size:.9em}
+.practice-library-link{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:flex-end;margin:-4px 0 12px}
+.practice-tools,.case-patterns,.case-search,.drawio-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.practice-tools .buttonlink,.case-entry .buttonlink{font-size:15px}
+.practice-tools{margin:10px 0}.target-preview{display:block;width:100%;max-height:510px;object-fit:contain;border:1px solid #d1dce7;border-radius:9px;background:#fff}
+.practice-reference{margin-top:22px;padding:4px 0 12px;border-top:1px solid #d7dfe8}
+#form .case-choice{display:flex;align-items:flex-start;gap:10px;font-weight:400;margin:12px 0}
+#form .case-choice input{width:18px;height:18px;flex:none;margin:3px 0}
+.case-entry{padding:12px 0;border-top:1px solid #d8e1ea}.case-entry p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.case-patterns button,.case-search button{font-size:15px}.case-search input{flex:1 1 200px;min-width:0}
+dialog.drawio-editor{width:min(96vw,1700px);height:93dvh;max-width:none;max-height:none;margin:auto;padding:0;border:1px solid #c5d2df;border-radius:12px;background:#fff}
+.drawio-editor[open]{display:flex;flex-direction:column}.drawio-head{padding:10px 16px;border-bottom:1px solid #d6e0e9;color:#263d55}.drawio-status{flex:1;font-size:15px}.drawio-editor iframe{width:100%;flex:1;min-height:0;border:0}
+.practice-failure{padding:1rem 0;border-top:1px solid #d5dfe9}
+.practice-failure .row{flex-wrap:wrap;gap:.3rem 1rem}
+.practice-failure time,.practice-failure dt{color:#58687a}
+.practice-failure p{margin:.5rem 0}
+.practice-failure code{overflow-wrap:anywhere}
+.practice-failure dl{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;gap:.3rem 1rem;margin:.75rem 0 0}
+.practice-failure dd{margin:0;overflow-wrap:anywhere}
+.drawio-editor button[hidden]{display:none}
+@media(max-width:650px){dialog.drawio-editor{width:100vw;height:100dvh;border-radius:0}.drawio-head{padding:8px}.practice-library-link{justify-content:flex-start}}

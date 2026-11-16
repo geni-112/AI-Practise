@@ -1,0 +1,11 @@
+import {sourceArchive} from './export-source.mjs';
+import fs from 'node:fs';
+const root=new URL('.',import.meta.url);const read=p=>fs.readFileSync(new URL(p,root),'utf8');const assets=Object.fromEntries(['index.html','style.css','app.js','i18n.js','dictionary-schema.js','dictionaries.js'].map(p=>[p,read('public/'+p)]));
+assets['report-template.js']=read('public/report-template.js');
+assets['practices.js']=read('public/practices.js');
+assets['practice-citations.js']=read('public/practice-citations.js');
+assets['practice-tools.js']=read('public/practice-tools.js');
+assets['practice-tools.css']=read('public/practice-tools.css');
+const out='const SOURCE_ARCHIVE='+JSON.stringify(sourceArchive().toString('base64'))+';\nconst ASSETS='+JSON.stringify(assets)+';\nconst REPORT_LAYOUT='+JSON.stringify(JSON.parse(read('templates/monthly-report-layout.json')))+';\nconst REPORT_XLSX='+JSON.stringify(fs.readFileSync(new URL('templates/monthly-report.xlsx',root)).toString('base64'))+';\n'+read('public/dictionary-schema.js')+'\n'+read('worker/dictionaries.js')+'\n'+read('worker/report-template.js')+'\n'+read('worker/server.js');
+fs.rmSync(new URL('dist',root),{recursive:true,force:true});fs.mkdirSync(new URL('dist/server',root),{recursive:true});fs.writeFileSync(new URL('dist/server/index.mjs',root),out);
+console.log('Built standalone Navigator application');

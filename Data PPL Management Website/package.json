@@ -1,0 +1,26 @@
+{
+  "name": "data-navigator",
+  "version": "3.8.2",
+  "private": true,
+  "description": "数据业务项目作战台源码",
+  "scripts": {
+    "agent:verify": "npm ci --no-audit --no-fund && npm test",
+    "catalog:check": "node server/import-catalog.mjs --check",
+    "build": "node build.mjs",
+    "test": "node build.mjs && node tests/server.mjs && node tests/maas-completion.mjs && node tests/architecture-languages.mjs && node tests/practice-citations.mjs && node tests/ui.cjs && node tests/report-template.mjs && node tests/public-release.mjs",
+    "start": "node server/index.mjs",
+    "dev": "node --env-file=.env server/index.mjs",
+    "test:mysql": "node tests/mysql.mjs",
+    "bootstrap": "node server/bootstrap.mjs"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.24.6",
+    "saxes": "6.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0"
+  }
+}

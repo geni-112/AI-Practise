@@ -1,0 +1,12 @@
+[Unit]
+Description=Consistent Data PPL SQL and attachment backup
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=DB_BACKUP_CNF=/etc/data-ppl-backup.cnf
+Environment=BACKUP_DIR=/var/backups/data-ppl-management
+ExecStart=/bin/bash /opt/data-ppl-management/deploy/backup.sh
+TimeoutStartSec=1800
+UMask=0077

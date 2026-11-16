@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Data PPL backup before the cloud server snapshot
+
+[Timer]
+OnCalendar=*-*-* 06:30:00 UTC
+Persistent=true
+Unit=data-ppl-backup.service
+
+[Install]
+WantedBy=timers.target

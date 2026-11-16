@@ -1,0 +1,86 @@
+name: data-ppl-management
+services:
+  app:
+    build: .
+    image: data-ppl-management:3.8.2
+    restart: unless-stopped
+    init: true
+    read_only: true
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      UPLOAD_DIR: /data/uploads
+      TRUST_PROXY: "true"
+      OCR_ENDPOINT: http://ocr:8091/extract
+      DRAWIO_ORIGIN: https://drawio.${SITE_DOMAIN:?Set SITE_DOMAIN}
+    networks:
+      - default
+      - ocr_internal
+    volumes:
+      - ./data:/data
+      - ./secrets:/run/secrets:ro
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    expose:
+      - "3000"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+  ocr:
+    build: ./ocr
+    image: data-ppl-ocr:3.6.0
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    networks:
+      - ocr_internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 224m
+    cpus: 0.75
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+  web:
+    build: ./deploy/editor
+    image: data-ppl-web:3.6.0
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  caddy_data:
+  caddy_config:
+networks:
+  ocr_internal:
+    internal: true

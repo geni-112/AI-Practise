@@ -1,0 +1,67 @@
+{
+  "source": {
+    "file": "Synthetic test data",
+    "sheet": "Test",
+    "rows": 2,
+    "latestKnownDate": "2025-06-02"
+  },
+  "projects": [
+    {
+      "id": "fixture-project-1",
+      "name": "Test Project 1",
+      "customer": "Test Customer 1",
+      "type": "大数据",
+      "repo": "Test Office",
+      "stage": 2,
+      "status": "正常",
+      "risk": false,
+      "bdId": "",
+      "saId": "",
+      "bdName": "",
+      "saName": "",
+      "notes": "Synthetic test note",
+      "updatedAt": "2025-06-02T00:00:00Z",
+      "pipelineDate": "2025-06-01",
+      "planYear": 2025,
+      "eiPlan": 1,
+      "servicePlan": null,
+      "actuals": [],
+      "milestones": {},
+      "logs": [],
+      "_version": 1
+    },
+    {
+      "id": "fixture-project-2",
+      "name": "Test Project 2",
+      "customer": "Test Customer 2",
+      "type": "大数据",
+      "repo": "Test Office",
+      "stage": 2,
+      "status": "正常",
+      "risk": false,
+      "bdId": "",
+      "saId": "",
+      "bdName": "",
+      "saName": "",
+      "notes": "Synthetic test note",
+      "updatedAt": "2025-06-02T00:00:00Z",
+      "pipelineDate": "2025-06-01",
+      "planYear": 2025,
+      "eiPlan": 1,
+      "servicePlan": null,
+      "actuals": [],
+      "milestones": {},
+      "logs": [],
+      "_version": 1
+    }
+  ],
+  "resources": [
+    {
+      "id": "fixture-resource",
+      "title": "Test guide",
+      "type": "大数据",
+      "body": "Synthetic test content",
+      "tag": "Test"
+    }
+  ]
+}

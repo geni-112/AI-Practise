@@ -1,0 +1,69 @@
+const $=selector=>document.querySelector(selector);
+const form=$('#loginForm'),error=$('#loginError'),button=$('#loginButton');
+let mustChangePassword=false;
+const requestedPage=new URLSearchParams(location.search).get('next')||'';
+const reviewSlug=/^review-([a-z0-9][a-z0-9-]{0,63})$/.exec(requestedPage)?.[1];
+const destination=requestedPage==='maas'?'/settings/maas':reviewSlug?'/best-practices/reviews/'+reviewSlug:'/';
+async function auth(path,body){
+  const response=await fetch('/api/auth/'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+  const result=await response.json();
+  if(!response.ok)throw Object.assign(new Error(result.error||'操作失败'),{status:response.status});
+  return result;
+}
+function showForm(required,email=''){
+  mustChangePassword=required;
+  form.reset();$('#email').value=email;$('#email').readOnly=required;
+  $('#authTitle').textContent=required?'首次登录，请修改密码':'登录工作空间';
+  $('#authHint').textContent=required?'请设置自己的新密码，完成后才能进入工作空间。':'使用管理员授权的账号登录。';
+  $('#passwordLabel').textContent=required?'当前密码':'密码';
+  $('#newPasswordField').hidden=!required;$('#newPassword').required=required;
+  $('#repeatField').hidden=!required;$('#repeat').required=required;
+  $('#signOut').hidden=!required;$('#loginNote').hidden=required;
+  button.textContent=required?'保存新密码':'登录 →';
+  const params=new URLSearchParams();
+  if(required)params.set('change-password','required');
+  if(destination!=='/')params.set('next',requestedPage);
+  history.replaceState(null,'','/login'+(params.size?'?'+params.toString():''));
+  window.i18n.apply();
+}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();button.disabled=true;error.textContent='';
+  try{
+    if(mustChangePassword){
+      const password=$('#newPassword').value;
+      if(password!==$('#repeat').value)throw new Error('两次密码不一致');
+      await auth('password',{currentPassword:$('#password').value,password});
+      showForm(false,$('#email').value);
+      $('#authHint').textContent='密码已更新，请使用新密码登录。';
+      $('#password').focus();
+    }else{
+      const result=await auth('login',{email:$('#email').value,password:$('#password').value});
+      if(result.mustChangePassword){showForm(true,$('#email').value);$('#password').focus()}
+      else location.assign(destination);
+    }
+  }catch(e){
+    if(e.status===401&&mustChangePassword)showForm(false,$('#email').value);
+    error.textContent=e.message;
+  }finally{button.disabled=false;window.i18n.apply()}
+});
+$('#signOut').addEventListener('click',async()=>{
+  try{await auth('logout',{});showForm(false);error.textContent=''}catch(e){error.textContent=e.message}
+});
+window.addEventListener('hashchange',()=>{
+  if(new URLSearchParams(location.hash.slice(1)).has('activate')){
+    history.replaceState(null,'',location.pathname+location.search);
+    error.textContent='链接设置密码已停用，请联系管理员重置初始密码';
+    window.i18n.apply();
+  }
+});
+async function initialize(){
+  button.disabled=true;
+  const legacyLink=new URLSearchParams(location.hash.slice(1)).has('activate');
+  try{
+    const status=await auth('status');
+    showForm(!!status.mustChangePassword,status.email||'');
+    if(legacyLink)error.textContent='链接设置密码已停用，请联系管理员重置初始密码';
+  }catch(e){error.textContent=e.message}
+  finally{button.disabled=false;window.i18n.apply()}
+}
+initialize();
