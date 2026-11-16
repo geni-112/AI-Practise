@@ -5,7 +5,7 @@ This directory is a self-contained release of Data PPL Management Website 3.8.2.
 ## Verify a clean checkout
 
 ```sh
-cd "Data PPL Management Website"
+cd "20261116 Data PPL Management Website"
 npm run agent:verify
 ```
 

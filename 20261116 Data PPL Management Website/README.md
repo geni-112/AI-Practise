@@ -9,8 +9,8 @@
 ```sh
 git clone --depth 1 --filter=blob:none --sparse https://github.com/geni-112/AI-Practise.git
 cd AI-Practise
-git sparse-checkout set "Data PPL Management Website"
-cd "Data PPL Management Website"
+git sparse-checkout set "20261116 Data PPL Management Website"
+cd "20261116 Data PPL Management Website"
 npm run agent:verify
 ```
 
