@@ -40,17 +40,21 @@ function evidencePosition(label) {
   return [x/10,y/10,Math.min(w,1000-x)/10,Math.min(h,1000-y)/10];
 }
 function evidenceTarget(item,label) {return 'mark-'+practiceState.tab+'-'+item.id+'-'+label.id}
+function evidenceNumber(label){return Number(label.id.slice(1))}
+function evidenceColor(label){return 'diagram-color-'+((evidenceNumber(label)-1)%4)}
 function evidenceLink(item,label) {
   if(!evidencePosition(label))return '';
-  return '<a class="diagram-link" href="#'+esc(evidenceTarget(item,label))+'">'+i18n.t('在原图中定位')+'</a>';
+  return '<a class="diagram-link '+evidenceColor(label)+'" href="#'+esc(evidenceTarget(item,label))+'" aria-label="'+esc(i18n.t('定位标注')+' '+evidenceNumber(label)+' · '+label.text)+'"><span class="diagram-link-badge" data-user-content>#'+evidenceNumber(label)+'</span><span>'+i18n.t('在原图中定位')+'</span></a>';
 }
 function evidenceImage(item) {
   const markers=(item.ocrEvidence?.labels||[]).map(label=>{
     const position=evidencePosition(label);if(!position)return '';
-    const [x,y,w,h]=position;
-    return '<span class="diagram-highlight" tabindex="-1" role="img" aria-label="'+esc(label.text)+'" id="'+esc(evidenceTarget(item,label))+'" style="left:'+x+'%;top:'+y+'%;width:'+w+'%;height:'+h+'%"></span>';
+    const [x,y,w,h]=position,number=evidenceNumber(label);
+    return '<span class="diagram-highlight '+evidenceColor(label)+(y<5?' is-top-edge':'')+(x+w>95?' is-right-edge':'')+'" data-label-id="'+esc(label.id)+'" tabindex="-1" role="img" aria-label="'+esc(i18n.t('标注')+' '+number+' · '+label.text)+'" id="'+esc(evidenceTarget(item,label))+'" style="left:'+x+'%;top:'+y+'%;width:'+w+'%;height:'+h+'%"><span class="diagram-marker" aria-hidden="true" data-user-content>#'+number+'</span></span>';
   }).join('');
-  return '<div class="diagram-image"><img class="practice-original" src="/api/practices/'+esc(item.id)+'/image" alt="'+i18n.t('上传的架构图')+'">'+markers+'</div><a class="no-export" href="/api/practices/'+esc(item.id)+'/image" target="_blank" rel="noopener">'+i18n.t('打开完整原图')+'</a>';
+  const toggleId='show-'+evidenceTarget(item,{id:'annotations'});
+  const controls=markers?'<input class="diagram-annotation-toggle" id="'+esc(toggleId)+'" type="checkbox" checked><label class="diagram-annotation-label" for="'+esc(toggleId)+'">'+i18n.t('显示原图标注')+'</label><span class="diagram-annotation-hint">'+i18n.t('彩色编号与分析中的原图引用对应，点击定位后加粗高亮。')+'</span>':'';
+  return '<div class="diagram-evidence">'+controls+'<div class="diagram-image"><img class="practice-original" src="/api/practices/'+esc(item.id)+'/image" alt="'+i18n.t('上传的架构图')+'">'+markers+'</div><a class="no-export" href="/api/practices/'+esc(item.id)+'/image" target="_blank" rel="noopener">'+i18n.t('打开完整原图')+'</a></div>';
 }
 document.addEventListener('click',event=>{
   const link=event.target.closest?.('a.diagram-link');if(!link)return;
@@ -67,6 +71,8 @@ function attachPracticeCitations(root,labels,item) {
     span.dataset.diagramLabels.split(' ').forEach(id=>ids.add(id));
     span.removeAttribute('data-diagram-labels');
   }
+  const cited=new Set([...byContainer.values()].flatMap(ids=>[...ids]));
+  root.querySelectorAll('.diagram-highlight').forEach(mark=>mark.classList.toggle('is-cited',cited.size===0||cited.has(mark.dataset.labelId)));
   for(const [container,ids] of byContainer){
     const rows=[...ids].map(id=>{
       const label=labels.get(id);

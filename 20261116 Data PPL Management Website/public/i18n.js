@@ -303,6 +303,12 @@ Object.assign(en,{
  "成员已删除，已移除对应项目指派":"A deleted member was removed from the project team."
 });
 Object.assign(en,{"BD 姓名":"BD name","BD 姓名须为不超过 120 个字符的单行文字":"Enter a BD name of up to 120 characters on one line."});
+Object.assign(en,{
+ "标注":"Annotation",
+ "定位标注":"Locate annotation",
+ "显示原图标注":"Show original diagram annotations",
+ "彩色编号与分析中的原图引用对应，点击定位后加粗高亮。":"Match the colored numbers to the references in the analysis. Select a reference for a stronger highlight."
+});
 const patterns=[
  [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
  [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],
