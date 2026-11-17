@@ -63,11 +63,11 @@ export async function readPracticeInput(client, id) {
 
 export async function caseDetails(client, row) {
   const input=await readPracticeInput(client,row.id);
-  const saved=(await client.query('SELECT summary,reviewed_by,reviewed_at FROM architecture_cases WHERE analysis_id=?',[row.id])).rows[0];
+  const saved=(await client.query('SELECT c.summary,c.reviewed_by,c.reviewed_at,pub.title FROM architecture_cases c LEFT JOIN architecture_case_publications pub USING(analysis_id) WHERE c.analysis_id=?',[row.id])).rows[0];
   const mappings=saved ? (await caseMappings(client,[row.id])).map(x=>({product:x.product,service:x.service_id})) : [];
   const sources=[];
   for (const source of input.sources) {
-    const ref=(await client.query('SELECT a.title FROM architecture_cases c JOIN architecture_analyses a ON a.id=c.analysis_id WHERE c.analysis_id=? AND a.archived_at IS NULL',[source.id])).rows[0];
+    const ref=(await client.query('SELECT pub.title'+visibleCases+' WHERE c.analysis_id=? AND a.archived_at IS NULL',[source.id])).rows[0];
     sources.push({id:source.id,alias:source.alias,used:source.used===true,terms:source.terms,title:ref?.title || '',available:!!ref});
   }
   return {inputMode:input.inputMode,referenceRequested:input.referenceRequested,ocrEvidence:input.evidence,
@@ -75,12 +75,14 @@ export async function caseDetails(client, row) {
 }
 
 export async function saveReference(client, user, row, body, files) {
-  if (row.owner_email!==user.email && !user.permissions.includes('practice.manage')) throw authError(403,'仅发起人或管理员可维护此分析');
+  if (!user.permissions.includes('practice.manage')) throw authError(403,'仅案例审核人可发布或撤下团队案例');
   if (body._version!==row.version) throw authError(409,'架构分析已更新，请刷新');
   if (typeof body.publish!=='boolean') throw authError(400,'参考案例内容无效');
   const input=await readPracticeInput(client,row.id);
   if (body.publish) {
     if (row.status!=='succeeded' || row.archived_at) throw authError(409,'请先完成分析并恢复归档记录');
+    const title=typeof body.title==='string'?body.title.trim():'';
+    if(!title || title.length>200 || body.reviewed!==true)throw authError(400,'请填写公开案例标题并确认已脱敏');
     const result=JSON.parse(row.result_json);
     const summary=typeof body.summary==='string' ? body.summary.trim() : '';
     if (!summary || summary.length>1000 || !Array.isArray(body.mappings) || body.mappings.length>150) throw authError(400,'参考案例内容无效');
@@ -101,6 +103,7 @@ export async function saveReference(client, user, row, body, files) {
     } else {
       await client.query('INSERT INTO architecture_cases(analysis_id,image_digest,summary,reviewed_by) VALUES(?,?,?,?)',[row.id,digest,summary,user.email]);
     }
+    await client.query('INSERT INTO architecture_case_publications(analysis_id,title) VALUES(?,?) ON DUPLICATE KEY UPDATE title=VALUES(title)',[row.id,title]);
     await client.query('DELETE FROM architecture_case_mappings WHERE analysis_id=?',[row.id]);
     for(const m of selected) await client.query('INSERT INTO architecture_case_mappings(analysis_id,product,service_id) VALUES(?,?,?)',[row.id,m.product,m.service]);
     await client.query('DELETE FROM architecture_case_terms WHERE analysis_id=?',[row.id]);
@@ -114,7 +117,13 @@ export async function saveReference(client, user, row, body, files) {
   if((await client.query('UPDATE architecture_analyses SET version=version+1 WHERE id=? AND version=?',[row.id,row.version])).rowCount!==1)throw authError(409,'架构分析已更新，请刷新');
 }
 
-const visibleCases=' FROM architecture_cases c JOIN architecture_analyses a ON a.id=c.analysis_id ';
+const visibleCases=' FROM architecture_cases c JOIN architecture_case_publications pub ON pub.analysis_id=c.analysis_id JOIN architecture_analyses a ON a.id=c.analysis_id ';
+export async function publicCase(client,id) {
+  const item=(await client.query('SELECT c.analysis_id AS id,pub.title,c.summary,c.reviewed_at,a.business_type'+visibleCases+'WHERE c.analysis_id=? AND a.archived_at IS NULL',[id])).rows[0];
+  if(!item)throw authError(404,'参考案例不存在');
+  const mappings=await caseMappings(client,[id]);
+  return {...item,mappings:mappings.map(m=>({product:m.product,service:m.service_id}))};
+}
 export async function relevantCases(client, job, evidence, digest) {
   const terms=normalizedTerms(...(evidence?.labels || []).map(l=>l.text),job.title,job.context_text);
   if(!terms.length)return [];
@@ -134,13 +143,13 @@ export async function referenceLibrary(client, url) {
   const query=(url.searchParams.get('q')||'').trim().slice(0,80);
   const product=url.searchParams.get('product')||'', service=url.searchParams.get('service')||'';
   const filters=['a.archived_at IS NULL'], args=[];
-  if(query){filters.push('(LOCATE(?,a.title)>0 OR LOCATE(?,c.summary)>0)');args.push(query,query)}
+  if(query){filters.push('(LOCATE(?,pub.title)>0 OR LOCATE(?,c.summary)>0)');args.push(query,query)}
   if(product&&service){filters.push('EXISTS (SELECT 1 FROM architecture_case_mappings m WHERE m.analysis_id=c.analysis_id AND m.product=? AND m.service_id=?)');args.push(product,service)}
   const from=visibleCases+' WHERE '+filters.join(' AND ');
   const total=Number((await client.query('SELECT COUNT(*) AS n'+from,args)).rows[0].n);
-  const items=(await client.query('SELECT a.id,a.title,a.business_type,c.summary,c.reviewed_at'+from+' ORDER BY c.reviewed_at DESC,c.analysis_id LIMIT 12 OFFSET '+((page-1)*12),args)).rows;
+  const items=(await client.query('SELECT a.id,pub.title,a.business_type,c.summary,c.reviewed_at'+from+' ORDER BY c.reviewed_at DESC,c.analysis_id LIMIT 12 OFFSET '+((page-1)*12),args)).rows;
   const patterns=(await client.query(`SELECT m.product,m.service_id,COUNT(*) AS cases_used FROM architecture_case_mappings m
-    JOIN architecture_analyses a ON a.id=m.analysis_id WHERE a.archived_at IS NULL
+    JOIN architecture_analyses a ON a.id=m.analysis_id JOIN architecture_case_publications pub ON pub.analysis_id=m.analysis_id WHERE a.archived_at IS NULL
     GROUP BY m.product,m.service_id HAVING COUNT(*)>=2 ORDER BY cases_used DESC,m.product,m.service_id LIMIT 24`)).rows;
   return {items,page,total,patterns};
 }

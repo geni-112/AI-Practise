@@ -11,3 +11,41 @@ console.log('PASS: empty initial workspace; synthetic fixtures; owner binding; d
 
 assert.equal((await call('view@test.com','source/download')).status,403);
 const sourceResponse=await mod.default.fetch(new Request('https://test.local/api/source/download',{headers:{'oai-authenticated-user-id':owner,'oai-authenticated-user-email':owner}}),{DB,ADMIN_EMAIL:'owner@example.invalid'});assert.equal(sourceResponse.status,200);assert.equal(sourceResponse.headers.get('Content-Type'),'application/zip');const zipBytes=new Uint8Array(await sourceResponse.arrayBuffer());assert.equal(zipBytes[0],80);assert.equal(zipBytes[1],75);console.log('PASS: source download restricted to administrators, valid ZIP signature');
+
+const bdEmail='workflow-bd@example.invalid',saEmail='workflow-sa@example.invalid',otherBD='second-bd@example.invalid';
+for(const [email,roleId] of [[bdEmail,'bd'],[saEmail,'sa'],[otherBD,'bd']])await call(owner,'admin/member','POST',{email,roleId});
+const available=(await call(bdEmail,'workspace')).body.members;
+assert(available.some(m=>m.email===saEmail));assert(available.every(m=>m.enabled&&m.role_id==='sa'));
+const ownProject=await call(bdEmail,'projects','POST',{name:'Alpha-Workstream',stage:4,saId:saEmail});
+assert.equal(ownProject.status,201);assert.equal(ownProject.body.saName,saEmail);
+assert((await call(saEmail,'workspace')).body.projects.some(p=>p.id===ownProject.body.id));
+assert.equal((await call(otherBD,'projects/'+ownProject.body.id,'PATCH',{_version:1,saId:''})).status,403);
+assert.equal((await call(bdEmail,'projects/'+ownProject.body.id,'PATCH',{_version:1,saId:otherBD})).status,400);
+assert.equal((await call(bdEmail,'projects/'+ownProject.body.id,'PATCH',{_version:1,bdId:otherBD})).status,403);
+const active=ownProject.body;
+const cases=[active,{...active,id:'lost',status:'丢单',risk:true},{...active,id:'hold',status:'挂起'},{...active,id:'archived',archivedAt:'2024-11-01'}];
+const poc=mod.buildReport(cases,'2099-10');assert.equal(poc.stats.poc,1);assert.equal(poc.groups[0].poc,1);assert.equal(poc.stats.blocked,1);
+
+const fill=(id,kind,obj)=>db.prepare('INSERT INTO records(id,kind,payload) VALUES(?,?,?)').run(id,kind,JSON.stringify(obj));
+fill('report-history-v1','meta',{month:'2024-10'});
+const timed={...active,name:'October opportunity',repo:'Monthly fixture',pipelineDate:'2024-10-01',updatedAt:'2024-10-25',stage:4,actuals:[{month:'2024-10',kind:'EI',amount:1}]};
+db.prepare('UPDATE project_report_states SET payload=?,effective_month=? WHERE project_id=?').run(JSON.stringify(timed),'2024-10',active.id);
+db.prepare('UPDATE records SET payload=? WHERE id=?').run(JSON.stringify(timed),active.id);
+assert.equal((await call(bdEmail,'projects/'+active.id,'PATCH',{_version:1,stage:6,next:'November-only instruction'})).status,200);
+db.prepare("UPDATE project_report_states SET effective_month='2024-11' WHERE project_id=? AND project_version=2").run(active.id);
+const filters={period:'2024-10',type:'全部',repo:'Monthly fixture'};
+const october=await call(owner,'reports/preview','POST',filters);
+assert.equal(october.body.basis,'monthEnd');assert.equal(october.body.stats.poc,1);assert.equal(october.body.stats.signed,0);
+assert.equal((await call(owner,'reports/preview','POST',{...filters,period:'2024-11'})).body.stats.signed,1);
+const old=await call(owner,'reports/preview','POST',{...filters,period:'2024-09'});assert.equal(old.body.basis,'ledger');
+const forecast=await call(owner,'reports/template','POST',{...filters,period:'2024-09',format:'html',language:'en'});assert(forecast.body.html.includes('Recalculated from the current ledger'));
+const frozen=(await call(owner,'reports','POST',{...filters,summary:'Board-only custom summary'})).body;
+assert.equal((await call(owner,'reports/preview','POST',filters)).body.id,frozen.id);
+assert.equal((await call(owner,'reports/preview','POST',filters)).body.basis,'snapshot');
+const reader=(await call(owner,'admin/role','POST',{name:'Limited report author',permissions:['project.read.own','report.view','report.generate','report.export','finance.read']})).body;
+await call(owner,'admin/member','POST',{email:otherBD,roleId:reader.id,_version:1});
+const restricted=(await call(otherBD,'reports/'+frozen.id+'/export')).body;
+assert.equal(restricted.stats.projects,0);assert.equal(restricted.groups.length,0);
+for(const marker of ['October opportunity','Board-only custom summary','November-only instruction','reportInputs'])assert(!JSON.stringify(restricted).includes(marker));
+const overview=(await call('view@test.com','reports/'+frozen.id+'/export')).body;assert.deepEqual(overview.projects,[]);assert(!JSON.stringify(overview).includes('October opportunity'));
+console.log('PASS: BD assignment boundaries, active POC counts, month-end states, historical fallback, fixed snapshots and role-scoped report exports');

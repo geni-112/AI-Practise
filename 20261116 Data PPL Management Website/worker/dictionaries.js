@@ -39,7 +39,10 @@ function validateDictionaryValue(list,field,value,oldValue,hasOld=false){
  fail(400,'请从数据字典选择有效选项：'+dict.name);
 }
 function validateProjectDictionaries(list,p,previous){
- for(const field of ['type','cloud','repo','industry','vendor','bdName','saName','confidence','stage','status','risk'])validateDictionaryValue(list,field,p[field],previous?.[field],!!previous);
+ for(const field of ['type','cloud','repo','industry','vendor','bdName','saName','confidence','stage','status','risk']){
+  if(field==='saName'&&p.saAccountEmail&&p.saName===p.saAccountEmail)continue;
+  validateDictionaryValue(list,field,p[field],previous?.[field],!!previous);
+ }
  for(const [key,value]of Object.entries(p.milestones||{}))validateDictionaryValue(list,'milestoneState',value,previous?.milestones?.[key],!!previous&&Object.hasOwn(previous.milestones||{},key));
  for(const entry of p.actuals||[])validateDictionaryValue(list,'revenueKind',entry.kind,entry.kind,!!previous?.actuals?.some(a=>a.kind===entry.kind&&a.month===entry.month&&a.amount===entry.amount));
 }

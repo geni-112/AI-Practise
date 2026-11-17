@@ -141,6 +141,41 @@ const en={
  '已启用 ·':'Enabled ·','已停用 ·':'Disabled ·'
 };
 Object.assign(en, {"首次登录，请修改密码": "Change your initial password", "请设置自己的新密码，完成后才能进入工作空间。": "Choose a new password before entering your workspace.", "保存新密码": "Save new password", "密码已更新，请使用新密码登录。": "Password updated. Sign in with your new password.", "新账号请使用管理员提供的初始密码登录；忘记密码时，请联系管理员重置。": "For a new account, use the initial password provided by your administrator. If you forget your password, ask your administrator to reset it.", "请先修改初始密码": "Change your initial password before continuing.", "新密码不能使用初始密码": "Your new password cannot be the initial password.", "新密码不能与当前密码相同": "Your new password must differ from your current password.", "链接设置密码已停用，请联系管理员重置初始密码": "Password links are no longer supported. Ask your administrator to reset your initial password.", "无法为此成员重置密码": "You cannot reset this member’s password.", "请使用修改密码功能修改自己的密码": "Use Change password to update your own password.", "请联系管理员确认账号已启用且角色有效。": "Ask your administrator to check that your account is enabled and has a valid role.", "通过角色分配数据权限，新成员使用初始密码登录。": "Assign access through roles. New members sign in with an initial password.", "新成员首次登录时必须修改部署管理员设置的初始密码。忘记密码时可由管理员重置；重置或停用会使原有会话失效。": "New members must change the deployment’s initial password at first sign-in. Administrators can reset forgotten passwords. Resetting or disabling an account signs out existing sessions.", "待修改初始密码": "Initial password change required", "已设置个人密码": "Personal password set", "重置密码": "Reset password", "确认重置": "Confirm reset", "新成员首次登录时必须修改部署管理员设置的初始密码。修改已有成员的角色或状态不会更改其密码。": "New members must change the deployment’s initial password at first sign-in. Updating an existing member’s role or status preserves their password.", "成员使用初始密码登录，首次登录必须修改。管理员可重置密码；账号停用或角色变更会使原有会话失效。": "Members sign in with an initial password and must change it on first use. Administrators can reset passwords. Disabling an account or changing its role revokes existing sessions.", "账号初始密码": "Account initial password", "初始密码": "Initial password", "请将初始密码告知成员本人。首次登录必须设置自己的新密码，完成后才能访问工作空间。": "Share the initial password with this member. They must choose their own password at first sign-in before accessing the workspace.", "重置后恢复为本部署的初始密码，已登录设备将退出。成员下次登录必须修改初始密码。": "Resetting restores the deployment’s initial password and signs out all devices. The member must change it on their next sign-in."});
+Object.assign(en, {
+ "为本人负责的项目指派 SA": "Assign an SA to my own BD projects",
+ "只能为本人负责的项目指派 SA": "You can assign an SA only to a project you own as BD.",
+ "SA 账号无效": "Invalid SA account",
+ "请选择已启用的 SA 账号": "Choose an active SA account.",
+ "指派后，SA 即可查看本项目并维护技术信息。": "The assigned SA can view this project and maintain its technical information.",
+ "更多商务、技术及收入字段": "More commercial, technical and revenue fields",
+ "显示正在准备或验证的 POC。挂起、丢单和归档项目不计入进行中 POC。": "Active POCs in preparation or validation. On-hold, lost and archived projects are excluded.",
+ "按当前台账重算": "Recalculated from the current ledger",
+ "按月末历史还原": "Month-end project history",
+ "该月没有归档快照或完整历史，按当前台账重算。": "This month has no archived snapshot or complete history. Figures were recalculated from the current ledger.",
+ "此旧快照仅保留项目行，部分汇总项缺少历史明细。": "This older snapshot only retains project rows. Some historical totals are unavailable.",
+ "该范围已有归档快照，请查看已发布版本": "A snapshot already exists for this scope. Open the published version.",
+ "关联项目": "Linked project",
+ "关联项目无效": "Invalid project",
+ "请选择你负责的有效项目": "Choose an active project assigned to you.",
+ "仅上传者和管理员": "Uploader and practice administrators only",
+ "项目成员可见": "Visible to project members",
+ "关联后，项目当前的 BD、SA 和最佳实践管理员可以查看原图和分析。": "Once linked, the assigned BD, SA and practice administrators can see the original and analysis.",
+ "修改原图可见范围": "Change original diagram access",
+ "公开案例标题": "Public case title",
+ "已核对标题、摘要和映射，已去除客户敏感信息。": "I reviewed the title, summary and mappings and removed sensitive customer information.",
+ "待脱敏审核": "Pending disclosure review",
+ "仅案例审核人可发布或撤下团队案例": "Only case reviewers may publish or withdraw a team case.",
+ "请填写公开案例标题并确认已脱敏": "Enter a public case title and confirm the material has been redacted.",
+ "参考案例不存在": "Reference case not found",
+ "请等待分析结束并恢复归档记录": "Wait for analysis to finish and restore any archived record first.",
+ "在原图中定位": "Highlight on original",
+ "打开完整原图": "Open full-size original",
+ "暂无定位": "Position unavailable",
+ "点击标注可在原图中查看对应区域。": "Select a label to highlight its location on the original diagram.",
+ "按月末历史汇总": "Compiled from month-end history",
+ "更新架构图项目权限": "Updated diagram project access",
+ "当前没有可查看的分析": "No analysis is available to view"
+});
 const patterns=[
  [/^创建初始密码账号：(.*)$/,(m,email)=>'Create account with initial password: '+email],
  [/^重置为初始密码：(.*)$/,(m,email)=>'Reset to initial password: '+email],

@@ -23,11 +23,11 @@ const saved=await call(owner,'reports',{period:'2026-05',summary:'独立月报�
 assert.equal((await call(owner,'reports/template',{format:'html',id:archive.id,summary:'malicious override'})).status,200);
 const archivedPreview=await (await call(owner,'reports/template',{format:'html',id:archive.id})).json();assert(archivedPreview.html.includes('独立月报总述'));assert(archivedPreview.html.includes('Monthly contact'));
 await call(owner,'admin/member',{email:'viewer@test.local',roleId:'viewer'});
-const visible=await (await call('viewer@test.local','reports',null,'GET')).json();assert.equal(visible[0].groups[0].ytdActual,null);assert.equal(visible[0].projects[0].ytdActual,undefined);assert.equal(visible[0].contact,'');
+const visible=await (await call('viewer@test.local','reports',null,'GET')).json();assert.equal(visible[0].groups[0].ytdActual,null);assert.deepEqual(visible[0].projects,[]);assert.equal(visible[0].contact,'');
 const redacted=await (await call('viewer@test.local','reports/template',{format:'html',id:archive.id})).json();assert(!redacted.html.includes('独立月报总述'));assert(!redacted.html.includes('Monthly contact'));assert(redacted.html.includes('未授权'));
 const excel=await call('viewer@test.local','reports/template',{format:'xlsx',id:archive.id});assert.equal(excel.status,200);const hiddenData=templateUnzip(Buffer.from(await excel.arrayBuffer())).find(e=>e.name==='xl/worksheets/sheet2.xml').data.toString();assert(!hiddenData.includes('<v>2.4</v>'));
 await call(owner,'admin/member',{email:'sa@test.local',roleId:'sa'});assert.equal((await call('sa@test.local','reports/template',{format:'html',period:'2026-05'})).status,403);
-assert.equal((await call(owner,'reports/template',{format:'xlsx',period:'2026-99'})).status,400);assert.equal((await call(owner,'reports/template',{format:'html',period:'2026-05',support:Array(6).fill('extra')})).status,400);
+assert.equal((await call(owner,'reports/template',{format:'xlsx',period:'2026-99'})).status,400);assert.equal((await call(owner,'reports/template',{format:'html',period:'2026-06',support:Array(6).fill('extra')})).status,400);
 const empty=monthlyTemplateModel(buildReport([],'2026-06'),dictionaries,'en');assert.equal(empty.extra,0);assert(monthlyTemplatePreview(empty).html.includes('No recorded revenue'));
 fs.writeFileSync(new URL('artifacts/template-work/empty-report.xlsx',root),monthlyTemplateWorkbook(empty));
 console.log('PASS: original workbook styles, merged cells, charts, monthly and prior-year totals, missing values, 23-project expansion, long text, XML escaping, immutable archive and financial permissions');

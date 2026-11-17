@@ -67,9 +67,12 @@ export async function migrate(pool) {
     const directory = new URL('../migrations/', import.meta.url);
     for (const name of (await fs.readdir(directory)).filter(x => x.endsWith('.sql')).sort()) {
       const sql = await fs.readFile(new URL(name, directory), 'utf8');
-      const checksum = createHash('sha256').update(sql).digest('hex');
+      const normalized=sql.replace(/\r\n/g,'\n');
+      const hash=value=>createHash('sha256').update(value).digest('hex');
+      const checksum=hash(normalized);
+      const validChecksums=new Set([checksum,hash(normalized.replace(/\n/g,'\r\n'))]);
       const existing = (await client.query('SELECT checksum FROM schema_migrations WHERE name=$1', [name])).rows[0];
-      if (existing && existing.checksum !== checksum) throw new Error(`Applied migration changed: ${name}`);
+      if (existing && !validChecksums.has(existing.checksum)) throw new Error(`Applied migration changed: ${name}`);
       if (!existing) {
         // MySQL DDL commits implicitly; every statement is restart-safe.
         for (const statement of sql.split(';').map(s=>s.trim()).filter(Boolean)) await client.query(statement);

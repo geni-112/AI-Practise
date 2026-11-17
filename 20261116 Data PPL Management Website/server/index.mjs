@@ -10,7 +10,7 @@ import { createPool, database, migrate, transaction } from './database.mjs';
 import { sessionUser, authRoute, authError, initializeAccounts, ensureInitialAccount, readInitialPassword } from './auth.mjs';
 import { fileStore } from './files.mjs';
 import {createPracticeService,initializePracticeRoles} from './practices.mjs';
-import application, { initialize } from '../dist/server/index.mjs';
+import application, { initialize, initializeReportHistory, initializeAssignmentPermission } from '../dist/server/index.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const json = (data, status = 200) => new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8'}});
@@ -31,6 +31,11 @@ export async function createApplication(options = {}) {
   await transaction(pool, client => initialize(database(client), {ADMIN_EMAIL:adminEmail}));
   await transaction(pool, client => initializeAccounts(client,adminEmail,initialPassword));
   await transaction(pool,initializePracticeRoles);
+  await transaction(pool,async client=>{
+    await client.query("SELECT id FROM records WHERE id='setup-v2' FOR UPDATE");
+    await initializeReportHistory(database(client));
+    await initializeAssignmentPermission(database(client));
+  });
   const practices=await createPracticeService({pool,files,env,editorOrigin,fetchImpl:options.maasFetch,probeFactory:options.visionProbe});
   async function handle(request, ip = 'local') {
     const url = new URL(request.url);
@@ -74,7 +79,7 @@ export async function createApplication(options = {}) {
         }
         if(maasPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
         if(reviewSlug){
-          if(!user.permissions.includes('practice.read'))throw authError(403,'当前角色没有此操作权限');
+          if(!user.permissions.includes('practice.manage'))throw authError(403,'当前角色没有此操作权限');
           const reviewPath=path.join(env.UPLOAD_DIR||path.join(root,'.data','uploads'),'practice-reviews',reviewSlug+'.html');
           try{return new Response(await fs.readFile(reviewPath),{headers:{'Content-Type':'text/html; charset=utf-8'}})}
           catch(e){if(e.code==='ENOENT')throw authError(404,'文件不存在');throw e}

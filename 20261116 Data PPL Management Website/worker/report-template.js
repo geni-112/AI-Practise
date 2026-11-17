@@ -3,7 +3,8 @@ export {monthlyTemplateModel,monthlyTemplateWorkbook,monthlyTemplatePreview,temp
 
 function reportRevenue(project,period,prior=false){
  const year=Number(period.slice(0,4))-(prior?1:0),end=String(year)+period.slice(4);
- const rows=(project.actuals||[]).filter(a=>a.month.startsWith(String(year)+'-')&&a.month<=end);
+ if(!Array.isArray(project.actuals))return (prior?project.priorYtdActual:project.ytdActual)??null;
+ const rows=project.actuals.filter(a=>a.month.startsWith(String(year)+'-')&&a.month<=end);
  return rows.length?rows.reduce((sum,a)=>sum+a.amount,0):null;
 }
 function enrichReportRevenue(snapshot,projects){
@@ -28,14 +29,13 @@ async function reportTemplateResponse(db,user,body){
  requireP(user,'report.view');if(body.format==='xlsx')requireP(user,'report.export');
  if(!['html','xlsx'].includes(body.format))fail(400,'报表格式无效');
  let report;
- if(body.id&&body.id!=='current'){report=await get(db,String(body.id),'report');if(!report)fail(404,'报表不存在');}
- else{
-  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(body.period||''))fail(400,'请选择月份');
-  report=buildReport(reportProjects(user,await all(db,'project')),body.period,body.type||'全部',body.repo||'全部');
-  if(!has(user,'report.generate')){report.projects=[];report.updates=[];}
-  if(has(user,'report.archive')&&has(user,'finance.read'))reportTemplateEdits(body,report);
+ if(body.id&&body.id!=='current'){
+  report=await get(db,String(body.id),'report');if(!report)fail(404,'报表不存在');report.basis='snapshot';
+ }else{
+  report=await reportForPeriod(db,user,body);
+  if(report.basis!=='snapshot'&&has(user,'report.archive')&&has(user,'finance.read'))reportTemplateEdits(body,report);
  }
- const visible=reportForUser(user,report),dicts=report.dictionarySnapshot||await dictionaries(db),model=monthlyTemplateModel(visible,dicts,body.language);
+ const visible=await visibleReport(db,user,report),dicts=report.dictionarySnapshot||await dictionaries(db),model=monthlyTemplateModel(visible,dicts,body.language);
  if(body.format==='html')return j({...monthlyTemplatePreview(model),summary:model.values.A3});
  return new Response(monthlyTemplateWorkbook(model),{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="Data-PPL-${report.period}.xlsx"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 }
@@ -82,16 +82,18 @@ function monthlyTemplateModel(report,dicts,language='zh'){
  const s=report.stats,missing=en?'Not recorded':'待补齐',money=value=>templateMoney(value,lang);
  values.A1=en?`LATAM Cloud ${category} Monthly Report · ${report.period}`:`拉美云${category}专项拓展月报-${String(year).slice(-2)}年${month}月`;
  values.A2=en?'1. Business summary':'一、业务总述';values.A5=en?`2. New opportunities in ${year}`:`二、${String(year).slice(-2)}年新机会点拓展情况`;
+ const provenance={live:en?'Current ledger':'实时台账',monthEnd:en?'Month-end project history':'按月末历史还原',ledger:en?'Recalculated from the current ledger':'按当前台账重算',snapshot:en?'Archived snapshot':'已归档固定快照'};
+ if(report.basis)values.A2+=' · '+provenance[report.basis]+(report.basis==='snapshot'&&report.dataBasis==='ledger'?' · '+provenance.ledger:'');
  const defaultSummary=en?
-  `1. Revenue: recorded YTD revenue ${report.financeHidden?'Not authorized':money(s.ytdActual)} M USD. Year-on-year: ${s.yoy==null?missing:(s.yoy*100).toFixed(1)+'%'}.\n\n2. Opportunities and key projects: ${s.projects} opportunities across ${s.customers} customers; ${s.newProjects} new this month. ${s.poc} are in POC preparation or validation. ${s.blocked} are on hold or blocked.\n\n3. Progress: ${s.updates} updates recorded this month. Recorded monthly revenue: ${report.financeHidden?'Not authorized':money(s.monthlyActual)} M USD. Missing revenue is not zero.`:
-  `1. 收入完成情况：截至${month}月，年内已录入实际收入${report.financeHidden?'未授权':money(s.ytdActual)} M USD，同比${s.yoy==null?'待补齐同期数据':(s.yoy*100).toFixed(1)+'%'}。\n\n2. 机会点及重点项目进展：台账共${s.projects}个机会点、${s.customers}个客户，本月新增入管道${s.newProjects}个。当前 POC 准备及验证项目${s.poc}个，挂起或阻塞项目${s.blocked}个。\n\n3. 本月推进：共记录${s.updates}条更新；本月已录入实际收入${report.financeHidden?'未授权':money(s.monthlyActual)} M USD。收入仅统计已录入部分，未填不视为零。`;
+  `1. Revenue: recorded YTD revenue ${report.financeHidden?'Not authorized':money(s.ytdActual)} M USD. Year-on-year: ${s.yoy==null?missing:(s.yoy*100).toFixed(1)+'%'}.\n\n2. Opportunities and key projects: ${s.projects} opportunities across ${s.customers??missing} customers; ${s.newProjects} new this month. ${s.poc} are in POC preparation or validation. ${s.blocked} are on hold or blocked.\n\n3. Progress: ${s.updates??missing} updates recorded this month. Recorded monthly revenue: ${report.financeHidden?'Not authorized':money(s.monthlyActual)} M USD. Missing revenue is not zero.`:
+  `1. 收入完成情况：截至${month}月，年内已录入实际收入${report.financeHidden?'未授权':money(s.ytdActual)} M USD，同比${s.yoy==null?'待补齐同期数据':(s.yoy*100).toFixed(1)+'%'}。\n\n2. 机会点及重点项目进展：台账共${s.projects}个机会点、${s.customers??missing}个客户，本月新增入管道${s.newProjects}个。当前 POC 准备及验证项目${s.poc}个，挂起或阻塞项目${s.blocked}个。\n\n3. 本月推进：共记录${s.updates??missing}条更新；本月已录入实际收入${report.financeHidden?'未授权':money(s.monthlyActual)} M USD。收入仅统计已录入部分，未填不视为零。`;
  values.A3=report.summaryGenerated?defaultSummary:(report.summary||defaultSummary);
  values.E19=en?`${year} Jan–${month} revenue (M USD)`:`${String(year).slice(-2)}年1-${month}月收入（M USD）`;
  const headers=en?['Office','Project','Current vendor','Use case',values.E19,'Executive alignment','Technical discussion','Solution design','POC','Contract / revenue','Progress']:['代表处','项目','现网厂家','业务场景',values.E19,'高层对标','技术交流','方案设计','PoC','合同签订及收入','进展'];headers.forEach((text,i)=>values[templateRef(i+1,19)]=text);
  rows[19]=Math.max(rows[19],...headers.map((text,i)=>templateLines(text,REPORT_LAYOUT.columns[i],16)*20+6));
  for(let index=0;index<Math.max(18,projects.length);index++){
   const row=20+index,p=projects[index];for(let col=1;col<=12;col++)values[templateRef(col,row)]='';if(!p)continue;
-  const progress=p.next||p.weekly||p.notes||'';const rowValues={A:label('repo',p.repo),B:p.name,C:label('vendor',p.vendor),D:p.scenario||'',E:report.financeHidden?'':p.ytdActual??'',K:progress};for(const [col,value]of Object.entries(rowValues))values[col+row]=value;
+  const inactive=p.status==='丢单'||p.status==='挂起';const progress=[inactive?label('status',p.status):'',p.next||p.weekly||p.notes||''].filter(Boolean).join(' · ');const rowValues={A:label('repo',p.repo),B:p.name,C:label('vendor',p.vendor),D:p.scenario||'',E:report.financeHidden?'':p.ytdActual??'',K:progress};for(const [col,value]of Object.entries(rowValues))values[col+row]=value;
   rows[row]=Math.max(rows[row]||34,...Object.entries(rowValues).filter(([col])=>col!=='E').map(([col,value])=>templateLines(value,col==='K'?REPORT_LAYOUT.columns[10]+REPORT_LAYOUT.columns[11]:REPORT_LAYOUT.columns[templateCol(col)-1],14)*19+8));
  }
  rows[3]=Math.max(rows[3],templateLines(values.A3,REPORT_LAYOUT.width,16)*22+28);
@@ -101,7 +103,7 @@ function monthlyTemplateModel(report,dicts,language='zh'){
  values['A'+(45+extra)]=report.contact||(en?'For questions, contact the platform administrator.':'* 如有疑问，请联系平台管理员。');
  const groups=(report.groups||[]).map(g=>({...g,label:g.repoMissing?(en?'Not recorded':'未填写'):label('repo',g.repo)}));
  const list=items=>items.length?items.slice(0,5).map(p=>{const text=`${label('repo',p.repo)} ${p.name}`;return text.length>28?text.slice(0,27)+'…':text}).join('\n')+(items.length>5?`\n${en?'More in table:':'其余见明细：'}${items.length-5}`:''):(en?'No projects':'暂无项目');
- const captions={10:en?`Pipeline development · ${projects.filter(p=>p.stage<3).length} projects`:`管道拓展中 · ${projects.filter(p=>p.stage<3).length} 个项目`,11:en?`POC / commercial · ${projects.filter(p=>p.stage>=3&&p.stage<6).length} projects`:`POC 与商务推进 · ${projects.filter(p=>p.stage>=3&&p.stage<6).length} 个项目`,12:en?`Signed / delivery · ${projects.filter(p=>p.stage>=6).length} projects`:`签约与交付 · ${projects.filter(p=>p.stage>=6).length} 个项目`,53:list(projects.filter(p=>p.stage<=1)),55:list(projects.filter(p=>p.stage===2||p.stage===5)),50:list(projects.filter(p=>[3,4].includes(p.stage))),45:list(projects.filter(p=>p.stage===6)),44:report.financeHidden?(en?'Not authorized':'未授权'):list(projects.filter(p=>(p.ytdActual??0)>0))};
+ const captions={10:en?`Pipeline development · ${projects.filter(p=>projectInProgress(p)&&p.stage<3).length} projects`:`管道拓展中 · ${projects.filter(p=>projectInProgress(p)&&p.stage<3).length} 个项目`,11:en?`POC / commercial · ${projects.filter(p=>projectInProgress(p)&&p.stage>=3&&p.stage<6).length} projects`:`POC 与商务推进 · ${projects.filter(p=>projectInProgress(p)&&p.stage>=3&&p.stage<6).length} 个项目`,12:en?`Signed / delivery · ${projects.filter(p=>p.status!=='丢单'&&p.stage>=6).length} projects`:`签约与交付 · ${projects.filter(p=>p.status!=='丢单'&&p.stage>=6).length} 个项目`,53:list(projects.filter(p=>projectInProgress(p)&&p.stage<=1)),55:list(projects.filter(p=>projectInProgress(p)&&(p.stage===2||p.stage===5))),50:list(projects.filter(isActivePoc)),45:list(projects.filter(p=>p.status!=='丢单'&&p.stage===6)),44:report.financeHidden?(en?'Not authorized':'未授权'):list(projects.filter(p=>(p.ytdActual??0)>0))};
  if(en)Object.assign(captions,{19:'Executive alignment',20:'Technical discussion',21:'Solution design',22:'POC',23:'Contract signing',24:'Revenue'});
  const chartTitles={revenue:en?`Jan–${month} ${category} revenue and year-on-year by office`:`1-${month}月 各代表处${category}收入及同比情况`,opportunities:en?`Jan–${month} ${category} opportunities by office`:`1-${month}月${category}机会点数量情况`};
  return {report,lang,en,year,month,category,projects,extra,rows,cells,merges,values,groups,captions,chartTitles,width:REPORT_LAYOUT.width,height:Object.values(rows).reduce((a,b)=>a+b,0)};
@@ -157,7 +159,7 @@ function templateDrawingXml(xml,model){
   const paragraphs=text.split('\n').map(line=>`<a:p>${paragraph}<a:r>${properties}<a:t>${templateEscape(line)}</a:t></a:r></a:p>`).join('');
   return anchor.replace(/<xdr:txBody>[\s\S]*?<\/xdr:txBody>/,`<xdr:txBody>${body.replace(/<a:p>[\s\S]*?<\/a:p>/g,'')}${paragraphs}</xdr:txBody>`);
  });
- const pictures=model.projects.map((p,index)=>{const proto=REPORT_LAYOUT.pictures[p.risk?'red':'blue'],phase=p.stage<=1?5:p.stage===2?6:[3,4].includes(p.stage)?8:p.stage===5?8:9;let raw=proto.xml,id=1000+index;
+ const pictures=model.projects.map((p,index)=>{if(p.status==='丢单'||p.status==='挂起')return '';const proto=REPORT_LAYOUT.pictures[p.risk?'red':'blue'],phase=p.stage<=1?5:p.stage===2?6:[3,4].includes(p.stage)?8:p.stage===5?8:9;let raw=proto.xml,id=1000+index;
   raw=raw.replace(/(<xdr:cNvPr\b[^>]*\bid=")\d+/,(_,prefix)=>prefix+id).replace(/(<xdr:cNvPr\b[^>]*\bname=")[^"]+/,(_,prefix)=>prefix+`Project ${index+1}`);
   raw=raw.replace(/<xdr:from>[\s\S]*?<\/xdr:from>/,`<xdr:from><xdr:col>${phase}</xdr:col><xdr:colOff>450000</xdr:colOff><xdr:row>${19+index}</xdr:row><xdr:rowOff>40000</xdr:rowOff></xdr:from>`);
   raw=raw.replace(/<xdr:to>[\s\S]*?<\/xdr:to>/,`<xdr:to><xdr:col>${phase}</xdr:col><xdr:colOff>${450000+Math.round(proto.width*9525)}</xdr:colOff><xdr:row>${19+index}</xdr:row><xdr:rowOff>${40000+Math.round(proto.height*9525)}</xdr:rowOff></xdr:to>`);return raw;
@@ -215,7 +217,7 @@ function monthlyTemplatePreview(model){
   const arrow=shape.geometry==='homePlate'&&Number(shape.id)<19;
   content+=`<div class="drawing text-shape" style="${position}font-size:${shape.fontSize}pt;font-weight:${shape.bold?'bold':'normal'};justify-content:${shape.anchor==='ctr'?'center':'flex-start'};text-align:${shape.align==='ctr'?'center':'left'};${arrow?'border:1px solid #e5e7eb;clip-path:polygon(0 0,93% 0,100% 50%,93% 100%,0 100%);':''}">${templateEscape(text)}</div>`;
  }
- model.projects.forEach((p,index)=>{const proto=REPORT_LAYOUT.pictures[p.risk?'red':'blue'],col=p.stage<=1?6:p.stage===2?7:[3,4].includes(p.stage)?9:p.stage===5?9:10;content+=`<img alt="" class="drawing" src="${proto.image}" style="left:${left(col)+47.24}px;top:${top(20+index)+4.2}px;width:${proto.width}px;height:${proto.height}px">`});
+ model.projects.forEach((p,index)=>{if(p.status==='丢单'||p.status==='挂起')return;const proto=REPORT_LAYOUT.pictures[p.risk?'red':'blue'],col=p.stage<=1?6:p.stage===2?7:[3,4].includes(p.stage)?9:p.stage===5?9:10;content+=`<img alt="" class="drawing" src="${proto.image}" style="left:${left(col)+47.24}px;top:${top(20+index)+4.2}px;width:${proto.width}px;height:${proto.height}px">`});
  const html=`<!doctype html><html lang="${model.en?'en':'zh-CN'}"><head><meta charset="UTF-8"><title>${templateEscape(model.values.A1)}</title><style>*{box-sizing:border-box}body{margin:0;background:#fff}.sheet{position:relative;background:#fff;width:${model.width}px;height:${model.height}px}.cell{position:absolute;display:flex;padding:1px 3px;overflow:hidden;line-height:1.2}.drawing{position:absolute}.text-shape{font-family:'Microsoft YaHei',Arial,sans-serif;display:flex;flex-direction:column;white-space:pre-wrap;line-height:1.25;padding:8px 10px;overflow:hidden}@media print{@page{size:A3 landscape;margin:8mm}body{zoom:0.6}}</style></head><body><div class="sheet">${content}</div></body></html>`;
  return {html,width:model.width,height:model.height};
 }

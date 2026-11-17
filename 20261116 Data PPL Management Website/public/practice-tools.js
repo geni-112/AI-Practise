@@ -27,7 +27,31 @@ function practiceNarrative(value,labels,language) {
   return '<span data-user-content data-diagram-labels="'+esc(ids.join(' '))+'">'+esc(text)+'</span>';
 }
 
-function attachPracticeCitations(root,labels) {
+function evidencePosition(label) {
+  if(!/^L[1-9]\d{0,2}$/.test(label?.id)||!Array.isArray(label.box)||label.box.length!==4||!label.box.every(Number.isFinite))return null;
+  const [x,y,w,h]=label.box;
+  if(x<0||y<0||x>=1000||y>=1000||w<=0||h<=0)return null;
+  return [x/10,y/10,Math.min(w,1000-x)/10,Math.min(h,1000-y)/10];
+}
+function evidenceTarget(item,label) {return 'mark-'+practiceState.tab+'-'+item.id+'-'+label.id}
+function evidenceLink(item,label) {
+  if(!evidencePosition(label))return '';
+  return '<a class="diagram-link" href="#'+esc(evidenceTarget(item,label))+'">'+i18n.t('在原图中定位')+'</a>';
+}
+function evidenceImage(item) {
+  const markers=(item.ocrEvidence?.labels||[]).map(label=>{
+    const position=evidencePosition(label);if(!position)return '';
+    const [x,y,w,h]=position;
+    return '<span class="diagram-highlight" tabindex="-1" role="img" aria-label="'+esc(label.text)+'" id="'+esc(evidenceTarget(item,label))+'" style="left:'+x+'%;top:'+y+'%;width:'+w+'%;height:'+h+'%"></span>';
+  }).join('');
+  return '<div class="diagram-image"><img class="practice-original" src="/api/practices/'+esc(item.id)+'/image" alt="'+i18n.t('上传的架构图')+'">'+markers+'</div><a class="no-export" href="/api/practices/'+esc(item.id)+'/image" target="_blank" rel="noopener">'+i18n.t('打开完整原图')+'</a>';
+}
+document.addEventListener('click',event=>{
+  const link=event.target.closest?.('a.diagram-link');if(!link)return;
+  const mark=document.getElementById(link.hash.slice(1)),details=mark?.closest('details');
+  if(details)details.open=true;
+});
+function attachPracticeCitations(root,labels,item) {
   const byContainer=new Map();
   for(const span of root.querySelectorAll('[data-diagram-labels]')){
     const container=span.closest('td,li,.practice-summary,.practice-reference');
@@ -42,7 +66,7 @@ function attachPracticeCitations(root,labels) {
       const label=labels.get(id);
       const name=label?.text?content(label.text):'<span>未找到对应的原图文字</span>';
       const confidence=label?.confidence==null?'':' · <span>识别置信度</span> '+content(label.confidence+' / 100');
-      return '<li><strong>'+name+'</strong><small><span>识别编号</span> '+content(id)+confidence+'</small></li>';
+      return '<li><strong>'+name+'</strong>'+evidenceLink(item,label)+'<small><span>识别编号</span> '+content(id)+confidence+'</small></li>';
     });
     container.insertAdjacentHTML('beforeend','<details class="practice-citations"><summary><span>查看原图标注</span> ('+ids.size+')</summary><ul>'+rows.join('')+'</ul></details>');
   }
@@ -56,8 +80,8 @@ function practiceEvidence(item) {
     return [content(first+(c.direction==='unknown'?' · ':' → ')+second),i18n.t(c.direction==='unknown'?'方向待确认':'检测到箭头')];
   });
   return '<details class="practice-source practice-ocr-evidence"><summary>OCR 识别依据</summary>'+
-    '<p class="viewnote">坐标为距左、距顶、宽度和高度，以原图的千分比表示。</p>'+
-    practiceTable(['图中文字','位置','识别置信度','识别编号'],e.labels.map(l=>[content(l.text),content(l.box.join(', ')),content(l.confidence+' / 100'),content(l.id)]))+
+    '<p class="viewnote">点击标注可在原图中查看对应区域。</p>'+
+    practiceTable(['图中文字','位置','识别置信度','识别编号'],e.labels.map(l=>[content(l.text),evidencePosition(l)?evidenceLink(item,l):i18n.t('暂无定位'),content(l.confidence+' / 100'),content(l.id)]))+
     (connections.length?practiceTable(['图中连线','方向'],connections):'<p class="subtitle">未识别到可确认的直线连接</p>')+
     (e.truncated?'<p class="viewnote">仅显示前 100 个文字区域</p>':'')+'</details>';
 }
@@ -65,27 +89,30 @@ function practiceEvidence(item) {
 function referenceSummary(item,canEdit,narrative=content) {
   const active=item.reference;
   const sources=(item.sources||[]).map(s=>`<li>${content(s.alias)} · ${s.available?`<button type="button" class="buttonlink" onclick="openReferenceCase('${s.id}')">${content(s.title)}</button>`:'<span>案例已撤下或归档</span>'} · <span>${s.used?'模型引用':'检索匹配'}</span></li>`).join('');
-  const edit=canEdit&&item.status==='succeeded'&&!item.archived_at;
+  const edit=canEdit&&has('practice.manage')&&item.status==='succeeded'&&!item.archived_at;
   if(!active&&!sources&&!edit&&!item.referenceRequested)return '';
   return `<section class="practice-reference"><h3>案例参考</h3>${sources?'<ul class="practice-points">'+sources+'</ul>':''}
-    ${active?'<p><span class="pill">已收录</span></p><p>'+narrative(active.summary)+'</p>':item.referenceRequested?'<p class="subtitle">参考案例候选，等待复核摘要与映射。</p>':''}
+    ${active?'<p><span class="pill">'+(active.title?'已收录':'待脱敏审核')+'</span></p><p>'+narrative(active.summary)+'</p>':item.referenceRequested?'<p class="subtitle">参考案例候选，等待复核摘要与映射。</p>':''}
     ${edit?`<div class="practice-tools no-export"><button type="button" onclick="reviewReference()">${active?'编辑案例摘要':item.referenceRequested?'审核候选案例':'收录为参考案例'}</button>
     ${active?'<button type="button" onclick="withdrawReference()">撤下案例</button>':''}</div>`:''}</section>`;
 }
 
 async function openReferenceCase(id) {
-  if($('#modal').open)closeModal();
-  switchPracticeTab('understanding');await selectPractice(id);
+  try{
+    const c=await api('practices/references/'+id);
+    if($('#modal').open)closeModal();
+    openForm('<h2>'+content(c.title)+'</h2><p>'+content(c.summary)+'</p>'+practiceTable(['原有组件','华为云候选服务'],c.mappings.map(m=>[content(m.product),serviceLink(m.service)]))+actions(false),()=>{});
+  }catch(e){error(e)}
 }
 function reviewReference() {
   const item=practiceState.selected,options=item.referenceCandidates||[],saved=item.reference;
   const selected=new Set((saved?saved.mappings:options).map(m=>m.product+'|'+m.service));
   const boxes=options.map((m,i)=>`<label class="case-choice"><input type="checkbox" name="mapping" value="${i}" ${selected.has(m.product+'|'+m.service)?'checked':''}><span data-user-content>${esc(m.product)} → ${esc(practiceState.catalog.find(s=>s.id===m.service)?.name||m.service)}</span></label>`).join('');
   openForm(`<h2>审核参考案例</h2><p class="viewnote">后续分析可检索这份摘要及勾选的服务映射。请核对内容并去除客户敏感信息。</p>
-    <label>案例摘要</label><textarea name="summary" required maxlength="1000" rows="5">${esc(saved?.summary||practiceCitations.format(practiceInLanguage(item)?.result?.summary||item.result.summary,practiceCitations.index(item.ocrEvidence),practiceInLanguage(item)?.result?i18n.language:item.language).text.slice(0,1000))}</textarea>
-    <h3>确认可复用的映射</h3>${boxes||'<p>暂无可确认信息</p>'}${actions()}`,async fd=>{
+    <label>公开案例标题</label><input name="publicTitle" required maxlength="200" value="${esc(saved?.title||'')}"><label>案例摘要</label><textarea name="summary" required maxlength="1000" rows="5">${esc(saved?.summary||practiceCitations.format(practiceInLanguage(item)?.result?.summary||item.result.summary,practiceCitations.index(item.ocrEvidence),practiceInLanguage(item)?.result?i18n.language:item.language).text.slice(0,1000))}</textarea>
+    <h3>确认可复用的映射</h3>${boxes||'<p>暂无可确认信息</p>'}<label class="case-choice"><input type="checkbox" name="reviewed" required><span>已核对标题、摘要和映射，已去除客户敏感信息。</span></label>${actions()}`,async fd=>{
       const mappings=fd.getAll('mapping').map(i=>options[Number(i)]);
-      await api('practices/'+item.id+'/reference','POST',{_version:item.version,publish:true,summary:fd.get('summary'),mappings});
+      await api('practices/'+item.id+'/reference','POST',{_version:item.version,publish:true,title:fd.get('publicTitle'),reviewed:fd.has('reviewed'),summary:fd.get('summary'),mappings});
       closeModal();await selectPractice(item.id);toast('已保存参考案例');
     });
 }

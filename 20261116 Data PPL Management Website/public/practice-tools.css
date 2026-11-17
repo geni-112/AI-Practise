@@ -25,3 +25,9 @@ dialog.drawio-editor{width:min(96vw,1700px);height:93dvh;max-width:none;max-heig
 .practice-failure dd{margin:0;overflow-wrap:anywhere}
 .drawio-editor button[hidden]{display:none}
 @media(max-width:650px){dialog.drawio-editor{width:100vw;height:100dvh;border-radius:0}.drawio-head{padding:8px}.practice-library-link{justify-content:flex-start}}
+.diagram-image{position:relative;display:block;width:100%;margin:8px 0}
+.diagram-image img.practice-original{display:block;width:100%;height:auto;max-height:none;max-width:100%;padding:0;margin:0;border:0;border-radius:0}
+.diagram-highlight{position:absolute;pointer-events:none;scroll-margin-block:18vh}
+.diagram-highlight:target{outline:3px solid #174c85;outline-offset:2px;background:rgba(120,181,249,.25);box-shadow:0 0 0 5px white}
+.diagram-link{display:inline-block;margin:.2rem .4rem;color:#325f8e;text-decoration:underline}
+.lead-details>summary{cursor:pointer;font-weight:600;padding:.65rem 0}

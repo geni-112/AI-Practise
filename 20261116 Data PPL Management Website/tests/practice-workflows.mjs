@@ -51,7 +51,7 @@ export async function verifyPracticeWorkflows({app,call,cookie,viewerCookie,page
   assert.equal(first.referenceRequested,true);assert.equal(first.reference,null);assert.equal((await get('/references')).total,0);
   assert.deepEqual(first.ocrEvidence.labels.map(l=>l.text.toLowerCase()).sort(),['kafka','mysql','数据仓库'].sort());
   assert.equal(first.result.flows[0].directionConfirmed,true);assert.equal(first.result.flows[1].directionConfirmed,false);
-  const publish=async(item,summary)=>post('/'+item.id+'/reference',{_version:item.version,publish:true,summary,mappings:item.referenceCandidates.filter(x=>x.service==='kafka')});
+  const publish=async(item,summary)=>post('/'+item.id+'/reference',{_version:item.version,publish:true,reviewed:true,title:'Reviewed '+item.id.slice(0,8),summary,mappings:item.referenceCandidates.filter(x=>x.service==='kafka')});
   assert.equal((await publish(first,'Kafka replication, review A')).status,200);
   assert.equal((await publish(first,'Stale review')).status,409);
   const second=await analyze('Reviewed MySQL fixture B',await variant('Second architecture'));

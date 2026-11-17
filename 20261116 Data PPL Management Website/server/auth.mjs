@@ -66,6 +66,18 @@ export async function ensureInitialAccount(client, email, actor, initialPassword
 export async function initializeAccounts(client, actor, initialPassword) {
   const pending = (await client.query('SELECT m.email FROM members m LEFT JOIN accounts a ON a.email=m.email WHERE a.email IS NULL ORDER BY m.email')).rows;
   for (const member of pending) await ensureInitialAccount(client,member.email,actor,initialPassword);
+  // A rotation affects only accounts still on their initial password. A concurrent
+  // personal password change uses the same account lock and is checked again here.
+  const waiting = (await client.query('SELECT email FROM account_password_state WHERE must_change_password=1 ORDER BY email')).rows;
+  for (const {email} of waiting) {
+    const account = (await client.query('SELECT password_hash FROM accounts WHERE email=? FOR UPDATE',[email])).rows[0];
+    const state = (await client.query('SELECT must_change_password FROM account_password_state WHERE email=? FOR UPDATE',[email])).rows[0];
+    if (!state?.must_change_password || !account || await checkPassword(initialPassword,account.password_hash)) continue;
+    await client.query('UPDATE accounts SET password_hash=?,changed_at=now() WHERE email=?',[await encodePassword(initialPassword),email]);
+    await client.query('DELETE FROM sessions WHERE email=?',[email]);
+    await client.query('DELETE FROM login_limits WHERE `key`=?',['email:'+digest(email)]);
+    await auditAuth(client,actor,'轮换待改账号初始密码：'+email);
+  }
 }
 async function resetPassword(client, actor, email, initialPassword) {
   if (!actor.permissions.includes('member.manage')) throw authError(403, '无法为此成员重置密码');

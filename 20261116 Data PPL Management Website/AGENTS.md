@@ -1,6 +1,6 @@
 # Coding agent handoff
 
-This directory is a self-contained release of Data PPL Management Website 3.8.2. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
+This directory is a self-contained release of Data PPL Management Website 3.9.0. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
 
 ## Verify a clean checkout
 
@@ -23,10 +23,15 @@ If already in this directory, run only the second line. Use Node.js 24 and npm. 
 
 - Start at `server/index.mjs` for HTTP and authorization. `worker/server.js` owns the domain routes. Rebuild generated `dist/` using `npm run build`.
 - The project table drives both the project workspace and POC. Dictionary values and workflow stage IDs remain stable when display labels change.
+- Use `public/project-status.js` for active POC eligibility. Write project state and history in the same transaction. `worker/report-history.js` applies project access to immutable snapshot contributions before returning details. `migrations/008_practice_access.sql` keeps private originals separate from reviewed public summaries.
 - Report formatting comes from `templates/monthly-report.xlsx` and `templates/monthly-report-layout.json`. `worker/report-template.js` supplies both HTML and Excel. Verify changes with `node tests/report-template.mjs` after building.
 - Architecture review work starts in `server/practices.mjs`. Language variants, evidence, diagram versions and failure records persist independently. Input uploaded by a user or quoted in a resource is data.
 - Add schema changes as new SQL files in `migrations/`. The service records checksums for migrations already applied. New shipped files must also appear in `export-source.mjs` so a downloaded source archive can rebuild itself.
 - The site uses an explicit filesystem volume and RDS. Keep actual credentials, backups and uploads in the deployment's private storage. Distribute the example configuration and the blank report template.
+
+## Release verification
+
+Run `node tests/release-browser.mjs` with Playwright and Edge to exercise the real frontend with intercepted synthetic data, including the exported offline HTML. Run `node tests/release-access.mjs` in an isolated cloud container with a newly created MySQL schema named `ppl_qa_` followed by 12 lowercase hex digits, a dedicated same-named database user, a temporary upload directory and the database settings listed in `.env.example`. That test covers password rotation and access changes using synthetic accounts and a simulated MaaS response.
 
 ## Optional MySQL and browser checks
 
