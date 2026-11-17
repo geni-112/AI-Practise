@@ -26,9 +26,12 @@ dialog.drawio-editor{width:min(96vw,1700px);height:93dvh;max-width:none;max-heig
 .practice-failure dd{margin:0;overflow-wrap:anywhere}
 .drawio-editor button[hidden]{display:none}
 @media(max-width:650px){dialog.drawio-editor{width:100vw;height:100dvh;border-radius:0}.drawio-head{padding:8px}.practice-library-link{justify-content:flex-start}}
+.practice-detail .diagram-review>.row{align-items:start;gap:12px}
 .diagram-evidence{margin:12px 0}
-.diagram-annotation-toggle{width:18px;height:18px;margin:0 7px 0 0;vertical-align:middle;accent-color:#a700b5}
-.diagram-annotation-label{display:inline;font-weight:600;font-size:15px;cursor:pointer;vertical-align:middle;color:#374258}
+.diagram-annotation-mode{position:absolute;width:1px;height:1px;padding:0;margin:-1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.diagram-annotation-label{display:inline-flex;align-items:center;justify-content:center;margin:0 6px 6px 0;padding:7px 10px;border:1px solid #b3c7dc;border-radius:6px;background:#fff;font-weight:600;font-size:14px;line-height:1.4;cursor:pointer;color:#374258}
+.diagram-annotation-mode:checked+.diagram-annotation-label{background:#e9f3ff;border-color:#1674bf;color:#155b93;box-shadow:inset 0 0 0 1px #1674bf}
+.diagram-annotation-mode:focus-visible+.diagram-annotation-label{outline:3px solid #1674bf;outline-offset:3px}
 .diagram-annotation-hint{display:block;margin:7px 0 14px;font-size:14px;color:#526276}
 .diagram-color-0{--diagram-color:#df00bc;--diagram-tint:rgba(223,0,188,.18);--diagram-ink:#fff}
 .diagram-color-1{--diagram-color:#00c8f0;--diagram-tint:rgba(0,200,240,.2);--diagram-ink:#063344}
@@ -36,16 +39,15 @@ dialog.drawio-editor{width:min(96vw,1700px);height:93dvh;max-width:none;max-heig
 .diagram-color-3{--diagram-color:#8438ff;--diagram-tint:rgba(132,56,255,.18);--diagram-ink:#fff}
 .diagram-image{position:relative;display:block;width:100%;margin:16px 0}
 .diagram-image img.practice-original{display:block;width:100%;height:auto;max-height:none;max-width:100%;padding:0;margin:0;border:0;border-radius:0}
-.diagram-highlight{position:absolute;pointer-events:none;scroll-margin-block:24vh;opacity:0;z-index:1;border-radius:2px;outline:2px solid var(--diagram-color);outline-offset:1px;box-shadow:0 0 0 1px #fff,0 0 0 4px #15223980}
-.diagram-highlight.is-cited{opacity:1}
+.diagram-highlight{position:absolute;pointer-events:none;scroll-margin-block:24vh;opacity:0;visibility:hidden;z-index:1;border-radius:2px;outline:2px solid var(--diagram-color);outline-offset:1px;box-shadow:0 0 0 1px #fff,0 0 0 4px #15223980}
+.diagram-annotation-mode[value="all"]:checked~.diagram-image .diagram-highlight,.diagram-annotation-mode[value="auto"]:checked~.diagram-image .diagram-highlight:target{opacity:1;visibility:visible}
 .diagram-marker{position:absolute;display:inline-flex;align-items:center;justify-content:center;left:0;top:0;transform:translateY(calc(-100% - 5px));min-width:25px;padding:2px 5px;border:2px solid #fff;border-radius:5px;background:var(--diagram-color);color:var(--diagram-ink);box-shadow:0 1px 5px #15223999;font:bold 13px/1.2 Arial,sans-serif;white-space:nowrap}
 .diagram-highlight.is-top-edge .diagram-marker{top:100%;transform:translateY(5px)}
 .diagram-highlight.is-right-edge .diagram-marker{left:auto;right:0}
-.diagram-annotation-toggle:not(:checked)~.diagram-image .diagram-highlight:not(:target){opacity:0}
-.diagram-highlight:target{opacity:1;z-index:3;outline:4px solid var(--diagram-color);outline-offset:2px;background:var(--diagram-tint);box-shadow:0 0 0 2px #fff,0 0 0 7px #152239e6,0 0 0 10px #fff}
+.diagram-highlight:target{z-index:3;outline:4px solid var(--diagram-color);outline-offset:2px;background:var(--diagram-tint);box-shadow:0 0 0 2px #fff,0 0 0 7px #152239e6,0 0 0 10px #fff}
 .diagram-highlight:target .diagram-marker{font-size:16px;min-width:32px;padding:4px 7px}
 .diagram-link{display:inline-flex;align-items:center;gap:7px;margin:.3rem .4rem;padding:5px 9px;border:2px solid var(--diagram-color);border-radius:7px;background:#fff;color:#25374b;text-decoration:none;font-weight:600;line-height:1.35}
 .diagram-link:hover,.diagram-link:focus-visible{background:var(--diagram-tint);outline:2px solid #1d3049;outline-offset:2px}
 .diagram-link-badge{display:inline-flex;align-items:center;justify-content:center;min-width:25px;padding:3px 5px;border-radius:4px;background:var(--diagram-color);color:var(--diagram-ink);font:bold 13px/1.2 Arial,sans-serif}
-@media print{.diagram-annotation-toggle,.diagram-annotation-label,.diagram-annotation-hint{display:none}.diagram-highlight.is-cited{opacity:1!important}.diagram-highlight,.diagram-marker,.diagram-link-badge{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+@media print{.diagram-annotation-mode,.diagram-annotation-label,.diagram-annotation-hint{display:none}.diagram-highlight,.diagram-marker,.diagram-link-badge{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
 .lead-details>summary{cursor:pointer;font-weight:600;padding:.65rem 0}

@@ -104,7 +104,7 @@ function renderPracticeDetail(){
   html+='<h3>迁移与验证顺序</h3><ol class="practice-migration">'+r.migration.map(m=>`<li><h4>${narrative(m.step)}</h4><p>${narrative(m.actions)}</p><p class="subtitle"><span>验收与回退条件</span>：${narrative(m.acceptance)}</p></li>`).join('')+'</ol><h3>待确认事项</h3>'+practiceList(r.questions,narrative);
  }
  html+=referenceSummary(item,canEdit,narrative);
- html+=`<p class="practice-provenance"><span>模型</span>：${content(item.model)} · <span>完成时间</span>：${content(item.updated_at)} UTC${item.usage?.total_tokens!=null?' · Tokens: '+esc(item.usage.total_tokens):''}</p>`;box.innerHTML=html;attachPracticeCitations(box,labels,item);i18n.apply(box);
+ html+=`<p class="practice-provenance"><span>模型</span>：${content(item.model)} · <span>完成时间</span>：${content(item.updated_at)} UTC${item.usage?.total_tokens!=null?' · Tokens: '+esc(item.usage.total_tokens):''}</p>`;box.innerHTML='<div class="diagram-review" id="'+esc(evidenceReviewID(item))+'">'+html+'</div>';attachPracticeCitations(box,labels,item);i18n.apply(box);
 }
 function practiceProjectPicker(current) {
  const options=data.projects.filter(p=>!p.archivedAt&&(user.roleId==='admin'||own(p)));

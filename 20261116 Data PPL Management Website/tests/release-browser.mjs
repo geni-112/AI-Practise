@@ -12,8 +12,8 @@ const root=new URL('../public/',import.meta.url),origin='https://ppl-fixture.inv
 const user={id:'bd-id',email:'bd@example.invalid',roleId:'bd',roleName:'BD',permissions:['project.read.own','project.create','project.biz.own','project.assign.sa.own','practice.read','practice.analyze']};
 const image=await fs.readFile(new URL('../server/ocr-check.png',import.meta.url));
 const labels=[{id:'L1',text:'Event ingestion',box:[100,200,300,120],confidence:94},{id:'L2',text:'Object storage',box:[600,200,300,120],confidence:96},{id:'L3',text:'Batch processing',box:[100,650,300,120],confidence:92},{id:'L4',text:'SQL analytics',box:[600,650,300,120],confidence:97}];
-const result={...fixture,summary:'Ingestion, storage, processing and analytics (L1-L4)',target:{...fixture.target,summary:'Data flow and service mapping (L1-L4)'}};
-const sample={id:'10000000-0000-4000-8000-000000000001',title:'Browser fixture',status:'succeeded',language:'en',owner_email:user.email,updated_at:'2026-01-01',created_at:'2026-01-01',result,translations:{zh:{status:'succeeded',result:{...result,summary:'数据接入、存储、处理与分析（L1-L4）'}}},ocrEvidence:{labels,connections:[]}};
+const result={...fixture,summary:'Ingestion and storage (L1-L2)',target:{...fixture.target,summary:'Data flow and service mapping (L1-L2)'}};
+const sample={id:'10000000-0000-4000-8000-000000000001',title:'Browser fixture',status:'succeeded',language:'en',owner_email:user.email,updated_at:'2026-01-01',created_at:'2026-01-01',result,translations:{zh:{status:'succeeded',result:{...result,summary:'数据接入与存储（L1-L2）'}}},ocrEvidence:{labels,connections:[]}};
 let offline,submitted,filtered=false;const projects=[];
 function luminance(color) {
  const [r,g,b]=color.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number).map(n=>n/255).map(n=>n<=0.04045?n/12.92:((n+0.055)/1.055)**2.4);
@@ -107,18 +107,24 @@ try{
  assert(filtered);assert(await page.locator('.practice-archive input').isChecked());
  await page.getByRole('button',{name:/Browser fixture/}).click();
  async function annotations(scope=page){
-  const evidence=scope.locator('.diagram-evidence').first();
-  const markers=evidence.locator('.diagram-highlight.is-cited');
+  const evidence=scope.locator('.diagram-evidence').first();await evidence.waitFor();
+  const markers=evidence.locator('.diagram-highlight');
   assert.equal(await markers.count(),4);
   const colors=await markers.evaluateAll(items=>items.map(el=>{const s=getComputedStyle(el);return {color:s.outlineColor,opacity:s.opacity}}));
-  assert.equal(new Set(colors.map(c=>c.color)).size,4);assert(colors.every(c=>c.opacity==='1'));
+  assert.equal(new Set(colors.map(c=>c.color)).size,4);assert(colors.every(c=>c.opacity==='0'));
   assert.deepEqual(await markers.locator('.diagram-marker').allTextContents(),['#1','#2','#3','#4']);
-  const toggle=evidence.locator('input[type=checkbox]');
-  await toggle.uncheck();assert((await markers.evaluateAll(items=>items.map(el=>getComputedStyle(el).opacity))).every(value=>value==='0'));
-  await toggle.check();
+  await evidence.locator('label[for$="-all"]').click();
+  assert((await markers.evaluateAll(items=>items.map(el=>getComputedStyle(el).opacity))).every(value=>value==='1'));
+  await evidence.locator('label[for$="-none"]').click();
+  assert((await markers.evaluateAll(items=>items.map(el=>getComputedStyle(el).opacity))).every(value=>value==='0'));
+  await evidence.locator('label[for$="-auto"]').click();
  }
  async function mark(scope=page){
-  const details=scope.locator('.practice-citations').first();await details.locator('summary').click();
+  const details=scope.locator('.practice-citations').first(),evidence=scope.locator('.diagram-evidence').first();
+  const opacities=()=>evidence.locator('.diagram-highlight').evaluateAll(items=>items.map(el=>getComputedStyle(el).opacity));
+  await details.locator('summary').click();
+  assert.deepEqual(await opacities(),['1','1','0','0'],'Only this expanded reference is shown');
+  if(await scope.locator('.diagram-evidence').count()>1)assert((await scope.locator('.diagram-evidence').nth(1).locator('.diagram-highlight').evaluateAll(items=>items.map(el=>getComputedStyle(el).opacity))).every(value=>value==='0'),'Export sections do not affect one another');
   await details.locator('a.diagram-link').first().click();
   const metrics=await scope.locator('.diagram-highlight:target').evaluate(el=>{
    const rect=el.getBoundingClientRect(),img=el.parentElement.querySelector('img').getBoundingClientRect();
@@ -127,6 +133,17 @@ try{
   assert.equal(metrics.weight,'4px');assert.equal(metrics.opacity,'1');assert.notEqual(metrics.tint,'rgba(0, 0, 0, 0)');assert.equal(metrics.badge,metrics.color);
   const badge=await details.locator('.diagram-link-badge').first().evaluate(el=>{const s=getComputedStyle(el);return {color:s.backgroundColor,text:el.textContent}});assert.equal(badge.color,metrics.color);assert.equal(badge.text,'#1');
   assert.equal(metrics.outline,'solid');for(const [k,v]of Object.entries({x:.1,y:.2,w:.3,h:.12}))assert(Math.abs(metrics[k]-v)<.012,k);
+  await details.locator('summary').click();
+  assert.deepEqual(await opacities(),['1','0','0','0'],'Only the explicitly located marker remains');
+  await evidence.locator('label[for$="-none"]').click();
+  assert.deepEqual(await opacities(),['0','0','0','0'],'Hide all also hides the selected hash target');
+  await evidence.locator('label[for$="-all"]').click();
+  assert.deepEqual(await opacities(),['1','1','1','1']);
+  await evidence.locator('label[for$="-auto"]').click();
+  assert.deepEqual(await opacities(),['1','0','0','0']);
+  await scope.emulateMedia({media:'print'});
+  assert.deepEqual(await opacities(),['1','0','0','0'],'Print preserves the selected visibility');
+  await scope.emulateMedia({media:'screen'});
  }
  await annotations();await capture('diagram-annotations-desktop');await mark();await capture('diagram-annotations-selected');
  await page.locator('header [data-language=en]').click();
@@ -137,5 +154,5 @@ try{
  assert(offline.includes('data:image/png;base64,'));assert(!offline.includes('/api/practices/'));assert(!offline.includes('<script'));
  await page.goto(origin+'/offline');await annotations();await mark();await capture('diagram-annotations-offline');
  assert.deepEqual(errors,[]);
- console.log('PASS: compact BD creation, optional diagram upload and scoped archive navigation, bilingual color-numbered OCR links, visible and toggleable annotations, aligned highlights, and script-free offline report at phone width');
+ console.log('PASS: compact BD creation, optional diagram upload and scoped archive navigation, bilingual color-numbered OCR links, clean originals by default, reference-only highlights, show/hide all including selected markers, scoped script-free export and print visibility');
 }finally{await browser.close()}

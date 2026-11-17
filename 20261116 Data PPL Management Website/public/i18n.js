@@ -306,8 +306,11 @@ Object.assign(en,{"BD 姓名":"BD name","BD 姓名须为不超过 120 个字符�
 Object.assign(en,{
  "标注":"Annotation",
  "定位标注":"Locate annotation",
- "显示原图标注":"Show original diagram annotations",
- "彩色编号与分析中的原图引用对应，点击定位后加粗高亮。":"Match the colored numbers to the references in the analysis. Select a reference for a stronger highlight."
+ "原图标注":"Original diagram annotations",
+ "按引用显示":"On demand",
+ "全部展示":"Show all",
+ "全部隐藏":"Hide all",
+ "默认不显示标注；展开“查看原图标注”或点击定位后显示对应位置。":"Annotations are hidden by default. Expand a diagram reference or select a location to reveal the matching areas."
 });
 const patterns=[
  [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
