@@ -79,7 +79,7 @@ export async function createApplication(options = {}) {
         }
         if(maasPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
         if(reviewSlug){
-          if(!user.permissions.includes('practice.manage'))throw authError(403,'当前角色没有此操作权限');
+          if(user.roleId!=='admin')throw authError(403,'当前角色没有此操作权限');
           const reviewPath=path.join(env.UPLOAD_DIR||path.join(root,'.data','uploads'),'practice-reviews',reviewSlug+'.html');
           try{return new Response(await fs.readFile(reviewPath),{headers:{'Content-Type':'text/html; charset=utf-8'}})}
           catch(e){if(e.code==='ENOENT')throw authError(404,'文件不存在');throw e}
@@ -90,9 +90,12 @@ export async function createApplication(options = {}) {
         for (const header of protectedHeaders) headers.delete(header);
         if (user) { headers.set(protectedHeaders[0],user.id); headers.set(protectedHeaders[1],user.email); }
         const rawBody=write?await request.text():undefined;
-        const internal = new Request(request.url,{method:request.method,headers,body:rawBody});
-        // The authenticated HTTP boundary is the only way to reach the domain API.
-        const result = await application.fetch(internal,{DB:database(client),BUCKET:files,ADMIN_EMAIL:adminEmail,STANDALONE:true});
+        const domain=body=>application.fetch(new Request(request.url,{method:request.method,headers,body}),{DB:database(client),BUCKET:files,ADMIN_EMAIL:adminEmail,STANDALONE:true});
+        if(request.method==='POST'&&url.pathname==='/api/projects'){
+          const fields=JSON.parse(rawBody);
+          if(Object.hasOwn(fields,'architectureDiagram'))return practices.createProjectWithDiagram(client,user,fields,project=>domain(JSON.stringify(project)));
+        }
+        const result=await domain(rawBody);
         if (result.ok && url.pathname === '/api/admin/member' && write) {
           // A role change or disable takes effect on every device immediately.
           const body = JSON.parse(rawBody);

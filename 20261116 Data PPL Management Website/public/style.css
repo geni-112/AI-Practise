@@ -469,3 +469,4 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 .authcard .brand{margin-bottom:24px}
 .track h3{margin-top:0;max-width:75%}
 @media(min-width:721px){#nav:not(.nav-editing)>button{display:flex;align-items:baseline;gap:4px}#nav>button>span[aria-hidden]{flex:0 0 22px}}
+.case-choice[hidden]{display:none}

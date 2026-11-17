@@ -1,6 +1,6 @@
 
 export const PERMISSIONS={
- 'practice.read':'查看最佳实践','practice.analyze':'提交架构分析','practice.manage':'管理全部架构分析',
+ 'practice.read':'查看最佳实践','practice.analyze':'提交架构分析','practice.manage':'管理独立分析和参考案例',
  'project.read.all':'查看全部项目','project.read.own':'查看负责项目','project.create':'创建项目','project.biz.all':'维护全部项目商务信息','project.biz.own':'维护负责项目商务信息','project.tech.all':'维护全部项目技术信息','project.tech.own':'维护负责项目技术信息','project.assign':'分配 BD / SA 负责人','project.assign.sa.own':'为本人负责的项目指派 SA','project.archive':'归档与恢复项目','finance.read':'查看收入与预测','finance.write.all':'维护全部项目收入','finance.write.own':'维护负责项目收入','resource.read':'查看资料库','resource.write':'维护资料库','resource.archive':'归档与恢复资料','report.view':'查看报表','report.export':'导出报表','report.generate':'生成报表草稿','report.archive':'保存月报快照','member.manage':'管理成员','role.manage':'管理角色与权限','audit.view':'查看操作记录'};
 export const DEFAULT_ROLES=[{id:'admin',name:'管理员',permissions:Object.keys(PERMISSIONS),builtin:true},{id:'viewer',name:'报表查看者',permissions:['report.view','report.export'],builtin:true},{id:'bd',name:'BD',permissions:['project.read.own','project.create','project.biz.own','project.assign.sa.own','finance.read','finance.write.own','resource.read'],builtin:true},{id:'sa',name:'SA',permissions:['project.read.own','project.tech.own','resource.read','resource.write'],builtin:true}];
 const biz=['name','customer','type','cloud','region','repo','industry','priority','strategic','confidence','delivery','business','bdName','next','due','status','risk','stage'];

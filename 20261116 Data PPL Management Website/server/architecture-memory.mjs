@@ -68,7 +68,7 @@ export async function caseDetails(client, row) {
   const sources=[];
   for (const source of input.sources) {
     const ref=(await client.query('SELECT pub.title'+visibleCases+' WHERE c.analysis_id=? AND a.archived_at IS NULL',[source.id])).rows[0];
-    sources.push({id:source.id,alias:source.alias,used:source.used===true,terms:source.terms,title:ref?.title || '',available:!!ref});
+    sources.push({alias:source.alias,used:source.used===true,available:!!ref,...(ref?{id:source.id,terms:source.terms,title:ref.title}:{})});
   }
   return {inputMode:input.inputMode,referenceRequested:input.referenceRequested,ocrEvidence:input.evidence,
     sources,reference:saved ? {...saved,mappings} : null};
@@ -80,6 +80,7 @@ export async function saveReference(client, user, row, body, files) {
   if (typeof body.publish!=='boolean') throw authError(400,'参考案例内容无效');
   const input=await readPracticeInput(client,row.id);
   if (body.publish) {
+    if(row.project_id)throw authError(403,'项目架构图仅在项目内归档');
     if (row.status!=='succeeded' || row.archived_at) throw authError(409,'请先完成分析并恢复归档记录');
     const title=typeof body.title==='string'?body.title.trim():'';
     if(!title || title.length>200 || body.reviewed!==true)throw authError(400,'请填写公开案例标题并确认已脱敏');
@@ -117,7 +118,8 @@ export async function saveReference(client, user, row, body, files) {
   if((await client.query('UPDATE architecture_analyses SET version=version+1 WHERE id=? AND version=?',[row.id,row.version])).rowCount!==1)throw authError(409,'架构分析已更新，请刷新');
 }
 
-const visibleCases=' FROM architecture_cases c JOIN architecture_case_publications pub ON pub.analysis_id=c.analysis_id JOIN architecture_analyses a ON a.id=c.analysis_id ';
+const visibleCases=` FROM architecture_cases c JOIN architecture_case_publications pub ON pub.analysis_id=c.analysis_id
+ JOIN architecture_analyses a ON a.id=c.analysis_id AND NOT EXISTS (SELECT 1 FROM architecture_project_links l WHERE l.analysis_id=c.analysis_id) `;
 export async function publicCase(client,id) {
   const item=(await client.query('SELECT c.analysis_id AS id,pub.title,c.summary,c.reviewed_at,a.business_type'+visibleCases+'WHERE c.analysis_id=? AND a.archived_at IS NULL',[id])).rows[0];
   if(!item)throw authError(404,'参考案例不存在');
@@ -148,8 +150,7 @@ export async function referenceLibrary(client, url) {
   const from=visibleCases+' WHERE '+filters.join(' AND ');
   const total=Number((await client.query('SELECT COUNT(*) AS n'+from,args)).rows[0].n);
   const items=(await client.query('SELECT a.id,pub.title,a.business_type,c.summary,c.reviewed_at'+from+' ORDER BY c.reviewed_at DESC,c.analysis_id LIMIT 12 OFFSET '+((page-1)*12),args)).rows;
-  const patterns=(await client.query(`SELECT m.product,m.service_id,COUNT(*) AS cases_used FROM architecture_case_mappings m
-    JOIN architecture_analyses a ON a.id=m.analysis_id JOIN architecture_case_publications pub ON pub.analysis_id=m.analysis_id WHERE a.archived_at IS NULL
+  const patterns=(await client.query(`SELECT m.product,m.service_id,COUNT(*) AS cases_used ${visibleCases} JOIN architecture_case_mappings m ON m.analysis_id=c.analysis_id WHERE a.archived_at IS NULL
     GROUP BY m.product,m.service_id HAVING COUNT(*)>=2 ORDER BY cases_used DESC,m.product,m.service_id LIMIT 24`)).rows;
   return {items,page,total,patterns};
 }

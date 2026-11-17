@@ -87,9 +87,9 @@ function practiceEvidence(item) {
 }
 
 function referenceSummary(item,canEdit,narrative=content) {
-  const active=item.reference;
+  const active=item.project_id?null:item.reference;
   const sources=(item.sources||[]).map(s=>`<li>${content(s.alias)} · ${s.available?`<button type="button" class="buttonlink" onclick="openReferenceCase('${s.id}')">${content(s.title)}</button>`:'<span>案例已撤下或归档</span>'} · <span>${s.used?'模型引用':'检索匹配'}</span></li>`).join('');
-  const edit=canEdit&&has('practice.manage')&&item.status==='succeeded'&&!item.archived_at;
+  const edit=!item.project_id&&canEdit&&has('practice.manage')&&item.status==='succeeded'&&!item.archived_at;
   if(!active&&!sources&&!edit&&!item.referenceRequested)return '';
   return `<section class="practice-reference"><h3>案例参考</h3>${sources?'<ul class="practice-points">'+sources+'</ul>':''}
     ${active?'<p><span class="pill">'+(active.title?'已收录':'待脱敏审核')+'</span></p><p>'+narrative(active.summary)+'</p>':item.referenceRequested?'<p class="subtitle">参考案例候选，等待复核摘要与映射。</p>':''}

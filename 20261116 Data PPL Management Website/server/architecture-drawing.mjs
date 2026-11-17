@@ -110,7 +110,7 @@ export async function drawingRoute(c,request,user,row,operation,url,editorOrigin
     return Response.json(body);
   }
   if(request.method!=='POST'||operation!=='drawing')throw authError(405,'请使用 POST');
-  if(!user.permissions.includes('practice.analyze')||(row.owner_email!==user.email&&!user.permissions.includes('practice.manage')))throw authError(403,'仅发起人或管理员可维护此分析');
+  if(!row.canMaintain)throw authError(403,'当前账号仅可查看此分析');
   const b=await request.json();
   if(b.language!=null && b.language!==language)throw authError(409,'图纸语言已改变，请重新打开编辑器');
   const diagram=validateDrawing(b.xml),preview=validateImage(b.preview,'image/png');

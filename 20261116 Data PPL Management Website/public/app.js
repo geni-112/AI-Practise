@@ -39,6 +39,9 @@ function assignment(name,current){const members=data.members.filter(m=>m.enabled
 function project(id){const p=data.projects.find(p=>p.id===id),isNew=!p;if(isNew&&!has('project.create'))return error(new Error('没有创建权限'));const v=p||{type:category!=='全部'&&dictionary('type').items.some(i=>i.value===category&&i.enabled)?category:dictionaryDefault('type'),stage:Number(dictionaryDefault('stage')),status:dictionaryDefault('status'),risk:dictionaryDefault('risk')==='true',planYear:new Date().getFullYear(),repo:'',bdId:user.id,saId:'',milestones:{},actuals:[]};const b=!v.archivedAt&&(isNew||can(v,'project.biz')),t=!v.archivedAt&&can(v,'project.tech'),f=!v.archivedAt&&has('finance.read')&&can(v,'finance.write'),ownAssign=has('project.assign.sa.own')&&[user.id,user.email].includes(v.bdId),edit=!v.archivedAt&&(b||t||f||has('project.assign')||ownAssign);let html=`<h2>${isNew?'新建项目':content(v.name)}</h2><p class="viewnote">商务字段：${b?'可编辑':'只读'} · 技术字段：${t?'可编辑':'只读'} · 收入字段：${f?'可编辑':'未授权编辑'}</p><div class="fieldgrid">${field('项目名称 *','name',v.name,!b,'text',true)}${field('客户','customer',v.customer,!b)}<div><label>业务类别</label><select name="type" ${b?'':'disabled'}>${dictionaryOptions('type',v.type)}</select></div>${field('代表处','repo',v.repo,!b)}${field('行业','industry',v.industry,!b)}<div><label>云类别</label><select name="cloud" ${b?'':'disabled'}>${dictionaryOptions('cloud',v.cloud||'',{blank:true})}</select></div><div><label>当前阶段</label><select name="stage" ${b?'':'disabled'}>${dictionaryOptions('stage',v.stage)}</select></div><div><label>推进状态</label><select name="status" ${b?'':'disabled'}>${dictionaryOptions('status',v.status)}</select></div><div><label>阻塞标记</label><select name="risk" ${b?'':'disabled'}>${dictionaryOptions('risk',String(!!v.risk))}</select></div>${field('BD 展示姓名','bdName',v.bdName,!b)}${field('SA 展示姓名','saName',v.saName,!t)}${field('把握度','confidence',v.confidence,!b)}${field('预计交付时间','delivery',v.delivery,!b)}${field('下一步行动','next',v.next,!b,'text',true)}${field('行动截止日','due',v.due,!b,'date')}${field('现网厂家','vendor',v.vendor,!t)}${field('业务场景','scenario',v.scenario,!t,'text',true)}</div>`;
 if(ownAssign&&!has('project.assign')&&!v.archivedAt)html+='<div class="fieldgrid"><div><label>SA 账号</label>'+assignment('saId',v.saId)+'</div></div><p class="viewnote">指派后，SA 即可查看本项目并维护技术信息。</p>';
 if(has('project.assign')&&!v.archivedAt)html+=`<h3>账号负责人 · 决定项目访问范围</h3><div class="fieldgrid"><div><label>BD 账号</label>${assignment('bdId',v.bdId)}</div><div><label>SA 账号</label>${assignment('saId',v.saId)}</div></div><p class="viewnote">成员先在权限管理中添加；姓名展示与账号授权分别维护。</p>`;
+let diagramRequestKey;
+if(isNew)html+='<div class="fieldgrid"><div class="wide"><label for="projectArchitecture">技术架构图（可选）</label><input id="projectArchitecture" name="projectArchitecture" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="projectArchitectureHint"><p id="projectArchitectureHint" class="viewnote">支持 PNG、JPEG、WebP，最大 2 MB。保存项目后自动分析，成功后归档到最佳实践。仅本项目当前的 BD、SA 和平台管理员可查看。</p></div></div>';
+else if(user.roleId==='admin'||own(v))html+=`<button type="button" data-project="${esc(v.id)}" onclick="openProjectPractices(this.dataset.project)">查看项目架构图</button>`;
 html+=`<label>技术方案 / 历史记录</label><textarea name="notes" ${t?'':'disabled'} style="height:200px">${esc(v.notes||'')}</textarea><h3>客户旅程里程碑</h3><div class="fieldgrid">${['高层对标','技术交流','方案设计','POC 资源','POC 验收','合同签订'].map((s,i)=>`<div><label>${s}</label><select name="milestone${i}" ${(i===0||i===5)?b?'':'disabled':t?'':'disabled'}>${dictionaryOptions('milestoneState',v.milestones?.[s]||(isNew?dictionaryDefault('milestoneState'):'未开展'))}</select></div>`).join('')}</div>`;
 if(has('finance.read'))html+=`<h3>收入与预测 · M USD</h3><p class="viewnote">计划、空间与实际收入独立记录。计划不能直接作为实际收入。</p><div class="fieldgrid">${field('计划年份','planYear',v.planYear,!f,'number')}${field('年度 EI 计划','eiPlan',v.eiPlan,!f,'number')}${field('年度专业服务计划','servicePlan',v.servicePlan,!f,'number')}${field('EI 收入空间','eiSpace',v.eiSpace,!f,'number')}${field('项目总收入空间','totalSpace',v.totalSpace,!f,'number')}</div><label>实际收入明细</label><div id="actualRows">${(v.actuals||[]).map((a,i)=>incomeRow(a,i,!f)).join('')}</div>${f?'<button type="button" onclick="addIncomeRow()">＋ 增加实际收入</button>':''}`;
 if(!isNew)html+=`<h3>更新进展与求助</h3><textarea name="update" ${edit?'':'disabled'} placeholder="本次进展、阻塞、需要的支持及下一步。保存后自动记录日期进入报表。"></textarea><div class="timeline">${(v.logs||[]).slice(-5).reverse().map(l=>`<div class="note">${l.system?'<span>'+esc(l.text)+'</span>':content(l.text)}<small style="display:block">${esc(l.by)} · ${esc(l.at.slice(0,10))}</small></div>`).join('')}</div><div class="metadata"><span>来源：</span> ${esc(v.source||'网站更新')} <span>· 最近更新 ${esc(v.updatedAt||'日期待确认')}</span></div>`;
@@ -51,8 +54,14 @@ html+=archiveButton('projects',v,'project.archive')+actions(edit);openForm(html,
  if(has('project.assign'))update.bdId=raw.bdId||'';
  if((has('project.assign')||ownAssign)&&raw.saId!==undefined&&(isNew||raw.saId!==(v.saId||'')))update.saId=raw.saId;
  if(raw.update?.trim())update.update=raw.update.trim();
- await api(isNew?'projects':'projects/'+encodeURIComponent(id),isNew?'POST':'PATCH',update);
- closeModal();await reload();toast('项目已保存，报表数据源已更新')});
+ const file=fd.get('projectArchitecture');
+ if(isNew&&file?.name){
+  const image=await readPracticeImage(file);
+  diagramRequestKey??=crypto.randomUUID();
+  update.architectureDiagram={requestKey:diagramRequestKey,language:i18n.language,...image};
+ }
+ const result=await api(isNew?'projects':'projects/'+encodeURIComponent(id),isNew?'POST':'PATCH',update);
+ closeModal();await reload();toast(i18n.t(result.architectureSubmitted?'项目已保存，架构图已提交分析':'项目已保存，报表数据源已更新'))});
  if(isNew&&ownAssign&&!has('project.assign'))compactLeadForm();
 }
 function compactLeadForm(){
@@ -60,7 +69,7 @@ function compactLeadForm(){
  const basics=document.createElement('div');basics.className='fieldgrid';
  const more=document.createElement('details');more.className='lead-details';
  const summary=document.createElement('summary');summary.textContent=i18n.t('更多商务、技术及收入字段');more.append(summary);
- for(const key of ['name','customer','type','repo','stage','saId','next','due']){
+ for(const key of ['name','customer','type','repo','stage','saId','next','due','projectArchitecture']){
   const field=form.querySelector('[name="'+key+'"]')?.closest('.fieldgrid > div');if(field)basics.append(field);
  }
  first.before(basics,more);

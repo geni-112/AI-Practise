@@ -1,8 +1,16 @@
-let practiceState={items:[],catalog:[],service:{ready:false},selected:null,tab:'understanding',page:1,total:0,archived:false},practiceTimer=null,practiceImage=null,practiceSelection=0;
+let practiceState={items:[],catalog:[],service:{ready:false},selected:null,tab:'understanding',page:1,total:0,archived:false,projectId:''},practiceTimer=null,practiceImage=null,practiceSelection=0;
 const practiceStatus={queued:'等待分析',running:'正在分析',succeeded:'分析完成',failed:'分析失败'};
 const practiceTerms={observed:'图中明确',inferred:'分析推测',unknown:'待确认',high:'高',medium:'中',low:'低',clear:'清晰',partial:'部分可读',unclear:'无法可靠识别',batch:'批处理',stream:'流处理',request:'请求响应',source:'数据源',ingestion:'数据接入',storage:'数据存储',processing:'计算处理',serving:'数据服务',governance:'治理与安全',operations:'运维',network:'网络'};
 const pt=value=>i18n.t(practiceTerms[value]||value);
-function practicesHTML(){return pageTitle(has('practice.analyze')?'<button class="primary" onclick="newPractice()">＋ 上传架构图</button>':'')+`<div class="practice-tabs" role="tablist" aria-label="最佳实践视图"><button role="tab" aria-selected="${practiceState.tab==='understanding'}" onclick="switchPracticeTab('understanding')">架构解读</button><button role="tab" aria-selected="${practiceState.tab==='comparison'}" onclick="switchPracticeTab('comparison')">方案对比</button></div><div class="practice-library-link"><a class="buttonlink" href="/settings/maas">架构分析设置</a><button type="button" onclick="openCaseLibrary()">参考案例库</button></div><div id="practiceService"></div><div class="practice-layout"><section class="panel practice-history"><div class="row"><h2>分析记录</h2><button onclick="loadPractices(renderToken)">刷新</button></div><label class="practice-archive"><input type="checkbox" ${practiceState.archived?'checked':''} onchange="practiceState.archived=this.checked;practiceState.page=1;loadPractices(renderToken)">包含已归档</label><div id="practiceList" class="empty">正在加载分析记录…</div><div id="practicePages"></div></section><section id="practiceDetail" class="panel practice-detail"><div class="practice-empty"><span class="practice-mark">◇</span><h2>让架构图成为可讨论的方案</h2><p>上传架构图后，查看厂商、组件、数据流和关键问题，再逐项比较华为云服务建议。</p><div class="practice-steps"><span>01 · 读懂架构</span><span>02 · 匹配服务</span><span>03 · 验证迁移</span></div></div></section></div>`}
+function openProjectPractices(id){
+ practiceSelection++;practiceState.selected=null;practiceState.page=1;practiceState.archived=true;practiceState.projectId=id;
+ closeModal();return go('practices');
+}
+function projectPracticeFilter(){
+ const project=data.projects.find(p=>p.id===practiceState.projectId);
+ return practiceState.projectId?`<div class="row"><span><span>关联项目</span> · ${content(project?.name||'')}</span>${has('practice.read')?`<button type="button" onclick="practiceState.projectId='';practiceState.page=1;render()">清除项目筛选</button>`:''}</div>`:'';
+}
+function practicesHTML(){return pageTitle(has('practice.analyze')&&has('practice.read')?'<button class="primary" onclick="newPractice()">＋ 上传架构图</button>':'')+`<div class="practice-tabs" role="tablist" aria-label="最佳实践视图"><button role="tab" aria-selected="${practiceState.tab==='understanding'}" onclick="switchPracticeTab('understanding')">架构解读</button><button role="tab" aria-selected="${practiceState.tab==='comparison'}" onclick="switchPracticeTab('comparison')">方案对比</button></div><div class="practice-library-link">${user.roleId==='admin'?'<a class="buttonlink" href="/settings/maas">架构分析设置</a>':''}${has('practice.read')?'<button type="button" onclick="openCaseLibrary()">参考案例库</button>':''}</div><div id="practiceService"></div><div class="practice-layout"><section class="panel practice-history"><div class="row"><h2>分析记录</h2><button onclick="loadPractices(renderToken)">刷新</button></div>${projectPracticeFilter()}<label class="practice-archive"><input type="checkbox" ${practiceState.archived?'checked':''} onchange="practiceState.archived=this.checked;practiceState.page=1;loadPractices(renderToken)">包含已归档</label><div id="practiceList" class="empty">正在加载分析记录…</div><div id="practicePages"></div></section><section id="practiceDetail" class="panel practice-detail"><div class="practice-empty"><span class="practice-mark">◇</span><h2>让架构图成为可讨论的方案</h2><p>上传架构图后，查看厂商、组件、数据流和关键问题，再逐项比较华为云服务建议。</p><div class="practice-steps"><span>01 · 读懂架构</span><span>02 · 匹配服务</span><span>03 · 验证迁移</span></div></div></section></div>`}
 function practiceInLanguage(item,language=i18n.language){
  if(!item)return null;
  const primary=(item.sourceLanguage||item.language)===language,tr=item.translations?.[language];
@@ -29,7 +37,7 @@ function schedulePracticePoll(token){
  practiceTimer=setTimeout(()=>{if(page==='practices'&&token===renderToken)loadPractices(token).catch(error)},delay);
 }
 async function loadPractices(token=renderToken){
- const result=await api(`practices?page=${practiceState.page}&archived=${practiceState.archived}`);if(page!=='practices'||token!==renderToken)return;
+ const result=await api(`practices?page=${practiceState.page}&archived=${practiceState.archived}${practiceState.projectId?'&projectId='+encodeURIComponent(practiceState.projectId):''}`);if(page!=='practices'||token!==renderToken)return;
  Object.assign(practiceState,result);
  $('#practiceService').innerHTML=result.service.ready?`<div class="practice-service"><span class="dot"></span><span>${result.service.inputMode==='ocr'?'云端 OCR + 文本 MaaS':'多模态 MaaS'}</span><small data-user-content>${esc(result.service.model)}${result.service.region?' · '+esc(result.service.region):''}</small></div>`:`<div class="notice"><span>管理员尚未完成架构分析服务配置</span>${user.roleId==='admin'?'<button onclick="maasSettingsForm()">配置 MaaS</button>':''}</div>`;
  $('#practiceList').className='';$('#practiceList').innerHTML=result.items.map(item=>`<button class="practice-item ${practiceState.selected?.id===item.id?'selected':''}" onclick="selectPractice('${item.id}')"><span data-user-content>${esc(item.title)}</span><small><span>${practiceStatus[item.status]}</span> · ${esc(item.created_at.slice(0,10))}${item.archived_at?' · <span>已归档</span>':''}</small><small data-user-content>${esc(item.owner_email)}</small></button>`).join('')||'<p class="empty">暂无架构分析</p>';
@@ -65,15 +73,15 @@ function serviceLink(id){const item=practiceState.catalog.find(s=>s.id===id);ret
 function renderPracticeDetail(){
  const item=practiceInLanguage(practiceState.selected),box=$('#practiceDetail');if(!item||!box)return;
  const labels=practiceCitations.index(item.ocrEvidence),narrative=value=>practiceNarrative(value,labels,item.language);
- const r=item.result,canEdit=has('practice.analyze')&&(item.owner_email===user.email||has('practice.manage'));
- let html=`<div class="row"><div><h2 data-user-content>${esc(item.title)}</h2></div><span class="pill">${practiceStatus[item.status]}</span></div><p class="subtitle">${content(item.target_region)} · ${content(item.owner_email)} · ${content(item.language==='en'?'English':'中文')}</p><div class="practice-detail-actions">${practiceLanguageSwitch(item.language)}<button type="button" onclick="showPracticeFailures()">失败日志</button>${r?'<button onclick="exportPractice()">导出分析报告</button>':''}${canEdit&&item.status==='failed'&&!item.archived_at?'<button onclick="practiceAction(\'retry\')">重新分析</button>':''}${canEdit&&!['queued','running'].includes(item.status)?`<button onclick="practiceAction('${item.archived_at?'restore':'archive'}')">${item.archived_at?'恢复记录':'归档记录'}</button>`:''}</div>`;
+ const r=item.result,canEdit=item.canMaintain===true;
+ let html=`<div class="row"><div><h2 data-user-content>${esc(item.title)}</h2></div><span class="pill"><span>${practiceStatus[item.status]}</span>${item.archived_at?' · <span>已归档</span>':''}</span></div><p class="subtitle">${content(item.target_region)} · ${content(item.owner_email)} · ${content(item.language==='en'?'English':'中文')}</p><div class="practice-detail-actions">${practiceLanguageSwitch(item.language)}<button type="button" onclick="showPracticeFailures()">失败日志</button>${r?'<button onclick="exportPractice()">导出分析报告</button>':''}${canEdit&&item.status==='failed'&&!item.archived_at?'<button onclick="practiceAction(\'retry\')">重新分析</button>':''}${canEdit&&!['queued','running'].includes(item.status)?`<button onclick="practiceAction('${item.archived_at?'restore':'archive'}')">${item.archived_at?'恢复记录':'归档记录'}</button>`:''}</div>`;
  const assigned=data.projects.find(p=>p.id===item.project_id);
- html+='<div class="practice-tools"><span>'+i18n.t(item.project_id?'项目成员可见':'仅上传者和管理员')+'</span>'+(assigned?' · '+content(assigned.name):'')+(canEdit&&!item.archived_at&&!['queued','running'].includes(item.status)?'<button class="no-export" type="button" onclick="editPracticeProject()">修改原图可见范围</button>':'')+'</div>';
+ html+='<div class="practice-tools"><span>'+i18n.t(item.project_id?'仅项目 BD、SA 和平台管理员可见':'仅上传者和管理员')+'</span>'+(assigned?' · '+content(assigned.name):'')+(canEdit&&!item.projectSubmission&&(!item.project_id||user.roleId==='admin')&&!item.archived_at&&!['queued','running'].includes(item.status)?'<button class="no-export" type="button" onclick="editPracticeProject()">修改原图可见范围</button>':'')+'</div>';
  if(!r&&item.status==='succeeded'){
   const tr=item.translation,failed=tr?.status==='failed';
   html+='<div class="practice-pending" role="status"><h3>'+(failed?'此语言版本生成失败':'正在准备此语言版本')+'</h3>'+
    '<p>'+esc(tr?.errorMessage||'云端正在翻译这份分析，完成后此页会自动更新。')+'</p>'+
-   (failed&&canEdit&&!item.archived_at?'<button type="button" onclick="retryPracticeTranslation()">重试翻译</button>':'')+'</div>';
+   (failed&&canEdit&&(!item.archived_at||item.projectSubmission)?'<button type="button" onclick="retryPracticeTranslation()">重试翻译</button>':'')+'</div>';
   box.innerHTML=html;i18n.apply(box);return;
  }
  if(!r){html+=`<div class="practice-pending"><h3>${item.status==='failed'?'分析未完成':'正在读取架构并整理方案'}</h3><p>${item.status==='failed'?esc(item.errorMessage):'可以离开此页面，分析会在后台继续，结果自动保存。'}</p></div><img class="practice-original" src="/api/practices/${item.id}/image" alt="上传的架构图">`;box.innerHTML=html;return}
@@ -99,8 +107,8 @@ function renderPracticeDetail(){
  html+=`<p class="practice-provenance"><span>模型</span>：${content(item.model)} · <span>完成时间</span>：${content(item.updated_at)} UTC${item.usage?.total_tokens!=null?' · Tokens: '+esc(item.usage.total_tokens):''}</p>`;box.innerHTML=html;attachPracticeCitations(box,labels,item);i18n.apply(box);
 }
 function practiceProjectPicker(current) {
- const options=data.projects.filter(p=>!p.archivedAt&&(has('practice.manage')||own(p)));
- return '<label>关联项目</label><select name="projectId"><option value="">仅上传者和管理员</option>'+options.map(p=>'<option data-user-content value="'+esc(p.id)+'" '+(p.id===current?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select><p class="viewnote">关联后，项目当前的 BD、SA 和最佳实践管理员可以查看原图和分析。</p>';
+ const options=data.projects.filter(p=>!p.archivedAt&&(user.roleId==='admin'||own(p)));
+ return '<label>关联项目</label><select name="projectId" onchange="updateReferenceChoice(this.value)">'+(current?'':'<option value="">仅上传者和管理员</option>')+options.map(p=>'<option data-user-content value="'+esc(p.id)+'" '+(p.id===current?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select><p class="viewnote">关联后，仅项目当前指派的 BD、SA 和平台管理员可以查看原图和分析。</p>';
 }
 function editPracticeProject() {
  const item=practiceState.selected;
@@ -109,13 +117,18 @@ function editPracticeProject() {
   closeModal();await loadPractices(renderToken);
  });
 }
+function updateReferenceChoice(projectId){
+ const choice=$('#referenceChoice');if(!choice)return;
+ choice.hidden=!!projectId;
+ const box=choice.querySelector('input');box.disabled=!!projectId;if(projectId)box.checked=false;
+}
 function newPractice(){
  if(!practiceState.service.ready){toast('管理员尚未完成架构分析服务配置');if(user.roleId==='admin')maasSettingsForm();return}
  practiceImage=null;const requestKey=crypto.randomUUID(),inputMode=practiceState.service.inputMode;
- openForm(`<h2>上传架构图</h2><p class="viewnote">${inputMode==='vision'?'图片与补充背景将发送至管理员配置的华为云 MaaS 进行分析。请确认你有权分享这些资料。':'平台在华为云 ECS 上识别原图，再将提取的文字、位置、候选连线及补充背景发送给文本 MaaS。'}</p>${practiceProjectPicker('')}<label>分析标题 *</label><input name="title" required maxlength="200" placeholder="例如：某客户数据平台现网架构"><div class="formgrid"><div><label>业务类别</label><select name="businessType"><option>大数据</option><option>数据库</option><option>综合架构</option></select></div><div><label>目标部署区域 *</label><input name="targetRegion" required maxlength="120" value="la-south-2 (Santiago)"></div></div><p class="viewnote">中文和英文版报告及目标架构图都会保存，优先生成当前界面的语言。</p><label>架构图 *</label><input name="image" type="file" accept="image/png,image/jpeg,image/webp" required onchange="previewPracticeImage(this)"><p class="viewnote">支持 PNG、JPEG、WebP，最大 2MB；请保证组件名称和箭头清晰。</p><div id="practiceUploadPreview"></div><label>补充背景</label><textarea name="context" maxlength="8000" rows="4" placeholder="业务目标、数据规模、延迟要求、已知产品版本，以及你关注的问题"></textarea><label class="case-choice"><input type="checkbox" name="referenceRequested"><span>列为参考案例候选，复核后供团队使用</span></label><div class="formactions"><button type="button" onclick="closeModal()">取消</button><button class="primary">上传并分析</button></div>`,async fd=>{
+ openForm(`<h2>上传架构图</h2><p class="viewnote">${inputMode==='vision'?'图片与补充背景将发送至管理员配置的华为云 MaaS 进行分析。请确认你有权分享这些资料。':'平台在华为云 ECS 上识别原图，再将提取的文字、位置、候选连线及补充背景发送给文本 MaaS。'}</p>${practiceProjectPicker('')}<label>分析标题 *</label><input name="title" required maxlength="200" placeholder="例如：某客户数据平台现网架构"><div class="formgrid"><div><label>业务类别</label><select name="businessType"><option>大数据</option><option>数据库</option><option>综合架构</option></select></div><div><label>目标部署区域 *</label><input name="targetRegion" required maxlength="120" value="la-south-2 (Santiago)"></div></div><p class="viewnote">中文和英文版报告及目标架构图都会保存，优先生成当前界面的语言。</p><label>架构图 *</label><input name="image" type="file" accept="image/png,image/jpeg,image/webp" required onchange="previewPracticeImage(this)"><p class="viewnote">支持 PNG、JPEG、WebP，最大 2MB；请保证组件名称和箭头清晰。</p><div id="practiceUploadPreview"></div><label>补充背景</label><textarea name="context" maxlength="8000" rows="4" placeholder="业务目标、数据规模、延迟要求、已知产品版本，以及你关注的问题"></textarea><label class="case-choice" id="referenceChoice"><input type="checkbox" name="referenceRequested"><span>列为参考案例候选，复核后供团队使用</span></label><div class="formactions"><button type="button" onclick="closeModal()">取消</button><button class="primary">上传并分析</button></div>`,async fd=>{
   const file=fd.get('image');const image=await readPracticeImage(file);
   const item=await api('practices','POST',{requestKey,inputMode,projectId:fd.get('projectId')||null,referenceRequested:fd.has('referenceRequested'),title:fd.get('title'),businessType:fd.get('businessType'),targetRegion:fd.get('targetRegion'),language:i18n.language,context:fd.get('context'),...image});
-  closeModal();practiceState.selected=item;practiceState.page=1;practiceState.archived=false;await go('practices');toast('架构图已提交，分析结果会自动保存');
+  closeModal();practiceSelection++;practiceState.selected=item.id?item:null;practiceState.page=1;practiceState.projectId='';practiceState.archived=false;await go('practices');toast('架构图已提交，分析结果会自动保存');
  });
 }
 async function readPracticeImage(file){if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type)||!file.size||file.size>2097152)throw new Error('请上传清晰的 PNG、JPEG 或 WebP 图片，大小不超过 2MB');const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error('文件读取失败'));reader.readAsDataURL(file)});return {name:file.name,mime:file.type,base64}}

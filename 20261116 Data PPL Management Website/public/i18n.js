@@ -1,6 +1,20 @@
 /* Interface translations only. User content and canonical form values stay intact. */
 (()=>{
 const en={
+ "当前账号仅可查看此分析":"You have read-only access to this analysis.",
+ "自动归档项目架构图":"Automatically archived project diagram",
+ "管理独立分析和参考案例":"Manage standalone analyses and reference cases",
+ "技术架构图（可选）":"Technical architecture diagram (optional)",
+ "支持 PNG、JPEG、WebP，最大 2 MB。保存项目后自动分析，成功后归档到最佳实践。仅本项目当前的 BD、SA 和平台管理员可查看。":"PNG, JPEG or WebP, up to 2 MB. Saving queues the diagram for analysis. Successful results are archived in Best practices. Only the assigned project BD, SA and site administrators can view them.",
+ "查看项目架构图":"View project diagrams",
+ "清除项目筛选":"Clear project filter",
+ "项目已保存，架构图已提交分析":"Project saved. The diagram is queued for analysis.",
+ "项目架构图提交信息无效":"Invalid project diagram submission.",
+ "此提交已保存，输入内容与上次不同":"This submission was already saved with different input.",
+ "项目架构图须保留项目关联":"This diagram must stay linked to its project.",
+ "项目架构图仅在项目内归档":"Project diagrams can only be archived privately.",
+ "仅项目 BD、SA 和平台管理员可见":"Only the assigned project BD, SA and site administrators can view this diagram",
+ "关联后，仅项目当前指派的 BD、SA 和平台管理员可以查看原图和分析。":"Once linked, only the currently assigned project BD, SA and site administrators can view the original diagram and analysis.",
  "报告与图纸语言":"Report and diagram language",
  "正在准备此语言版本":"Preparing this language version",
  "云端正在翻译这份分析，完成后此页会自动更新。":"The platform is translating this analysis. This page will update when it is ready.",

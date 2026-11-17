@@ -19,12 +19,14 @@ const text=(v,max,required=false)=>{if(typeof v!=='string'||v.length>max||(requi
 // Unlinked analyses are private to their creator. Project-linked originals follow
 // the current project assignment on every request, including image and drawing downloads.
 const analysisJoin = ' FROM architecture_analyses a LEFT JOIN architecture_project_links l ON l.analysis_id=a.id LEFT JOIN records p ON p.id=l.project_id AND p.kind=\'project\' ';
+const assignedProjectMember="(JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.bdId')) IN (?,?) OR JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) IN (?,?))";
 function originalAccess(user) {
-  if (user.permissions.includes('practice.manage')) return {sql:'1=1',args:[]};
-  const privateOwner = '(l.analysis_id IS NULL AND a.owner_email=?)';
-  if (!user.permissions.some(p=>p==='project.read.own'||p==='project.read.all')) return {sql:privateOwner,args:[user.email]};
-  const assigned = ['bdId','saId'].map(k=>"JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$."+k+"')) IN (?,?)").join(' OR ');
-  return {sql:'('+privateOwner+' OR ('+assigned+'))',args:[user.email,user.id,user.email,user.id,user.email]};
+  if(user.roleId==='admin')return {sql:'1=1',args:[]};
+  const canRead=user.permissions.includes('practice.read'),manager=user.permissions.includes('practice.manage');
+  const privateOwner=canRead&&!manager;
+  const unlinked=!canRead?'0=1':manager?'l.analysis_id IS NULL':'(l.analysis_id IS NULL AND a.owner_email=?)';
+  return {sql:'('+unlinked+' OR (l.analysis_id IS NOT NULL AND '+assignedProjectMember+'))',
+    args:[...(privateOwner?[user.email]:[]),user.id,user.email,user.id,user.email]};
 }
 async function validatePracticeProject(client,user,id) {
   if (id==null || id==='') return null;
@@ -32,7 +34,7 @@ async function validatePracticeProject(client,user,id) {
   const record=(await client.query("SELECT payload FROM records WHERE id=? AND kind='project' FOR UPDATE",[id])).rows[0];
   const project=record&&JSON.parse(record.payload);
   const collaborator=project&&[project.bdId,project.saId].some(v=>v&&(v===user.id||v===user.email));
-  const allowed=user.permissions.includes('practice.manage') || collaborator&&user.permissions.some(p=>p==='project.read.own'||p==='project.read.all');
+  const allowed=user.roleId==='admin' || collaborator&&user.permissions.some(p=>p==='project.read.own'||p==='project.read.all');
   if (!project || project.archivedAt || !allowed) throw authError(403,'请选择你负责的有效项目');
   return id;
 }
@@ -99,10 +101,86 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
   if(Number(counts.total)>=cfg.dailyLimit||Number(counts.own)>=Math.min(cfg.dailyLimit,10))throw practiceError('DAILY_LIMIT');
   await c.query('INSERT INTO architecture_usage(id,owner_email,analysis_id,purpose) VALUES($1,$2,$3,$4)',[randomUUID(),user.email,analysisId,purpose]);
  }
- const view=row=>({...row,result:row.result_json?JSON.parse(row.result_json):null,usage:row.usage_json?JSON.parse(row.usage_json):null,result_json:undefined,usage_json:undefined,image_key:undefined,errorMessage:row.error_code?messages[row.error_code]||messages.MAAS_UNAVAILABLE:null});
- async function get(c,id,user){if(!uuid(id))throw authError(404,'架构分析不存在');const access=originalAccess(user);const row=(await c.query('SELECT a.*,l.project_id'+analysisJoin+'WHERE a.id=? AND '+access.sql,[id,...access.args])).rows[0];if(!row)throw authError(404,'架构分析不存在');return row}
+ const projectUpload=row=>row.image_key?.startsWith('project-diagram/')===true;
+ const view=row=>({...row,projectSubmission:projectUpload(row),result:row.result_json?JSON.parse(row.result_json):null,usage:row.usage_json?JSON.parse(row.usage_json):null,result_json:undefined,usage_json:undefined,image_key:undefined,errorMessage:row.error_code?messages[row.error_code]||messages.MAAS_UNAVAILABLE:null});
+ async function accessible(c,id,user,lock=false){
+  const access=originalAccess(user);
+  const row=(await c.query("SELECT a.*,l.project_id,JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) AS assigned_sa"+analysisJoin+'WHERE a.id=? AND '+access.sql+(lock?' FOR UPDATE':''),[id,...access.args])).rows[0];
+  if(!row)return null;
+  const {assigned_sa,...item}=row;
+  const technicalOwner=!!assigned_sa&&[user.id,user.email].includes(assigned_sa);
+  const ownsManual=!projectUpload(row)&&row.owner_email===user.email;
+  item.canMaintain=user.permissions.includes('practice.analyze')&&(user.roleId==='admin'||technicalOwner||ownsManual||(!row.project_id&&user.permissions.includes('practice.manage')));
+  return item;
+ }
+ async function get(c,id,user,lock=false){
+  const row=uuid(id)&&await accessible(c,id,user,lock);
+  if(!row)throw authError(404,'架构分析不存在');
+  return row;
+ }
+ async function submissionResponse(c,id,user,status=200){
+  const row=await accessible(c,id,user);
+  return json(row?view(row):{submitted:true},status);
+ }
+ async function originalImage(c,row){
+  if(!projectUpload(row))return files.get(row.image_key);
+  const original=(await c.query('SELECT original_image FROM project_diagram_submissions WHERE analysis_id=?',[row.id])).rows[0];
+  return original?{body:original.original_image}:null;
+ }
+ async function enqueue(c,user,cfg,input,bytes,projectId,requestDigest=null){
+  const count=(await c.query("SELECT COUNT(*) AS n FROM architecture_analyses WHERE status IN ('queued','running') AND archived_at IS NULL")).rows[0];
+  if(Number(count.n)>=10)throw authError(429,'分析队列已满，请稍后提交');
+  const id=randomUUID(),key=requestDigest?'project-diagram/'+id:'resources/'+randomUUID();
+  await budget(c,cfg,user,'analysis',id);
+  if(!requestDigest)await files.put(key,bytes);
+  try{
+   await c.query("INSERT INTO architecture_analyses(id,owner_email,request_key,title,business_type,context_text,target_region,language,image_key,image_name,image_mime,image_size,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'queued')",
+    [id,user.email,input.requestKey,input.title,input.businessType,input.context,input.targetRegion,input.language,key,input.name,input.mime,bytes.length]);
+   await c.query('INSERT INTO architecture_inputs(analysis_id,input_mode,image_digest,reference_requested) VALUES(?,?,?,?)',[id,cfg.inputMode,createHash('sha256').update(bytes).digest('hex'),!projectId&&input.referenceRequested?1:0]);
+   if(projectId)await c.query('INSERT INTO architecture_project_links(analysis_id,project_id) VALUES(?,?)',[id,projectId]);
+   if(requestDigest)await c.query('INSERT INTO project_diagram_submissions(analysis_id,request_digest,original_image) VALUES(?,?,?)',[id,requestDigest,bytes]);
+   await audit(c,user,'提交架构图分析',id);
+  }catch(error){if(!requestDigest)await files.delete(key);throw error}
+  return id;
+ }
+ async function createProjectWithDiagram(c,user,body,createProject){
+  need(user,'project.create');
+  const {architectureDiagram:diagram,...fields}=body;
+  if(!diagram||!uuid(diagram.requestKey)||!['zh','en'].includes(diagram.language))throw authError(400,'项目架构图提交信息无效');
+  const name=text(diagram.name,200,true);
+  try{
+   const bytes=validateImage(diagram.base64,diagram.mime);
+   const canonical=JSON.stringify([fields,name,diagram.mime,diagram.language],(_key,value)=>{
+    if(!value||typeof value!=='object'||Array.isArray(value))return value;
+    return Object.fromEntries(Object.keys(value).sort().map(key=>[key,value[key]]));
+   });
+   const digest=createHash('sha256').update(canonical).update(bytes).digest('hex');
+   // Serialize retries from the same creator before the project or its history is written.
+   await c.query('SELECT email FROM members WHERE email=? FOR UPDATE',[user.email]);
+   const old=(await c.query(`SELECT l.project_id,s.request_digest FROM architecture_analyses a
+    LEFT JOIN architecture_project_links l ON l.analysis_id=a.id LEFT JOIN project_diagram_submissions s ON s.analysis_id=a.id
+    WHERE a.owner_email=? AND a.request_key=?`,[user.email,diagram.requestKey])).rows[0];
+   if(old){
+    if(old.request_digest!==digest||!old.project_id)throw authError(409,'此提交已保存，输入内容与上次不同');
+    return json({id:old.project_id,architectureSubmitted:true});
+   }
+   const created=await createProject(fields);
+   if(!created.ok)return created;
+   const project=await created.json(),cfg=await config(c,true);
+   const input={requestKey:diagram.requestKey,title:project.name,businessType:['大数据','数据库'].includes(project.type)?project.type:'综合架构',
+    targetRegion:project.region?.trim().slice(0,120)||'la-south-2 (Santiago)',language:diagram.language,context:'',name,mime:diagram.mime};
+   await enqueue(c,user,cfg,input,bytes,project.id,digest);
+   return json({id:project.id,architectureSubmitted:true},201);
+  }catch(error){if(error.modelCode)throw practiceError(error.modelCode);throw error}
+ }
  async function route(c,request,user){
-  const url=new URL(request.url),p=url.pathname;if(!p.startsWith('/api/practices'))return null;
+  const url=new URL(request.url),p=url.pathname;
+  if(p==='/api/audit'&&request.method==='GET'&&user?.roleId!=='admin'){
+   need(user,'audit.view');
+   const entries=await c.query("SELECT e.* FROM audit e LEFT JOIN architecture_project_links l ON l.analysis_id=e.entity LEFT JOIN records p ON p.id=l.project_id AND p.kind='project' WHERE l.analysis_id IS NULL OR "+assignedProjectMember+" ORDER BY e.at DESC LIMIT 100",[user.id,user.email,user.id,user.email]);
+   return json(entries.rows);
+  }
+  if(!p.startsWith('/api/practices'))return null;
   if(!user)throw authError(401,'请先登录');
   try{
    if(p==='/api/practices/config'){
@@ -130,37 +208,35 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
      return json({...safe(saved),message:code?messages[code]:'架构分析服务已就绪，可上传架构图',...(code?{error:messages[code]}:{})},code?400:200);
     }};
    }
-   need(user,'practice.read');
+   const recordRoute=p.match(/^\/api\/practices\/([a-f0-9-]{36})(?:\/(image|retry|archive|restore|project|reference|failures|translation|drawing(?:\/preview)?))?$/);
+   const projectList=p==='/api/practices'&&request.method==='GET'&&url.searchParams.get('projectId');
+   if(user.roleId!=='admin'&&!projectList&&!recordRoute)need(user,'practice.read');
    const published=p.match(/^\/api\/practices\/references\/([a-f0-9-]{36})$/);
    if(published && request.method==='GET')return json(await publicCase(c,published[1]));
    if(p==='/api/practices/references'&&request.method==='GET')return json(await referenceLibrary(c,url));
    if(p==='/api/practices'&&request.method==='GET'){
     const cfg=await config(c),archived=url.searchParams.get('archived')==='true',page=Math.max(1,Math.min(10000,Number(url.searchParams.get('page'))||1));
-    const access=originalAccess(user),condition=analysisJoin+'WHERE '+access.sql+(archived?'':' AND a.archived_at IS NULL'),total=Number((await c.query('SELECT COUNT(*) AS n'+condition,access.args)).rows[0].n);
-    const list=(await c.query('SELECT a.id,a.title,a.business_type,a.owner_email,a.language,a.target_region,a.status,a.error_code,a.model,a.created_at,a.updated_at,a.archived_at,a.version,l.project_id'+condition+' ORDER BY a.created_at DESC,a.id LIMIT 30 OFFSET '+((Math.floor(page)-1)*30),access.args)).rows;
+    const access=originalAccess(user),projectId=url.searchParams.get('projectId');
+    const condition=analysisJoin+'WHERE '+access.sql+(archived?'':' AND a.archived_at IS NULL')+(projectId?' AND l.project_id=?':'');
+    const args=projectId?[...access.args,projectId]:access.args,total=Number((await c.query('SELECT COUNT(*) AS n'+condition,args)).rows[0].n);
+    const list=(await c.query('SELECT a.id,a.title,a.business_type,a.owner_email,a.language,a.target_region,a.status,a.error_code,a.model,a.created_at,a.updated_at,a.archived_at,a.version,a.image_key,l.project_id'+condition+' ORDER BY a.created_at DESC,a.id LIMIT 30 OFFSET '+((Math.floor(page)-1)*30),args)).rows;
     return json({items:list.map(view),total,page:Math.floor(page),service:{ready:ready(cfg),inputMode:cfg.inputMode,model:cfg.model,region:cfg.region},catalog:SERVICE_CATALOG});
    }
    if(p==='/api/practices'&&request.method==='POST'){
     need(user,'practice.analyze');const b=await request.json();if(!uuid(b.requestKey))throw authError(400,'最佳实践字段格式无效');
-    const duplicate=(await c.query('SELECT * FROM architecture_analyses WHERE owner_email=$1 AND request_key=$2',[user.email,b.requestKey])).rows[0];if(duplicate)return json(view(await get(c,duplicate.id,user)));
+    const duplicate=(await c.query('SELECT id FROM architecture_analyses WHERE owner_email=$1 AND request_key=$2',[user.email,b.requestKey])).rows[0];if(duplicate)return submissionResponse(c,duplicate.id,user);
     const projectId=await validatePracticeProject(c,user,b.projectId);
     const cfg=await config(c,true);if(!ready(cfg))throw practiceError('SERVICE_NOT_CONFIGURED');
     if(b.inputMode!=null&&b.inputMode!==cfg.inputMode)throw authError(409,'识别模式已改变，请重新打开上传窗口');
     if(b.referenceRequested!=null&&typeof b.referenceRequested!=='boolean')throw authError(400,'参考案例内容无效');
     const title=text(b.title,200,true),context=text(b.context||'',8000),targetRegion=text(b.targetRegion||'',120,true),name=text(b.name,200,true);
     if(!['大数据','数据库','综合架构'].includes(b.businessType)||!['zh','en'].includes(b.language))throw authError(400,'最佳实践字段格式无效');
-    const bytes=validateImage(b.base64,b.mime),count=(await c.query("SELECT COUNT(*) AS n FROM architecture_analyses WHERE status IN ('queued','running') AND archived_at IS NULL")).rows[0];
-    if(Number(count.n)>=10)throw authError(429,'分析队列已满，请稍后提交');
-    const id=randomUUID(),key='resources/'+randomUUID();await budget(c,cfg,user,'analysis',id);
-    await files.put(key,bytes);
-    try{await c.query("INSERT INTO architecture_analyses(id,owner_email,request_key,title,business_type,context_text,target_region,language,image_key,image_name,image_mime,image_size,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'queued')",[id,user.email,b.requestKey,title,b.businessType,context,targetRegion,b.language,key,name,b.mime,bytes.length]);
-     await c.query('INSERT INTO architecture_inputs(analysis_id,input_mode,image_digest,reference_requested) VALUES(?,?,?,?)',[id,cfg.inputMode,createHash('sha256').update(bytes).digest('hex'),b.referenceRequested?1:0]);
-     if(projectId)await c.query('INSERT INTO architecture_project_links(analysis_id,project_id) VALUES(?,?)',[id,projectId]);
-     await audit(c,user,'提交架构图分析',id)}catch(e){await files.delete(key);throw e}
-    return json(view(await get(c,id,user)),202);
+    const bytes=validateImage(b.base64,b.mime);
+    const id=await enqueue(c,user,cfg,{...b,title,context,targetRegion,name},bytes,projectId);
+    return submissionResponse(c,id,user,202);
    }
-   const match=p.match(/^\/api\/practices\/([a-f0-9-]{36})(?:\/(image|retry|archive|restore|project|reference|failures|translation|drawing(?:\/preview)?))?$/);
-   if(!match)return json({error:'接口不存在'},404);const [,id,operation]=match,row=await get(c,id,user);
+   const match=recordRoute;
+   if(!match)return json({error:'接口不存在'},404);const [,id,operation]=match,row=await get(c,id,user,request.method==='POST');
    if(!operation&&request.method==='GET'){
     const item=view(row),language=resultLanguage(url.searchParams.get('lang'),row.language);
     const translations=await translationsFor(c,id),versions=await drawingVersions(c,id);
@@ -180,20 +256,21 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
     return response;
    }
    if(operation==='image'&&request.method==='GET'){
-    const image=await files.get(row.image_key);if(!image)throw authError(404,'文件不存在');
+    const image=await originalImage(c,row);if(!image)throw authError(404,'文件不存在');
     return new Response(image.body,{headers:{'Content-Type':row.image_mime,'Content-Disposition':'inline','X-Content-Type-Options':'nosniff'}});
    }
    if(request.method!=='POST')return json({error:'请使用 POST'},405);
-   need(user,'practice.analyze');if(row.owner_email!==user.email&&!user.permissions.includes('practice.manage'))throw authError(403,'仅发起人或管理员可维护此分析');
+   if(!row.canMaintain)throw authError(403,'当前账号仅可查看此分析');
    const b=await request.json();if(b._version!==row.version)throw authError(409,'架构分析已更新，请刷新');
    if(operation==='translation'){
     const language=resultLanguage(b.language,otherLanguage(row.language));
-    if(row.status!=='succeeded'||row.archived_at||language===row.language)throw authError(409,'此语言版本无法重试');
+    if(row.status!=='succeeded'||(row.archived_at&&!projectUpload(row))||language===row.language)throw authError(409,'此语言版本无法重试');
     const updated=await c.query("UPDATE architecture_translations SET status='queued',available_at=NOW(),failures=0,error_code=NULL WHERE analysis_id=? AND language=? AND status='failed'",[id,language]);
     if(!updated.rowCount)throw authError(409,'此语言版本无法重试');
     await audit(c,user,'重试架构分析翻译',id);
    }else if(operation==='project'){
     if(row.archived_at||['queued','running'].includes(row.status))throw authError(409,'请等待分析结束并恢复归档记录');
+    if(row.project_id&&(projectUpload(row)||user.roleId!=='admin'||!b.projectId))throw authError(403,'项目架构图须保留项目关联');
     const projectId=await validatePracticeProject(c,user,b.projectId);
     if(!projectId && row.owner_email!==user.email && !user.permissions.includes('practice.manage'))throw authError(403,'当前角色没有此操作权限');
     if((await c.query('UPDATE architecture_analyses SET version=version+1 WHERE id=? AND version=?',[id,row.version])).rowCount!==1)throw authError(409,'架构分析已更新，请刷新');
@@ -210,7 +287,7 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
     if(['queued','running'].includes(row.status))throw authError(409,'请等待分析结束后归档');
     const updated=await c.query('UPDATE architecture_analyses SET archived_at=$1,updated_at=now(),version=version+1 WHERE id=$2 AND version=$3',[operation==='archive'?new Date().toISOString().slice(0,19).replace('T',' '):null,id,row.version]);if(updated.rowCount!==1)throw authError(409,'架构分析已更新，请刷新');await audit(c,user,operation==='archive'?'归档架构分析':'恢复架构分析',id);
    }else return json({error:'接口不存在'},404);
-   return json(view(await get(c,id,user)));
+   return submissionResponse(c,id,user);
   }catch(e){if(e.modelCode)throw practiceError(e.modelCode);throw e}
  }
  let timer=null,active=null,stopped=true;
@@ -226,11 +303,11 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
    if((await c.query("SELECT id FROM architecture_analyses WHERE status='running' AND lease_until>=now() LIMIT 1")).rows.length)return null;
    const row=(await c.query("SELECT * FROM architecture_analyses WHERE status='queued' AND archived_at IS NULL ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED")).rows[0];if(!row)return null;
    const owner=(await c.query('SELECT m.enabled,r.payload FROM members m JOIN records r ON r.id=m.role_id WHERE m.email=$1',[row.owner_email])).rows[0];
-   if(!owner?.enabled||!JSON.parse(owner.payload).permissions.includes('practice.analyze')){await c.query("UPDATE architecture_analyses SET status='failed',error_code='ACCESS_REVOKED',updated_at=now(),version=version+1 WHERE id=$1",[row.id]);await recordFailure(c,row.id,{stage:'worker'});return null}
+   if(!projectUpload(row)&&(!owner?.enabled||!JSON.parse(owner.payload).permissions.includes('practice.analyze'))){await c.query("UPDATE architecture_analyses SET status='failed',error_code='ACCESS_REVOKED',updated_at=now(),version=version+1 WHERE id=$1",[row.id]);await recordFailure(c,row.id,{stage:'worker'});return null}
    const leaseSeconds=cfg.analysisTimeoutMinutes*60+Math.ceil(OCR_TIMEOUT_MS/1000)+60;
    await c.query("UPDATE architecture_analyses SET status='running',started_at=now(),lease_until=TIMESTAMPADD(SECOND,?,now()),model=?,version=version+1,updated_at=now() WHERE id=?",[leaseSeconds,cfg.model,row.id]);
    const input=await readPracticeInput(c,row.id);
-   const inputMode=input.inputMode==='ocr'||cfg.inputMode==='ocr'?'ocr':'vision';
+   const inputMode=projectUpload(row)?cfg.inputMode:input.inputMode==='ocr'||cfg.inputMode==='ocr'?'ocr':'vision';
    await c.query('INSERT INTO architecture_inputs(analysis_id,input_mode) VALUES(?,?) ON DUPLICATE KEY UPDATE input_mode=VALUES(input_mode)',[row.id,inputMode]);
    return {...row,cfg,inputMode,runVersion:row.version+1};
   });
@@ -238,7 +315,7 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
   let result=null,usage=null,code=null,evidence=null,sources=[];
   let stage='image',modelStart=null,modelMs=null,failure=null;
   try{
-   const stored=await files.get(job.image_key);
+   const stored=await transaction(pool,c=>originalImage(c,job));
    if(!stored)throw practiceError('INVALID_IMAGE');
    const bytes=Buffer.from(await new Response(stored.body).arrayBuffer());
    if(job.inputMode==='ocr'){
@@ -264,11 +341,14 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
    failure={stage,timeoutSeconds:job.cfg.analysisTimeoutMinutes*60,modelMs,evidence,httpStatus:e.httpStatus,requestId:e.requestId,validationPath:e.validationPath,validationIssue:e.validationIssue};
   }
   await transaction(pool,async c=>{
-   const updated=await c.query('UPDATE architecture_analyses SET status=$1,result_json=$2,usage_json=$3,error_code=$4,lease_until=NULL,updated_at=now(),version=version+1 WHERE id=$5 AND version=$6 AND status=$7',[code?'failed':'succeeded',!code&&result?JSON.stringify(result):null,usage?JSON.stringify(usage):null,code,job.id,job.runVersion,'running']);
+   const updated=await c.query('UPDATE architecture_analyses SET status=$1,result_json=$2,usage_json=$3,error_code=$4,archived_at=CASE WHEN $8 THEN NOW() ELSE archived_at END,lease_until=NULL,updated_at=now(),version=version+1 WHERE id=$5 AND version=$6 AND status=$7',[code?'failed':'succeeded',!code&&result?JSON.stringify(result):null,usage?JSON.stringify(usage):null,code,job.id,job.runVersion,'running',!code&&projectUpload(job)?1:0]);
    if(updated.rowCount){
     await c.query('UPDATE architecture_inputs SET evidence_json=?,sources_json=? WHERE analysis_id=?',[evidence?JSON.stringify(evidence):null,JSON.stringify(sources),job.id]);
     if(failure)await recordFailure(c,job.id,failure);
-    else await queueTranslation(c,job.id,job.language);
+    else{
+     await queueTranslation(c,job.id,job.language);
+     if(projectUpload(job))await audit(c,{email:job.owner_email},'自动归档项目架构图',job.id);
+    }
     await audit(c,{email:job.owner_email},code?'架构分析失败':'完成架构图分析',job.id);
    }
   });return true;
@@ -276,5 +356,5 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
  const nextTranslation=()=>runNextTranslation({pool,config,ready,budget,
   translate:(cfg,messages)=>callModel({...cfg,apiKey:decrypt(cfg.secret)},messages,{fetchImpl,stream:true})});
  async function tick(){if(stopped||active)return;active=(async()=>{if(!await runNext())await nextTranslation()})();try{await active}catch{console.error(JSON.stringify({level:'error',code:'PRACTICE_WORKER_FAILED'}))}finally{active=null;if(!stopped)timer=setTimeout(tick,2000).unref()}}
- return {route,runNext,runNextTranslation:nextTranslation,start(){if(!stopped)return;stopped=false;timer=setTimeout(tick,500).unref()},async stop(){stopped=true;clearTimeout(timer);await active}};
+ return {route,createProjectWithDiagram,runNext,runNextTranslation:nextTranslation,start(){if(!stopped)return;stopped=false;timer=setTimeout(tick,500).unref()},async stop(){stopped=true;clearTimeout(timer);await active}};
 }

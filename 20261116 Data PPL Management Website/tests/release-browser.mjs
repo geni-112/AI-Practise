@@ -9,7 +9,7 @@ const user={id:'bd-id',email:'bd@example.invalid',roleId:'bd',roleName:'BD',perm
 const image=await fs.readFile(new URL('../server/ocr-check.png',import.meta.url));
 const result={...fixture,summary:'Object storage (L1)',target:{...fixture.target,summary:'Storage layer (L1)'}};
 const sample={id:'10000000-0000-4000-8000-000000000001',title:'Browser fixture',status:'succeeded',language:'en',owner_email:user.email,updated_at:'2026-01-01',created_at:'2026-01-01',result,translations:{zh:{status:'succeeded',result:{...result,summary:'对象存储（L1）'}}},ocrEvidence:{labels:[{id:'L1',text:'Storage',box:[100,200,300,120],confidence:94}],connections:[]}};
-let offline,submitted;
+let offline,submitted,filtered=false;const projects=[];
 const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
 try{
  await verifyNavigationBrowser(browser);
@@ -19,9 +19,14 @@ try{
   if(url.origin!==origin)return route.abort();
   if(path==='/offline')return route.fulfill({contentType:'text/html',body:offline});
   if(path==='/api/me')return route.fulfill({json:{user,permissions:{},source:{}}});
-  if(path==='/api/workspace')return route.fulfill({json:{projects:[],resources:[],roles:[],members:[{email:'sa@example.invalid',user_id:'sa-id',role_id:'sa',enabled:1}]}});
-  if(path==='/api/projects'){submitted=route.request().postDataJSON();return route.fulfill({status:201,json:{id:'test'}})}
-  if(path==='/api/practices')return route.fulfill({json:{items:[sample],total:1,page:1,service:{ready:true},catalog:[]}});
+  if(path==='/api/workspace')return route.fulfill({json:{projects,resources:[],roles:[],members:[{email:'sa@example.invalid',user_id:'sa-id',role_id:'sa',enabled:1}]}});
+  if(path==='/api/projects'){
+    submitted=route.request().postDataJSON();
+    const {architectureDiagram,...fields}=submitted,id='project-'+projects.length;
+    projects.push({...fields,id,bdId:user.id,_version:1});
+    return route.fulfill({status:201,json:{id,architectureSubmitted:!!architectureDiagram}});
+  }
+  if(path==='/api/practices'){if(url.searchParams.get('projectId')==='project-1'&&url.searchParams.get('archived')==='true')filtered=true;return route.fulfill({json:{items:[sample],total:1,page:1,service:{ready:true},catalog:[]}})}
   if(path==='/api/practices/'+sample.id)return route.fulfill({json:sample});
   if(path.endsWith('/image')||path.endsWith('/drawing/preview'))return route.fulfill({contentType:'image/png',body:image});
   if(path.startsWith('/api/'))throw Error('Unexpected fixture route '+path);
@@ -34,7 +39,19 @@ try{
  assert.equal(await page.locator('[name=vendor]').isVisible(),false);
  await page.getByRole('button',{name:'保存',exact:true}).click();await page.waitForSelector('#modal:not([open])',{state:'attached'});
  assert.equal(submitted.saId,'sa-id');assert.equal(submitted.name,'First lead');assert(!('bdId' in submitted));
- await page.getByRole('button',{name:/最佳实践/}).click();await page.getByRole('button',{name:/Browser fixture/}).click();
+ assert(!submitted.architectureDiagram);
+ await page.getByRole('button',{name:/新建项目/}).click();await page.locator('[name=name]').fill('Diagram project');
+ const file=page.getByLabel('技术架构图（可选）');assert(await file.isVisible());
+ await file.setInputFiles({name:'project.png',mimeType:'image/png',buffer:image});
+ await page.locator('#modal [data-language=en]').click();
+ assert.equal(await page.getByLabel('Technical architecture diagram (optional)').inputValue().then(value=>value.endsWith('project.png')),true);
+ await page.getByRole('button',{name:'Save',exact:true}).click();await page.waitForSelector('#modal:not([open])',{state:'attached'});
+ assert.equal(submitted.architectureDiagram.language,'en');assert.equal(submitted.architectureDiagram.base64,image.toString('base64'));
+ assert.match(submitted.architectureDiagram.requestKey,/^[0-9a-f-]{36}$/);
+ await page.getByText('Diagram project',{exact:true}).first().click();
+ await page.getByRole('button',{name:'View project diagrams'}).click();await page.locator('#practiceList .practice-item').waitFor();
+ assert(filtered);assert(await page.locator('.practice-archive input').isChecked());
+ await page.getByRole('button',{name:/Browser fixture/}).click();
  async function mark(scope=page){
   const details=scope.locator('.practice-citations').first();await details.locator('summary').click();
   await details.locator('a.diagram-link').first().click();
@@ -53,5 +70,5 @@ try{
  assert(offline.includes('data:image/png;base64,'));assert(!offline.includes('/api/practices/'));assert(!offline.includes('<script'));
  await page.goto(origin+'/offline');await mark();
  assert.deepEqual(errors,[]);
- console.log('PASS: compact BD creation and SA selection, bilingual OCR links, geometric alignment and script-free offline report at phone width');
+ console.log('PASS: compact BD creation, optional diagram upload and scoped archive navigation, bilingual OCR links, geometric alignment and script-free offline report at phone width');
 }finally{await browser.close()}
