@@ -183,12 +183,19 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
   if(!report)fail(404,'报表不存在');
   return j(await visibleReport(db,u,id==='current'?report:{...report,basis:'snapshot'}));
  }
- if(path==='/api/admin'&&req.method==='GET'){if(!has(u,'member.manage')&&!has(u,'role.manage'))fail(403,'无权限');return j({members:has(u,'member.manage')?(await db.prepare('SELECT email,user_id,role_id,enabled,version,display_name FROM members').all()).results:[],roles:await all(db,'role'),permissions:PERMISSIONS})}
+ if(path==='/api/admin'&&req.method==='GET'){
+  if(!has(u,'member.manage')&&!has(u,'role.manage'))fail(403,'无权限');
+  const counts=(await db.prepare('SELECT role_id,COUNT(*) AS total FROM members GROUP BY role_id').all()).results;
+  const usage=new Map(counts.map(row=>[row.role_id,Number(row.total)]));
+  return j({members:has(u,'member.manage')?(await db.prepare('SELECT email,user_id,role_id,enabled,version,display_name FROM members').all()).results:[],
+   roles:(await all(db,'role')).map(role=>({...role,memberCount:usage.get(role.id)||0})),permissions:PERMISSIONS});
+ }
  if(path==='/api/admin/member'&&req.method==='POST'){
   requireP(u,'member.manage');
   const b=await req.json(),email=String(b.email||'').trim().toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>190)fail(400,'邮箱无效');
   if(email===env.ADMIN_EMAIL)fail(400,'初始管理员权限不可更改');
+  if(env.STANDALONE)await db.prepare("SELECT id FROM records WHERE id=? AND kind='role' FOR UPDATE").bind(b.roleId).first();
   const role=await get(db,b.roleId,'role');
   if(!role)fail(400,'角色不存在');
   const member=await db.prepare('SELECT * FROM members WHERE email=?').bind(email).first();
@@ -210,7 +217,40 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
   }
   await audit(db,u,'更新成员资料与权限',email);return j({ok:true});
  }
- if(path==='/api/admin/role'&&req.method==='POST'){requireP(u,'role.manage');const b=await req.json();const id=b.id||crypto.randomUUID(),old=await get(db,id,'role');if(old&&old.permissions.some(p=>!has(u,p)))fail(403,'不能修改超出自身权限的角色');if(id==='admin')fail(400,'内置管理员权限不可修改');if(typeof b.name!=='string'||!b.name.trim()||b.name.length>40)fail(400,'角色名称无效');if(!Array.isArray(b.permissions)||b.permissions.some(p=>!Object.hasOwn(PERMISSIONS,p)||!has(u,p)))fail(403,'权限选项无效或超出自身权限');const r={id,name:b.name,permissions:[...new Set(b.permissions)],builtin:old?.builtin||false};if(old)await change(db,'role',r,b._version);else await insert(db,'role',r);await audit(db,u,old?'修改角色':'新增角色',id);return j(reportForUser(u,r))}
+ if(path==='/api/admin/role'&&req.method==='DELETE'){
+  requireP(u,'role.manage');
+  const body=await req.json();
+  if(typeof body.id!=='string'||!body.id||body.id.length>190)fail(400,'角色不存在');
+  if(env.STANDALONE)await db.prepare("SELECT id FROM records WHERE id=? AND kind='role' FOR UPDATE").bind(body.id).first();
+  const role=await get(db,body.id,'role');
+  if(!role)fail(404,'角色不存在，请刷新列表');
+  if(role.builtin||DEFAULT_ROLES.some(item=>item.id===role.id))fail(400,'预置角色不可删除');
+  if(role.permissions.some(permission=>!has(u,permission)))fail(403,'不能删除超出自身权限的角色');
+  if(body._version!==role._version)fail(409,'角色已更新，请重新打开后确认');
+  const assigned=await db.prepare('SELECT email FROM members WHERE role_id=? LIMIT 1').bind(role.id).first();
+  if(assigned)fail(400,'该角色仍有成员使用，请先将成员分配到其他角色');
+  const removed=await db.prepare("DELETE FROM records WHERE id=? AND kind='role' AND version=? AND NOT EXISTS(SELECT 1 FROM members WHERE role_id=?)")
+   .bind(role.id,body._version,role.id).run();
+  if(removed.meta.changes!==1)fail(409,'角色已更新，请重新打开后确认');
+  await audit(db,u,'删除角色：'+role.name,role.id);
+  return j({ok:true});
+ }
+ if(path==='/api/admin/role'&&req.method==='POST'){
+  requireP(u,'role.manage');
+  const b=await req.json(),id=b.id||crypto.randomUUID();
+  if(typeof id!=='string'||id.length>190)fail(400,'角色不存在');
+  if(env.STANDALONE&&b.id)await db.prepare("SELECT id FROM records WHERE id=? AND kind='role' FOR UPDATE").bind(id).first();
+  const previous=await get(db,id,'role');
+  if(b.id&&!previous)fail(404,'角色不存在，请刷新列表');
+  if(previous&&previous.permissions.some(p=>!has(u,p)))fail(403,'不能修改超出自身权限的角色');
+  if(id==='admin')fail(400,'内置管理员权限不可修改');
+  if(typeof b.name!=='string'||!b.name.trim()||b.name.length>40)fail(400,'角色名称无效');
+  if(!Array.isArray(b.permissions)||b.permissions.some(p=>!Object.hasOwn(PERMISSIONS,p)||!has(u,p)))fail(403,'权限选项无效或超出自身权限');
+  const role={id,name:b.name,permissions:[...new Set(b.permissions)],builtin:previous?.builtin||false};
+  if(previous)await change(db,'role',role,b._version);else await insert(db,'role',role);
+  await audit(db,u,previous?'修改角色':'新增角色',id);
+  return j(reportForUser(u,role));
+ }
  if(path==='/api/audit'&&req.method==='GET'){requireP(u,'audit.view');return j((await db.prepare('SELECT a.*,m.display_name AS actorDisplayName FROM audit a LEFT JOIN members m ON m.email=a.actor ORDER BY a.at DESC LIMIT 100').all()).results)}
  return j({error:'接口不存在'},404);
  }catch(e){if(!e.status)throw e;return j({error:e.status?e.message:'服务暂时不可用，请稍后重试'},e.status||500)}}};

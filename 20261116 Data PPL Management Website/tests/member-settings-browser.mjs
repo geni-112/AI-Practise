@@ -10,7 +10,7 @@ export async function verifyMemberSettingsBrowser(browser) {
     mustChangePassword:true,permissions:['project.read.own','project.tech.own','practice.read']};
   const members=[{email:member.email,user_id:member.id,display_name:member.displayName,role_id:'sa',enabled:1,version:1}];
   const roles=[{id:'sa',name:'SA',permissions:member.permissions,builtin:true,_version:1}];
-  let current=admin,memberBody,passwordBody;
+  let current=admin,memberBody,passwordBody;const deletedRoles=[];
   const errors=[],context=await browser.newContext({viewport:{width:1280,height:900},locale:'zh-CN'});
   const page=await context.newPage();page.setDefaultTimeout(12000);
   page.on('pageerror',e=>errors.push(e.message));
@@ -22,6 +22,17 @@ export async function verifyMemberSettingsBrowser(browser) {
     if(p==='/api/me')return reply({user:current,permissions:{},source:{}});
     if(p==='/api/workspace')return reply({projects:[],members,resources:[],roles:[]});
     if(p==='/api/admin')return reply({members,roles,permissions:{}});
+    if(p==='/api/admin/role'){
+      const b=body();
+      if(method==='POST'){
+        const role={id:'custom-'+roles.length,name:b.name,permissions:b.permissions,builtin:false,_version:1,memberCount:0};
+        roles.push(role);return reply(role);
+      }
+      assert.equal(method,'DELETE');
+      const index=roles.findIndex(r=>r.id===b.id);assert(index>=0);
+      assert.equal(b._version,roles[index]._version);assert(!roles[index].builtin);
+      deletedRoles.push(b.id);roles.splice(index,1);return reply({ok:true});
+    }
     if(p==='/api/admin/member'){
       memberBody=body();members.push({email:memberBody.email,user_id:'new-id',display_name:memberBody.displayName,role_id:'sa',version:1,enabled:1});
       return reply({ok:true,accountCreated:true,initialPassword:'Synthetic-initial-password'});
@@ -51,6 +62,34 @@ export async function verifyMemberSettingsBrowser(browser) {
     await page.goto(origin);
     await page.locator('#nav [data-menu-id=admin]').click();
     await page.getByRole('heading',{name:'团队成员',exact:true}).waitFor();
+    assert.equal(await page.locator('#roles').getByRole('button',{name:'删除',exact:true}).count(),0);
+    await page.getByRole('button',{name:'新增角色',exact:true}).click();
+    await page.getByLabel('角色名称 *',{exact:true}).fill('临时 <角色>');
+    await page.getByRole('button',{name:'保存',exact:true}).click();
+    const customRow=page.locator('#roles .listrow').filter({hasText:'临时 <角色>'});
+    await customRow.getByRole('button',{name:'删除',exact:true}).click();
+    await page.getByRole('heading',{name:'删除角色',exact:true}).waitFor();
+    await page.getByRole('button',{name:'取消',exact:true}).click();
+    assert.equal(deletedRoles.length,0);
+    await customRow.getByRole('button',{name:'删除',exact:true}).click();
+    await page.locator('#modal [data-language=en]').click();
+    await page.getByRole('button',{name:'Confirm deletion',exact:true}).click();
+    await customRow.waitFor({state:'detached'});
+    assert.equal(deletedRoles.length,1);
+    await page.reload();await page.locator('#nav [data-menu-id=admin]').click();
+    assert.equal(await page.locator('#roles').getByText('临时 <角色>',{exact:true}).count(),0);
+    roles.push({id:'occupied-role',name:'Occupied role',permissions:[],builtin:false,_version:1,memberCount:1});
+    await page.reload();await page.locator('#nav [data-menu-id=admin]').click();
+    await page.locator('#roles .listrow').filter({hasText:'Occupied role'}).getByRole('button',{name:'Delete',exact:true}).click();
+    assert.equal(await page.getByRole('button',{name:'Confirm deletion',exact:true}).count(),0);
+    await page.getByText('Members still use this role. Assign them to another role before deleting it.',{exact:true}).waitFor();
+    await page.setViewportSize({width:390,height:844});
+    await screenshot('role-in-use-en');
+    const layout=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('main *')].map(el=>({tag:el.tagName,id:el.id,css:el.className,right:el.getBoundingClientRect().right})).filter(el=>el.right>innerWidth+1).slice(0,15)}));
+    assert(layout.scroll<=layout.width,JSON.stringify(layout));
+    await page.getByRole('button',{name:'Close',exact:true}).click();
+    await page.setViewportSize({width:1280,height:900});
+    await page.locator('header [data-language=zh]').click();
     assert.equal(await page.locator('.dictionary-card').count(),0);
     assert.equal(await page.getByRole('button',{name:'配置 MaaS',exact:true}).count(),0);
     assert.match(await page.locator('#profile').innerText(),/管理员甲/);

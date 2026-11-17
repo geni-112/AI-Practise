@@ -267,7 +267,21 @@ Object.assign(en,{
  "更新成员资料与权限": "Updated member details and permissions",
  "成员先在权限管理中添加；选择账号后，展示名会显示在项目负责人中。": "Add members in Members & roles. Selecting an account displays that member’s name as the project owner."
 });
+Object.assign(en,{
+ "删除": "Delete",
+ "删除角色": "Delete role",
+ "使用成员": "Assigned members",
+ "确认删除": "Confirm deletion",
+ "确认删除此自定义角色？": "Delete this custom role?",
+ "该角色仍有成员使用，请先将成员分配到其他角色": "Members still use this role. Assign them to another role before deleting it.",
+ "预置角色不可删除": "Built-in roles cannot be deleted.",
+ "不能删除超出自身权限的角色": "You cannot delete a role with permissions beyond your own.",
+ "角色已更新，请重新打开后确认": "The role was updated. Reopen it to review the changes.",
+ "角色不存在，请刷新列表": "The role no longer exists. Refresh the list.",
+ "角色已删除": "Role deleted"
+});
 const patterns=[
+ [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],
  [/^创建初始密码账号：(.*)$/,(m,email)=>'Create account with initial password: '+email],
  [/^重置为初始密码：(.*)$/,(m,email)=>'Reset to initial password: '+email],
  [/^字典字段不能为空：(.*)$/,(m,field)=>'A dictionary field is required: '+translate(field)],

@@ -123,7 +123,7 @@ export async function createApplication(options = {}) {
     } catch (error) {
       const id=randomUUID();
       if (!error.status) console.error(JSON.stringify({level:'error',requestId:id,code:error.code||'INTERNAL'}));
-      const conflict=['ER_LOCK_DEADLOCK','ER_LOCK_WAIT_TIMEOUT','ER_DUP_ENTRY'].includes(error.code);
+      const conflict=['ER_LOCK_DEADLOCK','ER_LOCK_WAIT_TIMEOUT','ER_DUP_ENTRY','ER_NO_REFERENCED_ROW_2','ER_ROW_IS_REFERENCED_2'].includes(error.code);
       return json({error:error.status?error.message:conflict?'记录已变更，请刷新后重试':'服务暂时不可用，请稍后重试',requestId:id},error.status|| (conflict?409:500));
     }
   }

@@ -71,6 +71,44 @@ try{
  for(const route of ['practices/config','admin/dictionaries'])await read(route,owner,route==='admin/dictionaries'?{}:undefined,403);
 
  console.log('PASS: validated display names, atomic first-sign-in setup, profile conflicts, self-only updates and admin-only settings');
+
+ const disposableRole=await read('admin/role',admin.cookie,{name:'Delete role QA',permissions:['resource.read']});
+ assert.equal((await request('admin/role',owner,{id:disposableRole.id,_version:1},'DELETE')).status,403);
+ for(const id of ['admin','bd','sa','viewer']){
+  const entry=(await read('admin',admin.cookie)).roles.find(r=>r.id===id);
+  await read('admin/role',admin.cookie,{id,_version:entry._version},400,'DELETE');
+ }
+ await read('admin/role',admin.cookie,{id:disposableRole.id,_version:0},409,'DELETE');
+ const roleMember='role-delete-test@example.invalid';
+ await read('admin/member',admin.cookie,{email:roleMember,roleId:disposableRole.id,enabled:false});
+ assert.equal((await read('admin',admin.cookie)).roles.find(r=>r.id===disposableRole.id).memberCount,1);
+ await read('admin/role',admin.cookie,{id:disposableRole.id,_version:1},400,'DELETE');
+ await read('admin/member',admin.cookie,{email:roleMember,roleId:'sa',enabled:false,_version:1});
+ await read('admin/role',admin.cookie,{id:disposableRole.id,_version:1},200,'DELETE');
+ await read('admin/role',admin.cookie,{...disposableRole,name:'Stale editor',_version:1},404);
+ assert((await read('audit',admin.cookie)).some(entry=>entry.action==='删除角色：'+disposableRole.name&&entry.entity===disposableRole.id));
+ const secondAdminEmail='role-test-admin@example.invalid';
+ await read('admin/member',admin.cookie,{email:secondAdminEmail,roleId:'admin'});
+ const secondAdmin=(await personalize(secondAdminEmail)).cookie;
+ const raceRole=await read('admin/role',admin.cookie,{name:'Concurrent role QA',permissions:[]});
+ const memberVersion=(await read('admin',admin.cookie)).members.find(m=>m.email===roleMember).version;
+ const roleRace=await Promise.all([
+  request('admin/member',secondAdmin,{email:roleMember,roleId:raceRole.id,enabled:false,_version:memberVersion}),
+  request('admin/role',admin.cookie,{id:raceRole.id,_version:1},'DELETE')
+ ]);
+ const statuses=roleRace.map(r=>r.status);
+ assert(statuses.filter(s=>s===200).length===1&&statuses.every(s=>[200,400,404,409].includes(s)),statuses.join(','));
+ const roleState=await read('admin',admin.cookie);
+ const linked=roleState.members.find(m=>m.email===roleMember),remainingRole=roleState.roles.find(r=>r.id===raceRole.id);
+ if(remainingRole){
+  assert.equal(linked.role_id,raceRole.id);
+  await read('admin/member',admin.cookie,{email:roleMember,roleId:'sa',enabled:false,_version:linked.version});
+  await read('admin/role',admin.cookie,{id:raceRole.id,_version:remainingRole._version},200,'DELETE');
+ }else assert.notEqual(linked.role_id,raceRole.id);
+ const orphanCount=await transaction(app.pool,async c=>(await c.query("SELECT COUNT(*) AS n FROM members m LEFT JOIN records r ON r.id=m.role_id AND r.kind='role' WHERE r.id IS NULL")).rows[0].n);
+ assert.equal(Number(orphanCount),0);
+ console.log('PASS: MySQL role deletion, disabled-member references, concurrent assignments, stale editors and audit');
+
  const initialNav=await read('navigation',admin.cookie);
  const menuOrder=[...initialNav.order].reverse();
  const writes=await Promise.all([request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version}),request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version})]);

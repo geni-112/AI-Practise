@@ -101,3 +101,27 @@ for(const displayName of ['', ' ', 'x'.repeat(81), 'two\nlines', 42])assert.equa
 assert.equal((await call(owner,'admin/member','POST',{email:saEmail,roleId:'sa',_version:currentMember.version+1})).status,200);
 assert.equal((await call(saEmail,'me')).body.user.displayName,'架构师乙');
 console.log('PASS: display names, account assignments, validation, version conflicts and older member-update payloads');
+
+const disposable=(await call(owner,'admin/role','POST',{name:'可删除角色 <QA>',permissions:['resource.read']})).body;
+assert.equal((await call('view@test.com','admin/role','DELETE',{id:disposable.id,_version:1})).status,403);
+for(const id of ['admin','bd','sa','viewer']){
+ const entry=(await call(owner,'admin')).body.roles.find(r=>r.id===id);
+ assert.equal((await call(owner,'admin/role','DELETE',{id,_version:entry._version})).status,400);
+}
+assert.equal((await call(owner,'admin/role','DELETE',{id:disposable.id,_version:0})).status,409);
+assert.equal((await call(owner,'admin/role','DELETE',{id:disposable.id,_version:1})).status,200);
+assert(!(await call(owner,'admin')).body.roles.some(r=>r.id===disposable.id));
+assert.equal((await call(owner,'admin/role','DELETE',{id:disposable.id,_version:1})).status,404);
+assert.equal((await call(owner,'admin/role','POST',{...disposable,name:'Stale editor',_version:1})).status,404);
+assert((await call(owner,'audit')).body.some(entry=>entry.action==='删除角色：'+disposable.name&&entry.entity===disposable.id));
+const occupied=(await call(owner,'admin/role','POST',{name:'停用成员使用的角色',permissions:[]})).body;
+await call(owner,'admin/member','POST',{email:'disabled-role@example.invalid',roleId:occupied.id,enabled:false});
+assert.equal((await call(owner,'admin')).body.roles.find(r=>r.id===occupied.id).memberCount,1);
+assert.equal((await call(owner,'admin/role','DELETE',{id:occupied.id,_version:1})).status,400);
+await call(owner,'admin/member','POST',{email:'disabled-role@example.invalid',roleId:'sa',enabled:false,_version:1});
+assert.equal((await call(owner,'admin/role','DELETE',{id:occupied.id,_version:1})).status,200);
+const limited=(await call(owner,'admin/role','POST',{name:'Role operator',permissions:['role.manage']})).body;
+await call(owner,'admin/member','POST',{email:'role-operator@example.invalid',roleId:limited.id});
+const elevated=(await call(owner,'admin/role','POST',{name:'Restricted role',permissions:['resource.write']})).body;
+assert.equal((await call('role-operator@example.invalid','admin/role','DELETE',{id:elevated.id,_version:1})).status,403);
+console.log('PASS: custom role deletion, built-in and assigned-role protection, stale edits, permission boundaries and deletion audit');

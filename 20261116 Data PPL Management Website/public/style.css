@@ -552,3 +552,8 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 .settings-tabs [aria-selected=true]{color:var(--primary);background:#e4f1ff;box-shadow:inset 0 -3px var(--primary);font-weight:700}
 
 #settingsPanel{padding:0;margin:0}
+
+.role-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#roles .listrow>span:first-child{min-width:0;overflow-wrap:anywhere}
+
+@media(max-width:720px){#members .listrow{flex-wrap:wrap}#members .listrow>span:first-child{flex-basis:100%;min-width:0;overflow-wrap:anywhere}}
