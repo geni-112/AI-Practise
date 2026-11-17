@@ -1,6 +1,6 @@
 # 数据专项作战平台 · Data Solutions Hub
 
-本目录是数据专项作战平台 **3.11.1** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
+本目录是数据专项作战平台 **3.11.2** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
 
 ## 从干净检出开始
 
@@ -16,7 +16,7 @@ npm run agent:verify
 
 **For coding agents.** Run `npm run agent:verify` from this directory. The default verification needs no database account or MaaS token. For a running website, provide the cloud-specific settings below. The agent handoff lists the entry points, environment inputs and acceptance checks. [AGENTS.md](./AGENTS.md)
 
-成员可以在首次登录时填写或确认展示名，也可在「个人资料」修改。管理员可在新增或编辑成员时预填。账号邮箱用于登录和身份校验，展示名用于团队成员、负责人和操作记录。左侧「设置」集中管理数据字典和 AI 配置。拥有角色管理权限的成员可删除其权限范围内、尚未分配给成员的自定义角色。
+成员可以在首次登录时填写或确认展示名，也可在「个人资料」修改。管理员可在新增或编辑成员时预填。账号邮箱用于登录和身份校验，展示名用于团队成员、负责人和操作记录。左侧「设置」集中管理数据字典和 AI 配置。成员列表支持预览影响范围后删除账号，删除时撤销登录会话，解除项目负责人绑定，并由初始平台管理员接管其架构分析及个人月报。拥有角色管理权限的成员可删除其权限范围内、尚未分配给成员的自定义角色。
 
 ## 已交付的业务功能
 

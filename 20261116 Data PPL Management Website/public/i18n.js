@@ -280,7 +280,21 @@ Object.assign(en,{
  "角色不存在，请刷新列表": "The role no longer exists. Refresh the list.",
  "角色已删除": "Role deleted"
 });
+Object.assign(en,{
+ "删除成员": "Delete member",
+ "删除后，此账号将立即退出登录。": "Deleting this account signs the member out immediately.",
+ "负责人转为待分配的项目": "Projects with ownership to reassign",
+ "由平台管理员接管的架构分析": "Architecture analyses transferred to the site administrator",
+ "由平台管理员接管的个人月报": "Private reports transferred to the site administrator",
+ "成员已删除": "Member deleted",
+ "成员已删除，请刷新列表": "This member has been deleted. Refresh the list.",
+ "成员已更新，请重新打开后确认": "This member was updated. Reopen the deletion dialog to review.",
+ "初始管理员账号不可删除": "The initial site administrator account cannot be deleted.",
+ "请由其他管理员删除此账号": "Ask another administrator to delete your account.",
+ "成员已删除，负责人待分配": "A member was deleted. Assign a new project owner."
+});
 const patterns=[
+ [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
  [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],
  [/^创建初始密码账号：(.*)$/,(m,email)=>'Create account with initial password: '+email],
  [/^重置为初始密码：(.*)$/,(m,email)=>'Reset to initial password: '+email],

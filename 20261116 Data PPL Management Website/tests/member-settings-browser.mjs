@@ -10,7 +10,7 @@ export async function verifyMemberSettingsBrowser(browser) {
     mustChangePassword:true,permissions:['project.read.own','project.tech.own','practice.read']};
   const members=[{email:member.email,user_id:member.id,display_name:member.displayName,role_id:'sa',enabled:1,version:1}];
   const roles=[{id:'sa',name:'SA',permissions:member.permissions,builtin:true,_version:1}];
-  let current=admin,memberBody,passwordBody;const deletedRoles=[];
+  let current=admin,memberBody,passwordBody;const deletedRoles=[],deletedMembers=[];
   const errors=[],context=await browser.newContext({viewport:{width:1280,height:900},locale:'zh-CN'});
   const page=await context.newPage();page.setDefaultTimeout(12000);
   page.on('pageerror',e=>errors.push(e.message));
@@ -32,6 +32,15 @@ export async function verifyMemberSettingsBrowser(browser) {
       const index=roles.findIndex(r=>r.id===b.id);assert(index>=0);
       assert.equal(b._version,roles[index]._version);assert(!roles[index].builtin);
       deletedRoles.push(b.id);roles.splice(index,1);return reply({ok:true});
+    }
+    if(p==='/api/admin/member-deletion'){
+      const m=members.find(item=>item.email===url.searchParams.get('email'));assert(m);
+      return reply({email:m.email,displayName:m.display_name,userId:m.user_id,_version:m.version,projectCount:2,analysisCount:1,reportCount:1});
+    }
+    if(p==='/api/admin/member'&&method==='DELETE'){
+      const b=body(),i=members.findIndex(m=>m.email===b.email);assert(i>=0);
+      assert.equal(b.userId,members[i].user_id);assert.equal(b._version,members[i].version);
+      deletedMembers.push(b.email);members.splice(i,1);return reply({ok:true});
     }
     if(p==='/api/admin/member'){
       memberBody=body();members.push({email:memberBody.email,user_id:'new-id',display_name:memberBody.displayName,role_id:'sa',version:1,enabled:1});
@@ -103,6 +112,25 @@ export async function verifyMemberSettingsBrowser(browser) {
     await page.locator('#modal .formactions button').last().click();
     assert.match(await page.locator('#members').innerText(),/新成员 <研发>/);
     assert.equal(await page.locator('#members 研发').count(),0);
+    const newMemberRow=page.locator('#members .listrow').filter({hasText:'new@example.invalid'});
+    await newMemberRow.getByRole('button',{name:'删除',exact:true}).click();
+    await page.getByRole('heading',{name:'删除成员',exact:true}).waitFor();
+    assert.match(await page.locator('.deletion-impact').innerText(),/2/);
+    await page.getByRole('button',{name:'取消',exact:true}).click();
+    assert.equal(deletedMembers.length,0);
+    await newMemberRow.getByRole('button',{name:'删除',exact:true}).click();
+    await page.locator('#modal [data-language=en]').click();
+    await page.getByRole('heading',{name:'Delete member',exact:true}).waitFor();
+    await page.setViewportSize({width:390,height:844});
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await screenshot('delete-member-en');
+    await page.getByRole('button',{name:'Confirm deletion',exact:true}).click();
+    await newMemberRow.waitFor({state:'detached'});
+    assert.deepEqual(deletedMembers,['new@example.invalid']);
+    await page.reload();await page.locator('#nav [data-menu-id=admin]').click();
+    assert.equal(await newMemberRow.count(),0);
+    await page.setViewportSize({width:1280,height:900});
+    await page.locator('header [data-language=zh]').click();
     await page.getByRole('button',{name:'个人资料',exact:true}).first().click();
     await page.getByLabel('展示名 *',{exact:true}).fill('管理员 <平台>');
     await page.getByRole('button',{name:'保存',exact:true}).click();

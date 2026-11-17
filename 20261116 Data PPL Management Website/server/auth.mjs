@@ -56,7 +56,7 @@ export async function sessionUser(client, request, secure) {
   return row ? { id:row.user_id, email:row.email, displayName:row.display_name, profileVersion:row.version, roleId:row.role_id, permissions:JSON.parse(row.payload).permissions, mustChangePassword:!!row.must_change_password } : null;
 }
 export async function ensureInitialAccount(client, email, actor, initialPassword) {
-  await client.query('SELECT email FROM members WHERE email=$1 FOR UPDATE', [email]);
+  if(!(await client.query('SELECT email FROM members WHERE email=$1 FOR UPDATE', [email])).rows[0])return false;
   if ((await client.query('SELECT email FROM accounts WHERE email=$1 FOR UPDATE', [email])).rows[0]) return false;
   await client.query('INSERT INTO accounts(email,password_hash) VALUES($1,$2)', [email,await encodePassword(initialPassword)]);
   await client.query('INSERT INTO account_password_state(email,must_change_password) VALUES($1,1)', [email]);

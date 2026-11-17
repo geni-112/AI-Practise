@@ -4,6 +4,7 @@ import {createApplication} from '../server/index.mjs';
 import {transaction} from '../server/database.mjs';
 import {visionProbe} from '../server/architecture-model.mjs';
 import {fixture} from './architecture-fixture.mjs';
+import {deleteMember} from '../server/members.mjs';
 
 // Run only in a newly provisioned isolated test schema, with a user restricted to it.
 const env={...process.env,APP_ORIGIN:'https://qa.example.invalid',ADMIN_EMAIL:'admin@example.invalid',INITIAL_ACCOUNT_PASSWORD_FILE:'',INITIAL_ACCOUNT_PASSWORD:randomBytes(24).toString('hex')};
@@ -207,6 +208,84 @@ try{
  const before=await count();
  assert.equal((await request('projects',owner,{...submit,architectureDiagram:{...diagram,requestKey:randomUUID()}})).status,400);
  assert.deepEqual(await count(),before);
+
+ const deletionRole=await read('admin/role',admin.cookie,{name:'Member deletion QA',permissions:[...new Set([
+  ...(await read('admin',admin.cookie)).roles.find(r=>r.id==='bd').permissions,
+  'report.view','report.export','report.generate','report.archive','practice.read','practice.analyze'
+ ])]});
+ const removedEmail='member-deletion@example.invalid';
+ await read('admin/member',admin.cookie,{email:removedEmail,roleId:deletionRole.id,displayName:'Removal QA'});
+ const removedLogin=await personalize(removedEmail,'Removal QA');
+ const removedDevice=await login(removedEmail,removedLogin.password);
+ const removedUser=(await read('me',removedLogin.cookie)).user;
+ const assignedProject=await read('projects',removedLogin.cookie,{name:'Member deletion project',stage:3},201);
+ const sharedProject=await read('projects',admin.cookie,{name:'Legacy member assignment',bdId:removedUser.id,saId:removedUser.id},201);
+ await transaction(app.pool,async c=>{
+  const row=(await c.query("SELECT payload FROM records WHERE id=?",[sharedProject.id])).rows[0];
+  const legacy=JSON.parse(row.payload);legacy.bdId=removedEmail;legacy.saId=removedEmail;
+  await c.query('UPDATE records SET payload=? WHERE id=?',[JSON.stringify(legacy),sharedProject.id]);
+ });
+ const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Santiago'}).format(new Date()).slice(0,7);
+ const ownSnapshot=await read('reports',removedLogin.cookie,{period:month,type:'全部',repo:'全部'},201);
+ const originalSnapshot=(await read('reports',removedLogin.cookie)).find(r=>r.id===ownSnapshot.id);
+ const duplicateKey=randomUUID();
+ const movedAnalysis=await read('practices',removedLogin.cookie,{...diagram,requestKey:duplicateKey,title:'Member deletion image',businessType:'大数据',targetRegion:'Test'},202);
+ await read('practices',admin.cookie,{...diagram,requestKey:duplicateKey,title:'Same key from another owner',businessType:'大数据',targetRegion:'Test'},202);
+ await transaction(app.pool,c=>c.query("UPDATE architecture_analyses SET status='running',lease_until=TIMESTAMPADD(MINUTE,10,NOW()) WHERE id=?",[movedAnalysis.id]));
+ const runningVersion=(await read('practices/'+movedAnalysis.id,admin.cookie)).version;
+ const previewPath='admin/member-deletion?email='+encodeURIComponent(removedEmail);
+ await read(previewPath,owner,undefined,403);
+ await read('admin/member-deletion?email='+encodeURIComponent(env.ADMIN_EMAIL),secondAdmin,undefined,400);
+ await read('admin/member-deletion?email='+encodeURIComponent(secondAdminEmail),secondAdmin,undefined,400);
+ const memberPreview=await read(previewPath,admin.cookie);
+ assert.equal(memberPreview.projectCount,2);assert.equal(memberPreview.analysisCount,1);assert.equal(memberPreview.reportCount,1);
+ const deletionInput={email:removedEmail,userId:memberPreview.userId,_version:memberPreview._version};
+ await read('admin/member',owner,deletionInput,403,'DELETE');
+ await read('admin/member',admin.cookie,{...deletionInput,userId:randomUUID()},409,'DELETE');
+ await read('admin/member',admin.cookie,{...deletionInput,_version:memberPreview._version-1},409,'DELETE');
+ const adminUser=(await read('me',admin.cookie)).user;
+ await assert.rejects(transaction(app.pool,client=>deleteMember({
+  query:(sql,values)=>{
+   if(sql.startsWith('DELETE FROM members'))throw Error('injected member-delete failure');
+   return client.query(sql,values);
+  }
+ },adminUser,deletionInput,env.ADMIN_EMAIL)),/injected member-delete failure/);
+ assert.equal((await request('workspace',removedLogin.cookie)).status,200);
+ assert.equal((await read('workspace',admin.cookie)).projects.find(p=>p.id===assignedProject.id).bdId,removedUser.id);
+ assert.equal((await read('practices/'+movedAnalysis.id,removedLogin.cookie)).owner_email,removedEmail);
+ await read('admin/member',admin.cookie,deletionInput,200,'DELETE');
+ for(const cookie of [removedLogin.cookie,removedDevice])await read('workspace',cookie,undefined,401);
+ await login(removedEmail,removedLogin.password,401);
+ await read('admin/member',admin.cookie,deletionInput,404,'DELETE');
+ await read('admin/member',admin.cookie,{email:removedEmail,roleId:deletionRole.id,_version:memberPreview._version},404);
+ const afterRemoval=await read('workspace',admin.cookie);
+ for(const id of [assignedProject.id,sharedProject.id]){
+  const p=afterRemoval.projects.find(p=>p.id===id);assert.equal(p.bdId,'');assert.equal(p.saId??'','');
+  assert.equal(p.bdName,'');assert.equal(p.saName??'','');
+ }
+ const retained=await read('practices/'+movedAnalysis.id,admin.cookie);
+ assert.equal(retained.owner_email,env.ADMIN_EMAIL);assert.equal(retained.version,runningVersion);
+ assert.deepEqual(Buffer.from(await (await request('practices/'+movedAnalysis.id+'/image',admin.cookie)).arrayBuffer()),probe.image);
+ const retainedSnapshot=(await read('reports',admin.cookie)).find(r=>r.id===ownSnapshot.id);
+ assert.deepEqual(retainedSnapshot.projects,originalSnapshot.projects);assert.deepEqual(retainedSnapshot.stats,originalSnapshot.stats);
+ assert((await read('audit',admin.cookie)).some(entry=>entry.action==='删除成员：Removal QA'&&entry.entity===removedEmail));
+ const remainingCredentials=await transaction(app.pool,async c=>(await c.query('SELECT (SELECT COUNT(*) FROM members WHERE email=?) AS members,(SELECT COUNT(*) FROM accounts WHERE email=?) AS accounts,(SELECT COUNT(*) FROM sessions WHERE email=?) AS sessions',[removedEmail,removedEmail,removedEmail])).rows[0]);
+ assert.deepEqual(Object.values(remainingCredentials).map(Number),[0,0,0]);
+ await transaction(app.pool,c=>c.query("UPDATE architecture_analyses SET status='queued',lease_until=NULL WHERE id=?",[movedAnalysis.id]));
+ failAnalysis=false;
+ await app.practices.runNext();await app.practices.runNext();
+ assert.equal((await read('practices/'+movedAnalysis.id,admin.cookie)).status,'succeeded');
+ await read('admin/member',admin.cookie,{email:removedEmail,roleId:deletionRole.id,displayName:'New identity'});
+ const recreated=await personalize(removedEmail,'New identity');
+ assert.notEqual((await read('me',recreated.cookie)).user.id,removedUser.id);
+ assert.equal((await read('workspace',recreated.cookie)).projects.length,0);
+ assert.equal((await read('practices',recreated.cookie)).items.length,0);
+ assert(!(await read('reports',recreated.cookie)).some(r=>r.id===ownSnapshot.id));
+ const newPreview=await read(previewPath,admin.cookie);
+ await read('admin/member',admin.cookie,{email:removedEmail,userId:newPreview.userId,_version:newPreview._version},200,'DELETE');
+ await read('admin/role',admin.cookie,{id:deletionRole.id,_version:1},200,'DELETE');
+ console.log('PASS: member deletion, preview counts, transactional rollback, session revocation, legacy project assignments, private data handover and safe email reuse');
+
  const originalAdminHash=(await transaction(app.pool,c=>c.query('SELECT password_hash FROM accounts WHERE email=?',[env.ADMIN_EMAIL]))).rows[0].password_hash;
  await app.pool.end();env.INITIAL_ACCOUNT_PASSWORD=randomBytes(24).toString('hex');app=await start();
  assert.equal((await request('workspace',waiting)).status,401);await login(pending,firstPassword,401);

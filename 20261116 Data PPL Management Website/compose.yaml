@@ -2,7 +2,7 @@ name: data-ppl-management
 services:
   app:
     build: .
-    image: data-ppl-management:3.11.1
+    image: data-ppl-management:3.11.2
     restart: unless-stopped
     init: true
     read_only: true

@@ -75,6 +75,36 @@ export async function initializeAssignmentPermission(db) {
 function canAssignOwnSA(user,project){
  return has(user,'project.assign.sa.own') && !!project.bdId && [user.id,user.email].includes(project.bdId);
 }
+export async function memberDeletionImpact(db,member){
+ const matches=value=>!!value&&(value===member.user_id||value===member.email);
+ const projects=(await all(db,'project')).filter(project=>matches(project.bdId)||matches(project.saId));
+ const reports=(await all(db,'report')).filter(report=>report.scopeOwner===member.email);
+ return {projectCount:projects.length,reportCount:reports.length};
+}
+export async function detachMemberRecords(db,actor,member,adminEmail){
+ const matches=value=>!!value&&(value===member.user_id||value===member.email);
+ let projectCount=0,reportCount=0;
+ for(const project of await all(db,'project')){
+  const owners=['bd','sa'].filter(key=>matches(project[key+'Id']));
+  if(!owners.length)continue;
+  for(const key of owners)for(const suffix of ['Id','Name','AccountName','AccountEmail'])project[key+suffix]='';
+  project.updatedAt=now();
+  project.logs??=[];
+  project.logs.push({at:project.updatedAt,text:'成员已删除，负责人待分配',by:actor.email,byDisplayName:actor.displayName||'',system:true});
+  await change(db,'project',project,project._version);
+  await rememberProject(db,project,project._version+1);
+  projectCount++;
+ }
+ for(const report of await all(db,'report')){
+  const owned=report.scopeOwner===member.email;
+  const missingName=report.publishedBy===member.email&&!report.publishedByName&&member.display_name;
+  if(!owned&&!missingName)continue;
+  if(owned){report.scopeOwner=adminEmail;reportCount++}
+  if(missingName)report.publishedByName=member.display_name;
+  await change(db,'report',report,report._version);
+ }
+ return {projectCount,reportCount};
+}
 async function assignmentMembers(db,user){
  if(has(user,'project.assign'))return (await db.prepare('SELECT email,user_id,role_id,enabled,version,display_name FROM members').all()).results;
  if(!has(user,'project.assign.sa.own'))return [];
@@ -160,7 +190,7 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
  if(path==='/api/reports'&&req.method==='GET'){
   requireP(u,'report.view');
   const snapshots=(await all(db,'report')).filter(r=>reportAudience(u,r)).sort((a,b)=>b.generatedAt.localeCompare(a.generatedAt));
-  const result=[],names=await memberNames(db);for(const r of snapshots)result.push(await visibleReport(db,u,{...r,publishedByName:names.get(r.publishedBy)||r.publishedByName||'',basis:'snapshot'}));
+  const result=[],names=await memberNames(db);for(const r of snapshots)result.push(await visibleReport(db,u,{...r,publishedByName:r.publishedByName||names.get(r.publishedBy)||'',basis:'snapshot'}));
   return j(result);
  }
  if(path==='/api/reports/preview'&&req.method==='POST'){
@@ -199,6 +229,7 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
   const role=await get(db,b.roleId,'role');
   if(!role)fail(400,'角色不存在');
   const member=await db.prepare('SELECT * FROM members WHERE email=?').bind(email).first();
+  if(!member&&Object.hasOwn(b,'_version'))fail(404,'成员已删除，请刷新列表');
   if(member){
    const currentRole=await get(db,member.role_id,'role');
    if(currentRole?.permissions.some(p=>!has(u,p)))fail(403,'不能管理超出自身权限的成员');

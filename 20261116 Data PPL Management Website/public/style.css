@@ -557,3 +557,6 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 #roles .listrow>span:first-child{min-width:0;overflow-wrap:anywhere}
 
 @media(max-width:720px){#members .listrow{flex-wrap:wrap}#members .listrow>span:first-child{flex-basis:100%;min-width:0;overflow-wrap:anywhere}}
+
+.deletion-impact{padding-left:22px;line-height:1.8}.deletion-impact li{margin:8px 0}
+#members .listrow{flex-wrap:wrap}#members .listrow>span:first-child{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}

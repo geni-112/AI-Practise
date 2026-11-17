@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createPool, database, migrate, transaction } from './database.mjs';
 import { sessionUser, authRoute, authError, initializeAccounts, ensureInitialAccount, readInitialPassword } from './auth.mjs';
 import { fileStore } from './files.mjs';
+import {deleteMember} from './members.mjs';
 import {createPracticeService,initializePracticeRoles} from './practices.mjs';
 import application, { initialize, initializeReportHistory, initializeAssignmentPermission } from '../dist/server/index.mjs';
 
@@ -86,6 +87,12 @@ export async function createApplication(options = {}) {
           try{return new Response(await fs.readFile(reviewPath),{headers:{'Content-Type':'text/html; charset=utf-8'}})}
           catch(e){if(e.code==='ENOENT')throw authError(404,'文件不存在');throw e}
         }
+        if(url.pathname==='/api/admin/member-deletion'&&request.method==='GET'){
+          return json(await deleteMember(client,user,{email:url.searchParams.get('email')},adminEmail,true));
+        }
+        if(url.pathname==='/api/admin/member'&&request.method==='DELETE'){
+          return json(await deleteMember(client,user,await request.json(),adminEmail));
+        }
         const practice=await practices.route(client,request,user);
         if(practice)return practice;
         const headers = new Headers(request.headers);
@@ -93,6 +100,11 @@ export async function createApplication(options = {}) {
         if (user) { headers.set(protectedHeaders[0],user.id); headers.set(protectedHeaders[1],user.email); }
         const rawBody=write?await request.text():undefined;
         const domain=body=>application.fetch(new Request(request.url,{method:request.method,headers,body}),{DB:database(client),BUCKET:files,ADMIN_EMAIL:adminEmail,STANDALONE:true});
+        if(['POST','PATCH'].includes(request.method)&&/^\/api\/projects(?:\/[^/]+)?$/.test(url.pathname)){
+          const body=JSON.parse(rawBody);
+          const owners=[...new Set([body.bdId,body.saId].filter(value=>typeof value==='string'&&value))].sort();
+          for(const id of owners)await client.query('SELECT a.email FROM accounts a JOIN members m ON m.email=a.email WHERE m.email=? OR m.user_id=? FOR UPDATE',[id,id]);
+        }
         if(request.method==='POST'&&url.pathname==='/api/projects'){
           const fields=JSON.parse(rawBody);
           if(Object.hasOwn(fields,'architectureDiagram'))return practices.createProjectWithDiagram(client,user,fields,project=>domain(JSON.stringify(project)));
@@ -102,7 +114,7 @@ export async function createApplication(options = {}) {
           await client.query('SELECT email FROM accounts WHERE email=? FOR UPDATE',[email]);
         }
         const result=await domain(rawBody);
-        if (result.ok && url.pathname === '/api/admin/member' && write) {
+        if (result.ok && url.pathname === '/api/admin/member' && request.method==='POST') {
           // A role change or disable takes effect on every device immediately.
           const body = JSON.parse(rawBody);
           const email=String(body.email).trim().toLowerCase();
@@ -114,7 +126,8 @@ export async function createApplication(options = {}) {
           const body=await result.json();
           const states=(await client.query('SELECT email,must_change_password FROM account_password_state')).rows;
           const state=new Map(states.map(x=>[x.email,!!x.must_change_password]));
-          body.members=body.members.map(m=>({...m,must_change_password:state.get(m.email)||false}));
+          body.members=body.members.map(m=>({...m,must_change_password:state.get(m.email)||false,
+            canDelete:m.email!==adminEmail&&m.email!==user.email&&!!body.roles.find(role=>role.id===m.role_id)?.permissions.every(permission=>user.permissions.includes(permission))}));
           return json(body);
         }
         return result;
