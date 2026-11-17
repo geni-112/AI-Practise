@@ -1,6 +1,6 @@
 # Coding agent handoff
 
-This directory is a self-contained release of Data Solutions Hub (数据专项作战平台) 3.12.3. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
+This directory is a self-contained release of Data Solutions Hub (数据专项作战平台) 3.13.0. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
 
 ## Verify a clean checkout
 
@@ -21,6 +21,7 @@ If already in this directory, run only the second line. Use Node.js 24 and npm. 
 
 ## Change the right source
 
+- `server/mfa.mjs` enforces TOTP for built-in administrators and roles with `member.manage` or `role.manage`. Migration 014 stores encrypted secrets, session verification and hashed one-time recovery codes. Gate all APIs, pages and downloads, including auth mutations, before domain routing. Never log secrets or expose a web reset bypass. Account-row locks serialize OTP counters and recovery consumption. MFA error responses must commit the rate-limit/audit transaction. Preserve first-password sequencing and existing MFA during password reset. `mfaRequired:false` is only a test injection in `createApplication`; production startup has no disabling environment switch. Back up `data/private/mfa.key` with RDS. Run `node tests/mfa-browser.mjs` and the isolated `tests/release-mfa.mjs` before deploying authentication changes.
 - Start at `server/index.mjs` for HTTP and authorization. `worker/server.js` owns the domain routes. Rebuild generated `dist/` using `npm run build`.
 - Keep the Chinese and English platform names synchronized in both HTML shells and `public/i18n.js`. The local `brand.svg` is the logo and favicon. The workspace uses `public/ui-icons.svg` for its module and action icons and `public/style.css` for its color palette.
 - `members.display_name` is the editable presentation name. Keep email and user IDs as account and authorization identities. Profile edits use the member version, and initial-password completion saves the name and password in one transaction. The legacy `maas` navigation ID now renders Settings with dictionary and AI tabs. Preserve that ID and saved menu order.

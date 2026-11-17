@@ -5,7 +5,7 @@ import {transaction} from '../server/database.mjs';
 import {clearLegacy} from '../server/clear-legacy.mjs';
 import {INITIAL_PASSWORD} from './test-credentials.mjs';
 const env={INITIAL_ACCOUNT_PASSWORD:INITIAL_PASSWORD,DB_HOST:'127.0.0.1',DB_PORT:'13306',DB_USER:'navigator_test',DB_PASSWORD:'test-password-only',DB_NAME:'navigator_i18n_test',ADMIN_EMAIL:'i18n@test.local',APP_ORIGIN:'http://127.0.0.1:3101'};
-const app=await createApplication({env});
+const app=await createApplication({mfaRequired:false,env});
 const ids=Array.from({length:6},()=>randomUUID());
 try{
  const baseline=await transaction(app.pool,async c=>({accounts:(await c.query('SELECT email,password_hash FROM accounts ORDER BY email')).rows,members:(await c.query('SELECT * FROM members ORDER BY email')).rows,roles:(await c.query("SELECT * FROM records WHERE kind='role' ORDER BY id")).rows}));

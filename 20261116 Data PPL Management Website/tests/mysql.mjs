@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import {INITIAL_PASSWORD} from './test-credentials.mjs';
 const env={INITIAL_ACCOUNT_PASSWORD:INITIAL_PASSWORD,DB_HOST:'127.0.0.1',DB_PORT:'13306',DB_USER:'navigator_test',DB_PASSWORD:'test-password-only',DB_NAME:'navigator_test',ADMIN_EMAIL:'owner@test.local',APP_ORIGIN:'http://127.0.0.1:3100',IMPORT_LEGACY_DATA:'false',UPLOAD_DIR:fileURLToPath(new URL('../.data/test-uploads',import.meta.url))};
-let app=await createApplication({env});
+let app=await createApplication({mfaRequired:false,env});
 const email=env.ADMIN_EMAIL,password='Test-only-password-2745';await transaction(app.pool,c=>c.query('DELETE FROM login_limits'));
 await transaction(app.pool,async c=>{await c.query('UPDATE members SET user_id=COALESCE(user_id,$1) WHERE email=$2',[randomUUID(),email]);await c.query('INSERT INTO accounts(email,password_hash) VALUES($1,$2) ON DUPLICATE KEY UPDATE password_hash=VALUES(password_hash)',[email,await hashPassword(password)]);await c.query('UPDATE account_password_state SET must_change_password=0 WHERE email=$1',[email]);});
 const call=async(path,method='GET',body,cookie='',extra={})=>{
@@ -48,7 +48,7 @@ try {
  assert.equal((await call('/api/me','GET',undefined,memberCookie)).status,401);
  const file=await call('/api/files','POST',{name:'一致性测试.txt',type:'大数据',base64:Buffer.from('test file').toString('base64')},cookie);assert.equal(file.status,201,JSON.stringify(file.body));
  const downloaded=await call('/api/files/'+file.body.id,'GET',undefined,cookie);assert.equal(await downloaded.response.text(),'test file');
- await app.pool.end();app=await createApplication({env});
+ await app.pool.end();app=await createApplication({mfaRequired:false,env});
  assert.equal((await call('/api/me','GET',undefined,cookie)).status,200,'session survives a new application instance');
  assert.equal((await call('/api/workspace','GET',undefined,cookie)).body.projects.find(p=>p.id===id)._version,4,'committed record survives application restart');
  assert.equal(await (await call('/api/files/'+file.body.id,'GET',undefined,cookie)).response.text(),'test file','uploaded content survives application restart');

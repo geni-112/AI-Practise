@@ -7,7 +7,7 @@ import {hashPassword,digest} from '../server/auth.mjs';
 import {INITIAL_PASSWORD} from './test-credentials.mjs';
 const env={INITIAL_ACCOUNT_PASSWORD:INITIAL_PASSWORD,DB_HOST:'127.0.0.1',DB_PORT:'13306',DB_USER:'navigator_test',DB_PASSWORD:'test-password-only',DB_NAME:'navigator_test',ADMIN_EMAIL:'owner@test.local',APP_ORIGIN:'http://127.0.0.1:3103'};
 assert.equal(env.DB_HOST,'127.0.0.1');assert.equal(env.DB_NAME,'navigator_test');
-let app=await createApplication({env}),browser,server;
+let app=await createApplication({mfaRequired:false,env}),browser,server;
 const adminPassword='Owner-personal-test-4936',personalPassword='Member-personal-test-4936';
 const prefix='password-'+Date.now(),member=prefix+'@test.local',pending=prefix+'-pending@test.local',legacy=prefix+'-legacy@test.local',uiMember=prefix+'-ui@test.local',failed=prefix+'-rollback@test.local';
 const testEmails=[member,pending,legacy,uiMember,failed];
@@ -28,7 +28,7 @@ try{
   await c.query('INSERT INTO accounts(email,password_hash) VALUES($1,$2)',[legacy,await hashPassword(personalPassword)]);
  });
  const preserved=(await query('SELECT password_hash FROM accounts WHERE email=$1',[legacy])).rows[0].password_hash;
- await app.pool.end();app=await createApplication({env});
+ await app.pool.end();app=await createApplication({mfaRequired:false,env});
  assert.equal((await query('SELECT password_hash FROM accounts WHERE email=$1',[legacy])).rows[0].password_hash,preserved,'existing personal credentials are preserved');
  assert.equal((await login(legacy,personalPassword)).body.mustChangePassword,false);
  assert.equal((await login(pending,INITIAL_PASSWORD)).body.mustChangePassword,true,'previously unactivated members receive an initial credential');
@@ -73,7 +73,7 @@ try{
  let reached,release;const reachedPromise=new Promise(r=>reached=r),releasePromise=new Promise(r=>release=r);let pause=false;
  const tokenHash=digest(activeCookie.split('=')[1]);
  const pausedPool={...app.pool,connect:async()=>{const c=await app.pool.connect();return {...c,query:async(sql,values=[])=>{const r=await c.query(sql,values);if(pause&&sql.startsWith('SELECT email FROM sessions')&&values[0]===tokenHash){pause=false;reached();await releasePromise}return r}}}};
- const pausedApp=await createApplication({env,pool:pausedPool});pause=true;
+ const pausedApp=await createApplication({mfaRequired:false,env,pool:pausedPool});pause=true;
  const staleChange=call('/api/auth/password','POST',{currentPassword:personalPassword,password:'Racing-password-test-4936'},activeCookie,pausedApp);
  await reachedPromise;
  try{assert.equal((await call('/api/auth/reset-password','POST',{email:member},admin)).status,200)}finally{release()}

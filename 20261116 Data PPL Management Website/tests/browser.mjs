@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 
 import {INITIAL_PASSWORD} from './test-credentials.mjs';
 const env={INITIAL_ACCOUNT_PASSWORD:INITIAL_PASSWORD,DB_HOST:'127.0.0.1',DB_PORT:'13306',DB_USER:'navigator_test',DB_PASSWORD:'test-password-only',DB_NAME:'navigator_test',ADMIN_EMAIL:'owner@test.local',APP_ORIGIN:'http://127.0.0.1:3100',UPLOAD_DIR:fileURLToPath(new URL('../.data/test-uploads/',import.meta.url))};
-const app=await createApplication({env});
+const app=await createApplication({mfaRequired:false,env});
 await transaction(app.pool,async c=>{await c.query('DELETE FROM login_limits');await c.query('UPDATE accounts SET password_hash=$1 WHERE email=$2',[await hashPassword('Browser-test-password'),env.ADMIN_EMAIL]);await c.query('UPDATE account_password_state SET must_change_password=0 WHERE email=$1',[env.ADMIN_EMAIL]);});
 const server=httpServer(app);await new Promise(resolve=>server.listen(3100,'127.0.0.1',resolve));
 const browser=await chromium.launch({channel:'msedge',headless:true});

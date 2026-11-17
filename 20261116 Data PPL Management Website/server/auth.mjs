@@ -98,8 +98,11 @@ async function resetPassword(client, actor, email, initialPassword) {
 export async function authRoute(client, request, user, config, ip) {
   const path = new URL(request.url).pathname;
   if (!path.startsWith('/api/auth/')) return null;
-  if (path === '/api/auth/status' && request.method === 'GET') return json({authenticated:!!user,...(user?{email:user.email,displayName:user.displayName,profileVersion:user.profileVersion,mustChangePassword:user.mustChangePassword}:{})});
+  if (path === '/api/auth/status' && request.method === 'GET') return json({authenticated:!!user,...(user?{email:user.email,displayName:user.displayName,profileVersion:user.profileVersion,mustChangePassword:user.mustChangePassword,mfa:user.mfa}:{})});
   if (path === '/api/auth/activate' || path === '/api/auth/invite') return json({error:'链接设置密码已停用，请联系管理员重置初始密码'},410);
+  const mfaRoute=await config.mfa?.route(client,request,user);
+  if(mfaRoute)return mfaRoute;
+  if(user?.mfa?.required&&!user.mfa.verified&&(!user.mustChangePassword||user.mfa.enabled)&&!['/api/auth/logout','/api/auth/login'].includes(path))return json({error:'请完成管理员登录验证',code:'MFA_REQUIRED'},403);
   if (user?.mustChangePassword && !['/api/auth/password','/api/auth/logout'].includes(path)) return json({error:'请先修改初始密码',code:'PASSWORD_CHANGE_REQUIRED'},403);
   if (path === '/api/auth/profile' && request.method === 'GET') {
     if (!user) throw authError(401,'请先登录');

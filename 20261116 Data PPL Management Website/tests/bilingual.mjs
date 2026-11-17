@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {INITIAL_PASSWORD} from './test-credentials.mjs';
 const env={INITIAL_ACCOUNT_PASSWORD:INITIAL_PASSWORD,DB_HOST:'127.0.0.1',DB_PORT:'13306',DB_USER:'navigator_test',DB_PASSWORD:'test-password-only',DB_NAME:'navigator_i18n_test',ADMIN_EMAIL:'i18n@test.local',APP_ORIGIN:'http://127.0.0.1:3101'};
-const app=await createApplication({env});
+const app=await createApplication({mfaRequired:false,env});
 assert.equal(env.DB_HOST,'127.0.0.1');assert.equal(env.DB_NAME,'navigator_i18n_test');
 await transaction(app.pool,async c=>{
  await c.query("DELETE FROM records WHERE kind IN ('project','resource','report','dictionary')");

@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createPool, database, migrate, transaction } from './database.mjs';
 import { sessionUser, authRoute, authError, initializeAccounts, ensureInitialAccount, readInitialPassword } from './auth.mjs';
 import { fileStore } from './files.mjs';
+import {createMfa} from './mfa.mjs';
 import {deleteMember} from './members.mjs';
 import {createPracticeService,initializePracticeRoles} from './practices.mjs';
 import application, { initialize, initializeReportHistory, initializeAssignmentPermission } from '../dist/server/index.mjs';
@@ -37,6 +38,7 @@ export async function createApplication(options = {}) {
     await initializeReportHistory(database(client));
     await initializeAssignmentPermission(database(client));
   });
+  const mfa=await createMfa({env,secure,enforce:options.mfaRequired!==false});
   const practices=await createPracticeService({pool,files,env,editorOrigin,fetchImpl:options.maasFetch,probeFactory:options.visionProbe});
   async function handle(request, ip = 'local') {
     const url = new URL(request.url);
@@ -68,16 +70,20 @@ export async function createApplication(options = {}) {
         if (!body || typeof body !== 'object' || Array.isArray(body)) throw authError(400,'请求内容须为对象');
         request = new Request(url,{method:request.method,headers:request.headers,body:text});
       }
-      const loginAttempt = url.pathname === '/api/auth/login';
+      const loginAttempt = url.pathname === '/api/auth/login'||url.pathname.startsWith('/api/auth/mfa/');
       const response=await transaction(pool, async client => {
         const user = await sessionUser(client,request,secure);
-        const auth = await authRoute(client,request,user,{origin,secure,initialPassword},ip);
+        if(user)user.mfa=await mfa.status(client,user,request);
+        const auth = await authRoute(client,request,user,{origin,secure,initialPassword,mfa},ip);
         if (auth) return auth;
         if (!user && !publicAsset) {
           return url.pathname.startsWith('/api/') ? json({error:'登录已过期，请重新登录'},401) : new Response(null,{status:303,headers:{Location:loginURL(false)}});
         }
         if (user?.mustChangePassword && !publicAsset) {
           return url.pathname.startsWith('/api/') ? json({error:'请先修改初始密码',code:'PASSWORD_CHANGE_REQUIRED'},403) : new Response(null,{status:303,headers:{Location:loginURL(true)}});
+        }
+        if(user?.mfa?.required&&!user.mfa.verified&&!publicAsset){
+          return url.pathname.startsWith('/api/')?json({error:'请完成管理员登录验证',code:'MFA_REQUIRED'},403):new Response(null,{status:303,headers:{Location:loginURL(false)}});
         }
         if(settingsPage&&user.roleId!=='admin')throw authError(403,'当前角色没有此操作权限');
         if(settingsPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
@@ -166,7 +172,9 @@ export function httpServer(app) {
       if(app.secure) outgoing['Strict-Transport-Security']='max-age=31536000';
       res.writeHead(response.status,outgoing);
       if(response.body && req.method!=='HEAD') await pipeline(Readable.fromWeb(response.body),res); else res.end();
-      console.log(JSON.stringify({method:req.method,path:url.pathname,status:response.status,durationMs:Date.now()-start}));
+      const authFailure=url.pathname.startsWith('/api/auth/')&&[400,401,429].includes(response.status);
+      const adminChange=!['GET','HEAD'].includes(req.method)&&response.ok&&(url.pathname.startsWith('/api/admin/')||['/api/auth/password','/api/auth/reset-password','/api/auth/mfa/confirm'].includes(url.pathname));
+      console.log(JSON.stringify({method:req.method,path:url.pathname,status:response.status,durationMs:Date.now()-start,...(authFailure||adminChange?{security_event:authFailure?'auth_failure':'admin_change',source_ip:ip}:{})}));
     } catch(error) { if(!res.headersSent) res.writeHead(error.status||500,{'Content-Type':'application/json'});res.end(JSON.stringify({error:error.status?error.message:'请求处理失败'})); }
   });
   server.on('listening',()=>app.practices.start());

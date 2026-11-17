@@ -22,7 +22,7 @@ const mockModel=async(_url,options)=>{
  const value=translating?Object.fromEntries(Object.keys(JSON.parse(req.messages[1].content)).map(key=>[key,'测试译文'])):req.messages.length===1?{code:probe.code}:failAnalysis?{}:fixture;
  return Response.json({choices:[{message:{content:JSON.stringify(value)},finish_reason:'stop'}]});
 };
-const start=()=>createApplication({env,maasFetch:mockModel,visionProbe:()=>probe});
+const start=()=>createApplication({env,mfaRequired:false,maasFetch:mockModel,visionProbe:()=>probe});
 let app=await start();
 async function request(path,cookie='',body,method=body===undefined?'GET':'POST'){
  return app.handle(new Request(env.APP_ORIGIN+'/api/'+path,{method,headers:{Origin:env.APP_ORIGIN,'Content-Type':'application/json',cookie},body:body===undefined?undefined:JSON.stringify(body)}),'release-qa');

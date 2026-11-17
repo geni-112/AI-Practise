@@ -33,7 +33,7 @@ try{
  assert.equal(normalizeEndpoint('https://api.modelarts-maas.com/v1'),'https://api.modelarts-maas.com/v1/chat/completions');assert.deepEqual(validateAnalysis(fixture),fixture);
  const invalid=structuredClone(fixture);invalid.mappings[0].serviceIds=['fictional-service'];assert.throws(()=>validateAnalysis(invalid));invalid.mappings[0].serviceIds=['obs'];invalid.flows[0].to='missing';assert.throws(()=>validateAnalysis(invalid));
  assert(validateImage(probe.image.toString('base64'),'image/png').length>0);assert.throws(()=>validateImage(Buffer.from('<svg/>').toString('base64'),'image/png'));
- app=await createApplication({env,maasFetch:fakeFetch,visionProbe:()=>probe});
+ app=await createApplication({mfaRequired:false,env,maasFetch:fakeFetch,visionProbe:()=>probe});
  await query("DELETE FROM architecture_analyses WHERE title IN ('Architecture fixture <script>alert(1)</script>','Malformed response fixture','Browser architecture fixture')");
  await query('DELETE FROM login_limits');await query("DELETE FROM architecture_usage WHERE owner_email=$1",[env.ADMIN_EMAIL]);
  await query("DELETE FROM integration_settings WHERE id='maas'");
@@ -52,7 +52,7 @@ try{
  const created=await call('practices','POST',upload,cookie);assert.equal(created.status,202,JSON.stringify(created.body));records.push(created.body.id);assert.equal(created.body.status,'queued');
  assert.equal((await call('practices','POST',upload,cookie)).body.id,created.body.id,'duplicate submission does not duplicate a model call');
  assert.equal((await call('practices','POST',{...upload,requestKey:crypto.randomUUID()},cookie,{Origin:'https://untrusted.test'})).status,403);
- await app.practices.stop();await app.pool.end();app=await createApplication({env,maasFetch:fakeFetch,visionProbe:()=>probe});
+ await app.practices.stop();await app.pool.end();app=await createApplication({mfaRequired:false,env,maasFetch:fakeFetch,visionProbe:()=>probe});
  assert.equal((await call('practices/'+created.body.id,'GET',undefined,cookie)).body.status,'queued','queue and session survive an application restart');
  assert.equal(await app.practices.runNext(),true);
  let done=(await call('practices/'+created.body.id,'GET',undefined,cookie)).body;assert.equal(done.status,'succeeded');assert.deepEqual(done.result,fixture);assert.equal(done.usage.total_tokens,200);
