@@ -1,6 +1,6 @@
 # 数据专项作战平台 · Data Solutions Hub
 
-本目录是数据专项作战平台 **3.10.1** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
+本目录是数据专项作战平台 **3.11.0** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
 
 ## 从干净检出开始
 
@@ -15,6 +15,8 @@ npm run agent:verify
 ```
 
 **For coding agents.** Run `npm run agent:verify` from this directory. The default verification needs no database account or MaaS token. For a running website, provide the cloud-specific settings below. The agent handoff lists the entry points, environment inputs and acceptance checks. [AGENTS.md](./AGENTS.md)
+
+成员可以在首次登录时填写或确认展示名，也可在「个人资料」修改。管理员可在新增或编辑成员时预填。账号邮箱用于登录和身份校验，展示名用于团队成员、负责人和操作记录。左侧「设置」集中管理数据字典和 AI 配置。
 
 ## 已交付的业务功能
 
@@ -61,7 +63,7 @@ npm run agent:verify
 
    `/healthz` 会实际检查数据库，成功时返回 `{"status":"ok"}`。以 `ADMIN_EMAIL` 和本部署的初始口令登录，按页面提示设置个人密码。
 
-4. 如需架构分析，在网站的「最佳实践 → 架构分析设置」或 `/settings/maas` 填写华为云 MaaS Endpoint、模型和 API Key，并执行「保存并测试」。使用文本模型时选择「云端 OCR + 文本 MaaS」。应用内的 OCR 和 draw.io 在目标云主机运行。AI 调用的时限默认 10 分钟，可调为 1–30 分钟。
+4. 如需架构分析，在管理员「设置 → AI 配置」或 `/settings?section=ai` 填写华为云 MaaS Endpoint、模型和 API Key，并执行「保存并测试」。使用文本模型时选择「云端 OCR + 文本 MaaS」。应用内的 OCR 和 draw.io 在目标云主机运行。AI 调用的时限默认 10 分钟，可调为 1–30 分钟。
 
 ## 工作台栏目名称与排序
 

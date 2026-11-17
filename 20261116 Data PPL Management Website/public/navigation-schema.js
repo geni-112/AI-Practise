@@ -7,7 +7,7 @@ const workspaceMenus = [
   {id:'library', label:'资料库', en:'Resources', permissions:['resource.read']},
   {id:'reports', label:'报表中心', en:'Reports', permissions:['report.view']},
   {id:'admin', label:'成员与角色', en:'Members & roles', permissions:['member.manage','role.manage']},
-  {id:'maas', label:'架构分析设置', en:'Architecture AI settings', adminOnly:true},
+  {id:'maas', label:'设置', en:'Settings', adminOnly:true},
   {id:'audit', label:'操作记录', en:'Activity log', permissions:['audit.view']}
 ];
 const workspaceMenuIds = workspaceMenus.map(menu=>menu.id);

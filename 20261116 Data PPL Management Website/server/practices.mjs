@@ -18,7 +18,7 @@ const admin=user=>{if(user?.roleId!=='admin')throw authError(403,'仅管理员�
 const text=(v,max,required=false)=>{if(typeof v!=='string'||v.length>max||(required&&!v.trim()))throw authError(400,'最佳实践字段格式无效');return v.trim()};
 // Unlinked analyses are private to their creator. Project-linked originals follow
 // the current project assignment on every request, including image and drawing downloads.
-const analysisJoin = ' FROM architecture_analyses a LEFT JOIN architecture_project_links l ON l.analysis_id=a.id LEFT JOIN records p ON p.id=l.project_id AND p.kind=\'project\' ';
+const analysisJoin = ' FROM architecture_analyses a LEFT JOIN members owner ON owner.email=a.owner_email LEFT JOIN architecture_project_links l ON l.analysis_id=a.id LEFT JOIN records p ON p.id=l.project_id AND p.kind=\'project\' ';
 const assignedProjectMember="(JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.bdId')) IN (?,?) OR JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) IN (?,?))";
 function originalAccess(user) {
   if(user.roleId==='admin')return {sql:'1=1',args:[]};
@@ -105,7 +105,7 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
  const view=row=>({...row,projectSubmission:projectUpload(row),result:row.result_json?JSON.parse(row.result_json):null,usage:row.usage_json?JSON.parse(row.usage_json):null,result_json:undefined,usage_json:undefined,image_key:undefined,errorMessage:row.error_code?messages[row.error_code]||messages.MAAS_UNAVAILABLE:null});
  async function accessible(c,id,user,lock=false){
   const access=originalAccess(user);
-  const row=(await c.query("SELECT a.*,l.project_id,JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) AS assigned_sa"+analysisJoin+'WHERE a.id=? AND '+access.sql+(lock?' FOR UPDATE':''),[id,...access.args])).rows[0];
+  const row=(await c.query("SELECT a.*,owner.display_name AS ownerDisplayName,l.project_id,JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) AS assigned_sa"+analysisJoin+'WHERE a.id=? AND '+access.sql+(lock?' FOR UPDATE':''),[id,...access.args])).rows[0];
   if(!row)return null;
   const {assigned_sa,...item}=row;
   const technicalOwner=!!assigned_sa&&[user.id,user.email].includes(assigned_sa);
@@ -219,7 +219,7 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
     const access=originalAccess(user),projectId=url.searchParams.get('projectId');
     const condition=analysisJoin+'WHERE '+access.sql+(archived?'':' AND a.archived_at IS NULL')+(projectId?' AND l.project_id=?':'');
     const args=projectId?[...access.args,projectId]:access.args,total=Number((await c.query('SELECT COUNT(*) AS n'+condition,args)).rows[0].n);
-    const list=(await c.query('SELECT a.id,a.title,a.business_type,a.owner_email,a.language,a.target_region,a.status,a.error_code,a.model,a.created_at,a.updated_at,a.archived_at,a.version,a.image_key,l.project_id'+condition+' ORDER BY a.created_at DESC,a.id LIMIT 30 OFFSET '+((Math.floor(page)-1)*30),args)).rows;
+    const list=(await c.query('SELECT a.id,a.title,a.business_type,a.owner_email,owner.display_name AS ownerDisplayName,a.language,a.target_region,a.status,a.error_code,a.model,a.created_at,a.updated_at,a.archived_at,a.version,a.image_key,l.project_id'+condition+' ORDER BY a.created_at DESC,a.id LIMIT 30 OFFSET '+((Math.floor(page)-1)*30),args)).rows;
     return json({items:list.map(view),total,page:Math.floor(page),service:{ready:ready(cfg),inputMode:cfg.inputMode,model:cfg.model,region:cfg.region},catalog:SERVICE_CATALOG});
    }
    if(p==='/api/practices'&&request.method==='POST'){

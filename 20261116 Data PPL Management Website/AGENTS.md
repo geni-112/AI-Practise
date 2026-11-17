@@ -1,6 +1,6 @@
 # Coding agent handoff
 
-This directory is a self-contained release of Data Solutions Hub (数据专项作战平台) 3.10.1. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
+This directory is a self-contained release of Data Solutions Hub (数据专项作战平台) 3.11.0. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
 
 ## Verify a clean checkout
 
@@ -16,13 +16,14 @@ If already in this directory, run only the second line. Use Node.js 24 and npm. 
 1. Use the Linux ECS, a private MySQL 8 database and DNS provided for this deployment. The application and draw.io need separate hostnames. The main site and its `drawio.` subdomain both point to the ECS.
 2. On Ubuntu with no Docker installation, run `sudo bash deploy/install-ubuntu.sh`. Run `sudo bash deploy/prepare-config.sh` to create the private configuration and persistent directories. Supply the database and site variables from `.env.example`, plus the database CA. The setup command preserves an existing initial password.
 3. Run `sudo docker compose config --quiet`, then `sudo docker compose up -d --build --wait`. Confirm `/healthz` returns HTTP 200 with `{"status":"ok"}`, and both the login page and draw.io hostname are reachable. Opening the website redirects to sign-in.
-4. A fresh administrator must change the initial password at first sign-in. Configure the intended Huawei Cloud MaaS endpoint, model, and API key through `/settings/maas` for OCR-backed analysis. For a production acceptance check, upload a diagram, switch languages, compare the source and target architecture, then save an edited diagram and re-open its HTML export.
+4. A fresh administrator confirms a display name and changes the initial password at first sign-in. Configure the intended Huawei Cloud MaaS endpoint, model, and API key through Settings → AI configuration (`/settings?section=ai`) for OCR-backed analysis. For a production acceptance check, upload a diagram, switch languages, compare the source and target architecture, then save an edited diagram and re-open its HTML export.
 5. To populate the public library after startup run `sudo docker compose exec -T app node server/import-catalog.mjs --apply`. Repeating this command is safe. Use `--dry-run` first to see how many entries would be created or updated.
 
 ## Change the right source
 
 - Start at `server/index.mjs` for HTTP and authorization. `worker/server.js` owns the domain routes. Rebuild generated `dist/` using `npm run build`.
 - Keep the Chinese and English platform names synchronized in both HTML shells and `public/i18n.js`. The local `brand.svg` is the logo and favicon. The workspace uses `public/ui-icons.svg` for its module and action icons and `public/style.css` for its color palette.
+- `members.display_name` is the editable presentation name. Keep email and user IDs as account and authorization identities. Profile edits use the member version, and initial-password completion saves the name and password in one transaction. The legacy `maas` navigation ID now renders Settings with dictionary and AI tabs. Preserve that ID and saved menu order.
 - The project table drives both the project workspace and POC. Dictionary values and workflow stage IDs remain stable when display labels change.
 - Navigation order and optional per-menu `zh` / `en` names share one versioned MySQL workspace setting. Keep stable IDs, default names and permissions in `public/navigation-schema.js`. An order-only write preserves existing names. The administrator editor in `public/navigation-editor.js` supports mouse, touch and keyboard reordering and bilingual renaming.
 - Use `public/project-status.js` for active POC eligibility. Write project state and history in the same transaction. `worker/report-history.js` applies project access to immutable snapshot contributions before returning details. `migrations/008_practice_access.sql` keeps private originals separate from reviewed public summaries.

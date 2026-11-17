@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from '@playwright/test';
+import {verifyMemberSettingsBrowser} from './member-settings-browser.mjs';
 import {verifyNavigationBrowser} from './navigation-browser.mjs';
 import {fixture} from './architecture-fixture.mjs';
 
@@ -38,6 +39,7 @@ async function verifyWorkspaceAppearance(page) {
 const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
 try{
  await verifyNavigationBrowser(browser);
+ await verifyMemberSettingsBrowser(browser);
  const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url()),path=url.pathname;

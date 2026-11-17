@@ -1,9 +1,15 @@
-function maasLandingHTML(){
-  const role=roleLabel({id:user.roleId,name:user.roleName});
-  const details=user.roleId==='admin'?maasSettingsHTML():
-    '<section class="panel"><h2>需要平台管理员配置</h2><p>请将此页面链接发给平台管理员。管理员可以填写模型调用地址、模型名称和 API Key。</p></section>';
-  return pageTitle()+
-    '<p class="viewnote"><span>当前角色</span> · '+role+'</p>'+details;
+function settingsHTML(){
+ if(user.roleId!=='admin')return pageTitle()+'<section class="panel"><h2>需要平台管理员配置</h2></section>';
+ const tabs=[['dictionaries','数据字典'],['ai','AI 配置']];
+ return pageTitle('<a class="buttonlink" href="/api/source/download">'+uiIcon('download')+'<span>下载网站源码</span></a>')+
+  '<div class="settings-tabs" role="tablist" aria-label="设置分类">'+tabs.map(([id,name])=>
+   `<button type="button" id="settings-tab-${id}" role="tab" aria-controls="settingsPanel" aria-selected="${settingsTab===id}" onclick="switchSettingsTab('${id}')">${name}</button>`).join('')+
+  '</div>'+ `<section id="settingsPanel" role="tabpanel" aria-labelledby="settings-tab-${settingsTab}">${settingsTab==='ai'?maasSettingsHTML():dictionariesHTML()}</section>`;
+}
+function switchSettingsTab(tab){
+ settingsTab=tab;
+ history.replaceState(null,'',tab==='ai'?'/settings?section=ai':'/settings');
+ render();
 }
 
 function practiceDrawingURL(item,action){

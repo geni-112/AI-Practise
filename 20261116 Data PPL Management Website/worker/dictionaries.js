@@ -38,8 +38,9 @@ function validateDictionaryValue(list,field,value,oldValue,hasOld=false){
  if(dict.allowCustom&&typeof value==='string'&&value.length<=2000&&!value.startsWith('option_'))return;
  fail(400,'请从数据字典选择有效选项：'+dict.name);
 }
-function validateProjectDictionaries(list,p,previous){
+function validateProjectDictionaries(list,p,previous,names=new Map()){
  for(const field of ['type','cloud','repo','industry','vendor','bdName','saName','confidence','stage','status','risk']){
+  if(['bdName','saName'].includes(field)&&p[field.slice(0,2)+'Id']&&(p[field]===p[field.slice(0,2)+'AccountName']||p[field]===names.get(p[field.slice(0,2)+'Id'])))continue;
   if(field==='saName'&&p.saAccountEmail&&p.saName===p.saAccountEmail)continue;
   validateDictionaryValue(list,field,p[field],previous?.[field],!!previous);
  }

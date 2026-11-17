@@ -542,3 +542,13 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 .pill[data-status="succeeded"]{color:var(--success-ink);background:#e6f5ec}
 .pill[data-status="failed"]{color:var(--error-ink);background:#ffedf0}
 .pill[data-status="queued"]{color:var(--warning-ink);background:var(--warning-wash)}
+
+.profile-button{display:flex;align-items:center;gap:10px;width:100%;padding:6px 0;background:transparent;border:0;box-shadow:none;color:var(--ink);text-align:left}
+.profile-button>span{min-width:0;flex:1;overflow-wrap:anywhere}
+.profile-button>.ui-icon{width:16px;height:16px;flex-shrink:0;color:var(--primary)}
+.profile-button small{display:block}
+.settings-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-top:16px}
+.settings-tabs [role=tab]{border:0;border-radius:8px 8px 0 0;padding:12px 22px;box-shadow:none;background:transparent}
+.settings-tabs [aria-selected=true]{color:var(--primary);background:#e4f1ff;box-shadow:inset 0 -3px var(--primary);font-weight:700}
+
+#settingsPanel{padding:0;margin:0}

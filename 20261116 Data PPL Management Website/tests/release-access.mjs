@@ -29,10 +29,10 @@ async function login(email,password=firstPassword,status=200){
  const res=await request('auth/login','',{email,password});assert.equal(res.status,status);
  return res.headers.get('set-cookie')?.split(';')[0]||'';
 }
-async function personalize(email){
+async function personalize(email,displayName='Team member'){
  const old=await login(email);assert.equal((await request('workspace',old)).status,403);
  const password=randomBytes(20).toString('hex');
- await read('auth/password',old,{currentPassword:firstPassword,password});
+ await read('auth/password',old,{currentPassword:firstPassword,password,displayName});
  return {cookie:await login(email,password),password};
 }
 try{
@@ -43,7 +43,34 @@ try{
  }
  const admin=await personalize(env.ADMIN_EMAIL),bd='bd@example.invalid',sa='sa@example.invalid',other='other@example.invalid',pending='pending@example.invalid';
  for(const [email,roleId] of [[bd,'bd'],[sa,'sa'],[other,'sa'],[pending,'viewer']])await read('admin/member',admin.cookie,{email,roleId});
- const owner=(await personalize(bd)).cookie,assigned=(await personalize(sa)).cookie,unassigned=(await personalize(other)).cookie;
+ const owner=(await personalize(bd,'业务负责人')).cookie,assigned=(await personalize(sa,'架构师甲')).cookie,unassigned=(await personalize(other)).cookie;
+
+ const ownProfile=await read('auth/profile',owner),oldRole=(await read('me',owner)).user.roleId;
+ for(const displayName of ['', ' ', 'x'.repeat(81), 'two\nlines', 42])await read('auth/profile',owner,{displayName,_version:ownProfile._version},400);
+ const profileWrites=await Promise.all([
+  request('auth/profile',owner,{displayName:'业务负责人乙',_version:ownProfile._version,email:sa,roleId:'admin'}),
+  request('auth/profile',owner,{displayName:'业务负责人乙',_version:ownProfile._version})
+ ]);
+ assert.deepEqual(profileWrites.map(r=>r.status).sort(),[200,409]);
+ assert.equal((await read('me',owner)).user.roleId,oldRole);
+ assert.equal((await read('auth/profile',assigned)).displayName,'架构师甲');
+ assert.equal((await read('auth/profile',owner)).displayName,'业务负责人乙');
+ const profileMember=(await read('admin',admin.cookie)).members.find(m=>m.email===bd);
+ await read('admin/member',admin.cookie,{email:bd,roleId:'bd',displayName:'Stale administrator edit',_version:ownProfile._version},409);
+ assert.equal(profileMember.display_name,'业务负责人乙');
+ const stillWaiting=await login(pending);
+ await read('auth/profile',stillWaiting,{displayName:'Bypass',_version:1},403);
+ await read('auth/password',stillWaiting,{currentPassword:firstPassword,password:randomBytes(20).toString('hex'),displayName:' '},400);
+ assert.equal((await read('auth/status',stillWaiting)).mustChangePassword,true);
+ for(const p of ['/settings','/settings?section=ai','/settings/maas']){
+  assert.equal((await app.handle(new Request(env.APP_ORIGIN+p,{headers:{cookie:admin.cookie}}))).status,200);
+  assert.equal((await app.handle(new Request(env.APP_ORIGIN+p,{headers:{cookie:owner}}))).status,403);
+  const visitor=await app.handle(new Request(env.APP_ORIGIN+p));
+  assert.equal(visitor.status,303);assert.match(visitor.headers.get('Location'),/next=(settings|maas)/);
+ }
+ for(const route of ['practices/config','admin/dictionaries'])await read(route,owner,route==='admin/dictionaries'?{}:undefined,403);
+
+ console.log('PASS: validated display names, atomic first-sign-in setup, profile conflicts, self-only updates and admin-only settings');
  const initialNav=await read('navigation',admin.cookie);
  const menuOrder=[...initialNav.order].reverse();
  const writes=await Promise.all([request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version}),request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version})]);
@@ -61,7 +88,8 @@ try{
  assert.deepEqual(orderOnly.labels,labels);
  const waiting=await login(pending);
  const normalProject=await read('projects',owner,{name:'Project without diagram',saId:sa,stage:4},201);
- assert.equal(normalProject.saName,sa);
+ assert.equal(normalProject.saName,'架构师甲');
+ assert.equal(normalProject.bdName,'业务负责人乙');
  const diagram={requestKey:randomUUID(),language:'en',name:'architecture.png',mime:'image/png',base64:probe.image.toString('base64')};
  const submit={name:'Project with a technical diagram',saId:sa,stage:4,architectureDiagram:diagram};
  const bad=await request('projects',owner,{...submit,architectureDiagram:{...diagram,base64:'not an image'}});
@@ -149,6 +177,7 @@ try{
  assert.equal((await request('workspace',admin.cookie)).status,200);
  const refreshed=(await transaction(app.pool,c=>c.query('SELECT password_hash FROM accounts WHERE email=?',[env.ADMIN_EMAIL]))).rows[0].password_hash;
  assert.equal(refreshed,originalAdminHash);
+ assert.equal((await read('auth/profile',owner)).displayName,'业务负责人乙');
  assert.deepEqual((await read('workspace',admin.cookie)).navigation,{order:menuOrder,labels,_version:3});
  assert.equal((await read(list,unassigned)).total,1);assert.equal((await request(path+'/image',owner)).status,404);
  assert.deepEqual(Buffer.from(await (await request(path+'/image',newOwner)).arrayBuffer()),probe.image);

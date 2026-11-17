@@ -29,7 +29,7 @@ export function adaptConnection(connection) {
       const bound = [], hasNumbered = /\$\d+/.test(sql);
       sql = sql.replace(/\$(\d+)/g, (_, index) => { bound.push(values[Number(index)-1]); return '?'; });
       const params=hasNumbered?bound:values;
-      const [rows] = /^(START|COMMIT|ROLLBACK|SET|CREATE|ALTER|DROP)\b/i.test(sql.trim()) && !params.length
+      const [rows] = /^(START|COMMIT|ROLLBACK|SET|CREATE|ALTER|DROP|PREPARE|EXECUTE|DEALLOCATE)\b/i.test(sql.trim()) && !params.length
         ? await connection.query(sql) : await connection.execute(sql,params);
       return { rows:Array.isArray(rows) ? rows : [], rowCount:rows.affectedRows ?? rows.length };
     },

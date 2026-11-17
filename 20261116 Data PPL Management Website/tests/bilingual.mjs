@@ -60,14 +60,17 @@ try{
   if(!(await send('archive',p._version)).ok)throw Error('Archive failed');if(!(await send('restore',p._version+1)).ok)throw Error('Restore failed');
  });
  await page.reload();await page.getByRole('button',{name:'New project',exact:true}).waitFor();
- for(const name of ['POC center','Resources','Reports','Members & roles','Activity log']){
+ for(const name of ['POC center','Resources','Reports','Members & roles','Settings','Activity log']){
   await page.locator('#nav button').filter({hasText:name}).click();
   if(name==='Reports')await page.locator('.reporthead').waitFor();
   if(name==='Members & roles')await page.locator('#roles .listrow').first().waitFor();
   await untranslated(name);
   if(name==='Resources'){await page.getByRole('heading',{name:'Branch source fixture'}).click();await page.locator('.resource-branches summary').click();assert.equal(await page.locator('.resource-branches a').getAttribute('href'),'https://github.com/geni-112/AI-Practise/tree/main/chatbi');await untranslated('source branches');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.getByRole('button',{name:'New resource'}).click();await untranslated('resource form');await page.getByRole('button',{name:'Cancel',exact:true}).click()}
-  if(name==='Members & roles'){
+  if(name==='Settings'){
    await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();await page.getByRole('button',{name:'Add option'}).click();await page.locator('[data-property=zh]').fill('甲厂');await page.locator('[data-property=en]').fill('Vendor A');await untranslated('dictionary form');await page.getByRole('button',{name:'Save',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();assert.equal(await page.locator('[data-property=en]').inputValue(),'Vendor A');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.screenshot({path:'artifacts/admin-dictionaries-en.png',fullPage:true});
+  }
+  if(name==='Members & roles'){
+
    await page.getByRole('button',{name:'Add member'}).click();await untranslated('member form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
    await page.getByRole('button',{name:'Create role'}).click();await untranslated('role form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   }

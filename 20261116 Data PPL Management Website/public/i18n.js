@@ -242,6 +242,31 @@ Object.assign(en, {
  "导航版本无效": "Invalid navigation version.",
  "调整工作台导航顺序": "Reordered workspace navigation"
 });
+Object.assign(en,{
+ "个人资料": "My profile",
+ "展示名": "Display name",
+ "展示名 *": "Display name *",
+ "设置展示名": "Set display name",
+ "未设置展示名": "Display name not set",
+ "登录邮箱": "Login email",
+ "可由成员首次登录时填写": "Member can fill this in at first sign-in",
+ "展示名用于团队成员、项目负责人和操作记录。": "Your display name appears in the member list, project assignments and activity history.",
+ "成员首次登录时填写或确认展示名，并设置个人密码。": "Members enter or confirm their display name and set a personal password at first sign-in.",
+ "请确认展示名并设置个人密码，完成后即可进入工作空间。": "Confirm your display name and set a personal password to enter the workspace.",
+ "展示名已保存": "Display name saved",
+ "成员资料已保存": "Member details saved",
+ "AI 配置": "AI configuration",
+ "设置分类": "Settings sections",
+ "账号已停用或不可选": "Account disabled or unavailable",
+ "请选择已启用的 BD 账号": "Choose an enabled BD account",
+ "BD 账号无效": "Invalid BD account",
+ "展示名须为 1–80 个字符的单行文字": "Enter a display name of 1–80 characters on one line.",
+ "个人资料已更新，请重新打开后修改": "Your profile was updated. Reopen it before making changes.",
+ "个人资料已更新，请刷新后重新确认展示名": "Your profile was updated. Refresh and confirm your display name again.",
+ "修改展示名": "Updated display name",
+ "更新成员资料与权限": "Updated member details and permissions",
+ "成员先在权限管理中添加；选择账号后，展示名会显示在项目负责人中。": "Add members in Members & roles. Selecting an account displays that member’s name as the project owner."
+});
 const patterns=[
  [/^创建初始密码账号：(.*)$/,(m,email)=>'Create account with initial password: '+email],
  [/^重置为初始密码：(.*)$/,(m,email)=>'Reset to initial password: '+email],

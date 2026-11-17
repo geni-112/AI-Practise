@@ -41,10 +41,10 @@ try {
  const initial=await call('/api/auth/login','POST',{email:member,password:INITIAL_PASSWORD});assert.equal(initial.body.mustChangePassword,true);
  const initialCookie=initial.response.headers.get('Set-Cookie').split(';')[0];
  assert.equal((await call('/api/workspace','GET',undefined,initialCookie)).status,403);
- assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password},initialCookie)).status,200);
+ assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password,displayName:'Test Member'},initialCookie)).status,200);
  const memberLogin=await call('/api/auth/login','POST',{email:member,password});assert.equal(memberLogin.status,200);
  const memberCookie=memberLogin.response.headers.get('Set-Cookie').split(';')[0];
- assert.equal((await call('/api/admin/member','POST',{email:member,roleId:'sa',enabled:false,_version:1},cookie)).status,200);
+ assert.equal((await call('/api/admin/member','POST',{email:member,roleId:'sa',enabled:false,_version:2},cookie)).status,200);
  assert.equal((await call('/api/me','GET',undefined,memberCookie)).status,401);
  const file=await call('/api/files','POST',{name:'一致性测试.txt',type:'大数据',base64:Buffer.from('test file').toString('base64')},cookie);assert.equal(file.status,201,JSON.stringify(file.body));
  const downloaded=await call('/api/files/'+file.body.id,'GET',undefined,cookie);assert.equal(await downloaded.response.text(),'test file');

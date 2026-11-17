@@ -68,7 +68,7 @@ async function visibleReport(db,user,stored) {
       if(inputs.length){subset.stats.customers=null;subset.stats.updates=null;}
       subset.warnings.push('此旧快照仅保留项目行，部分汇总项缺少历史明细。');
     }
-    r={...subset,id:r.id,generatedAt:r.generatedAt,publishedBy:r.publishedBy,basis:r.basis,dataBasis:r.dataBasis};
+    r={...subset,id:r.id,generatedAt:r.generatedAt,publishedBy:r.publishedBy,publishedByName:r.publishedByName,basis:r.basis,dataBasis:r.dataBasis};
   }
   const details=has(user,'report.generate')&&(has(user,'project.read.all')||has(user,'project.read.own'));
   if(!details || restricted&&r.basis==='snapshot') {

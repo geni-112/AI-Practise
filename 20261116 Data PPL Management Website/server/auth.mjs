@@ -1,6 +1,7 @@
 import { randomBytes, createHash, scrypt as scryptCallback, timingSafeEqual, randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import {readFile} from 'node:fs/promises';
+import {normalizeDisplayName} from './member-profile.mjs';
 const scrypt = promisify(scryptCallback);
 export const digest = value => createHash('sha256').update(value).digest('hex');
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type':'application/json; charset=utf-8', ...headers } });
@@ -50,9 +51,9 @@ export async function sessionUser(client, request, secure) {
   // Lock credentials and recheck the session: resets cannot leave a stale
   // authenticated request running after their revocation has committed.
   await client.query('SELECT email FROM accounts WHERE email=$1 FOR UPDATE', [session.email]);
-  const result = await client.query(`SELECT m.email,m.user_id,m.role_id,r.payload,COALESCE(p.must_change_password,0) AS must_change_password FROM sessions s JOIN members m ON m.email=s.email JOIN records r ON r.id=m.role_id LEFT JOIN account_password_state p ON p.email=m.email WHERE s.token_hash=$1 AND s.expires_at>now() AND m.enabled=1`, [digest(token)]);
+  const result = await client.query(`SELECT m.email,m.user_id,m.role_id,m.display_name,m.version,r.payload,COALESCE(p.must_change_password,0) AS must_change_password FROM sessions s JOIN members m ON m.email=s.email JOIN records r ON r.id=m.role_id LEFT JOIN account_password_state p ON p.email=m.email WHERE s.token_hash=$1 AND s.expires_at>now() AND m.enabled=1`, [digest(token)]);
   const row = result.rows[0];
-  return row ? { id:row.user_id, email:row.email, roleId:row.role_id, permissions:JSON.parse(row.payload).permissions, mustChangePassword:!!row.must_change_password } : null;
+  return row ? { id:row.user_id, email:row.email, displayName:row.display_name, profileVersion:row.version, roleId:row.role_id, permissions:JSON.parse(row.payload).permissions, mustChangePassword:!!row.must_change_password } : null;
 }
 export async function ensureInitialAccount(client, email, actor, initialPassword) {
   await client.query('SELECT email FROM members WHERE email=$1 FOR UPDATE', [email]);
@@ -97,9 +98,13 @@ async function resetPassword(client, actor, email, initialPassword) {
 export async function authRoute(client, request, user, config, ip) {
   const path = new URL(request.url).pathname;
   if (!path.startsWith('/api/auth/')) return null;
-  if (path === '/api/auth/status' && request.method === 'GET') return json({authenticated:!!user,...(user?{email:user.email,mustChangePassword:user.mustChangePassword}:{})});
+  if (path === '/api/auth/status' && request.method === 'GET') return json({authenticated:!!user,...(user?{email:user.email,displayName:user.displayName,profileVersion:user.profileVersion,mustChangePassword:user.mustChangePassword}:{})});
   if (path === '/api/auth/activate' || path === '/api/auth/invite') return json({error:'链接设置密码已停用，请联系管理员重置初始密码'},410);
   if (user?.mustChangePassword && !['/api/auth/password','/api/auth/logout'].includes(path)) return json({error:'请先修改初始密码',code:'PASSWORD_CHANGE_REQUIRED'},403);
+  if (path === '/api/auth/profile' && request.method === 'GET') {
+    if (!user) throw authError(401,'请先登录');
+    return json({displayName:user.displayName,_version:user.profileVersion});
+  }
   if (request.method !== 'POST') return json({ error:'请使用 POST' }, 405);
   const body = await request.json();
   if (!body || typeof body !== 'object' || Array.isArray(body)) return json({error:'请求格式无效'},400);
@@ -111,25 +116,39 @@ export async function authRoute(client, request, user, config, ip) {
       if (row.attempts > (key.startsWith('ip:') ? 50 : 10)) return json({ error:'尝试次数过多，请 15 分钟后重试' }, 429, { 'Retry-After':'900' });
     }
     await client.query('SELECT email FROM accounts WHERE email=$1 FOR UPDATE', [email]);
-    const account = (await client.query('SELECT a.password_hash,m.enabled,COALESCE(p.must_change_password,0) AS must_change_password FROM accounts a JOIN members m ON m.email=a.email LEFT JOIN account_password_state p ON p.email=a.email WHERE a.email=$1', [email])).rows[0];
+    const account = (await client.query('SELECT a.password_hash,m.enabled,m.display_name,m.version,COALESCE(p.must_change_password,0) AS must_change_password FROM accounts a JOIN members m ON m.email=a.email LEFT JOIN account_password_state p ON p.email=a.email WHERE a.email=$1', [email])).rows[0];
     if (!await checkPassword(body.password, account?.password_hash) || !account?.enabled) return json({ error:'邮箱或密码不正确，或账号已停用' }, 401);
     await client.query('DELETE FROM login_limits WHERE `key`=$1', ['email:' + digest(email)]);
     await client.query('DELETE FROM sessions WHERE expires_at<=now()');
     const token = randomBytes(32).toString('hex');
     await client.query("INSERT INTO sessions(token_hash,email,expires_at) VALUES($1,$2,now()+INTERVAL 8 HOUR)", [digest(token),email]);
     await auditAuth(client,email,'登录');
-    return json({ok:true,mustChangePassword:!!account.must_change_password},200,{'Set-Cookie':sessionCookie(token,config.secure)});
+    return json({ok:true,displayName:account.display_name,profileVersion:account.version,mustChangePassword:!!account.must_change_password},200,{'Set-Cookie':sessionCookie(token,config.secure)});
   }
   if (!user) throw authError(401,'请先登录');
   if (path === '/api/auth/logout') {
     await client.query('DELETE FROM sessions WHERE token_hash=$1', [digest(cookieToken(request,config.secure))]);
     return json({ok:true},200,{'Set-Cookie':sessionCookie('',config.secure,0)});
   }
+  if (path === '/api/auth/profile') {
+    const displayName=normalizeDisplayName(body.displayName);
+    const changed=await client.query('UPDATE members SET display_name=?,version=version+1 WHERE email=? AND version=?',
+      [displayName,user.email,Number.isSafeInteger(body._version)?body._version:-1]);
+    if (changed.rowCount!==1) throw authError(409,'个人资料已更新，请重新打开后修改');
+    await auditAuth(client,user.email,'修改展示名');
+    return json({displayName,_version:body._version+1});
+  }
   if (path === '/api/auth/password') {
     const row = (await client.query('SELECT password_hash FROM accounts WHERE email=$1 FOR UPDATE',[user.email])).rows[0];
     if (!await checkPassword(body.currentPassword,row?.password_hash)) throw authError(400,'当前密码不正确');
     const hash = await hashPassword(body.password,config.initialPassword);
     if (await checkPassword(body.password,row.password_hash)) throw authError(400,'新密码不能与当前密码相同');
+    if (user.mustChangePassword) {
+      const displayName=normalizeDisplayName(body.displayName ?? user.displayName);
+      const changed=await client.query('UPDATE members SET display_name=?,version=version+1 WHERE email=? AND version=?',
+        [displayName,user.email,Number.isSafeInteger(body._version)?body._version:user.profileVersion]);
+      if (changed.rowCount!==1) throw authError(409,'个人资料已更新，请刷新后重新确认展示名');
+    }
     await client.query('UPDATE accounts SET password_hash=$1,changed_at=now() WHERE email=$2',[hash,user.email]);
     await client.query('UPDATE account_password_state SET must_change_password=0 WHERE email=$1',[user.email]);
     await client.query('DELETE FROM sessions WHERE email=$1',[user.email]);

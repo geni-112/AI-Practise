@@ -40,9 +40,9 @@ export async function createApplication(options = {}) {
   async function handle(request, ip = 'local') {
     const url = new URL(request.url);
     const publicAsset=['/style.css','/brand.svg','/ui-icons.svg'].includes(url.pathname);
-    const maasPage=url.pathname==='/settings/maas'&&['GET','HEAD'].includes(request.method);
+    const settingsPage=['/settings','/settings/maas'].includes(url.pathname)&&['GET','HEAD'].includes(request.method);
     const reviewSlug=['GET','HEAD'].includes(request.method)?url.pathname.match(/^\/best-practices\/reviews\/([a-z0-9][a-z0-9-]{0,63})$/)?.[1]:null;
-    const next=maasPage?'maas':reviewSlug?'review-'+reviewSlug:'';
+    const next=settingsPage?(url.pathname==='/settings/maas'||url.searchParams.get('section')==='ai'?'maas':'settings'):reviewSlug?'review-'+reviewSlug:'';
     function loginURL(required){
       const params=new URLSearchParams();
       if(required)params.set('change-password','required');
@@ -78,7 +78,8 @@ export async function createApplication(options = {}) {
         if (user?.mustChangePassword && !publicAsset) {
           return url.pathname.startsWith('/api/') ? json({error:'请先修改初始密码',code:'PASSWORD_CHANGE_REQUIRED'},403) : new Response(null,{status:303,headers:{Location:loginURL(true)}});
         }
-        if(maasPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
+        if(settingsPage&&user.roleId!=='admin')throw authError(403,'当前角色没有此操作权限');
+        if(settingsPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
         if(reviewSlug){
           if(user.roleId!=='admin')throw authError(403,'当前角色没有此操作权限');
           const reviewPath=path.join(env.UPLOAD_DIR||path.join(root,'.data','uploads'),'practice-reviews',reviewSlug+'.html');
@@ -95,6 +96,10 @@ export async function createApplication(options = {}) {
         if(request.method==='POST'&&url.pathname==='/api/projects'){
           const fields=JSON.parse(rawBody);
           if(Object.hasOwn(fields,'architectureDiagram'))return practices.createProjectWithDiagram(client,user,fields,project=>domain(JSON.stringify(project)));
+        }
+        if (write && url.pathname==='/api/admin/member') {
+          const email=String(JSON.parse(rawBody).email||'').trim().toLowerCase();
+          await client.query('SELECT email FROM accounts WHERE email=? FOR UPDATE',[email]);
         }
         const result=await domain(rawBody);
         if (result.ok && url.pathname === '/api/admin/member' && write) {
@@ -143,7 +148,7 @@ export function httpServer(app) {
       delete outgoing['content-security-policy'];
       Object.assign(outgoing,{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Frame-Options':'DENY','Permissions-Policy':'camera=(), microphone=(), geolocation=()'});
       outgoing['Content-Security-Policy']="default-src 'self'; script-src 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'";
-      if(['/', '/index.html', '/settings/maas'].includes(url.pathname))outgoing['Content-Security-Policy']+="; frame-src 'self' "+app.editorOrigin;
+      if(['/', '/index.html', '/settings', '/settings/maas'].includes(url.pathname))outgoing['Content-Security-Policy']+="; frame-src 'self' "+app.editorOrigin;
       if(url.pathname.startsWith('/best-practices/reviews/'))outgoing['Content-Security-Policy']="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'";
       if(app.secure) outgoing['Strict-Transport-Security']='max-age=31536000';
       res.writeHead(response.status,outgoing);

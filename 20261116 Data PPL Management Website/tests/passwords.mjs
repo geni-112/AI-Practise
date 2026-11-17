@@ -48,8 +48,8 @@ try{
  assert.equal((await call('/','GET',undefined,restricted)).response.headers.get('Location'),'/login?change-password=required');
  assert.equal((await call('/api/auth/status','GET',undefined,restricted)).body.mustChangePassword,true);
  for(const values of [{currentPassword:'wrong',password:personalPassword},{currentPassword:INITIAL_PASSWORD,password:'short'},{currentPassword:INITIAL_PASSWORD,password:INITIAL_PASSWORD}])assert.equal((await call('/api/auth/password','POST',values,restricted)).status,400);
- assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password:personalPassword},restricted,app,{Origin:'https://untrusted.local'})).status,403);
- assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password:personalPassword},restricted)).status,200);
+ assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password:personalPassword,displayName:'Test Member'},restricted,app,{Origin:'https://untrusted.local'})).status,403);
+ assert.equal((await call('/api/auth/password','POST',{currentPassword:INITIAL_PASSWORD,password:personalPassword,displayName:'Test Member'},restricted)).status,200);
  for(const cookie of [restricted,secondRestricted])assert.equal((await call('/api/workspace','GET',undefined,cookie)).status,401);
  assert.equal((await login(member,INITIAL_PASSWORD)).status,401);
  const normal=await login(member,personalPassword);assert.equal(normal.body.mustChangePassword,false);const memberCookie=cookieOf(normal);
@@ -57,7 +57,7 @@ try{
  assert.equal((await call('/api/auth/password','POST',{currentPassword:personalPassword,password:personalPassword},memberCookie)).status,400);
  assert.equal((await call('/api/auth/reset-password','POST',{email:legacy},memberCookie)).status,403,'member cannot reset another account');
  assert.equal((await call('/api/auth/reset-password','POST',{email:env.ADMIN_EMAIL},admin)).status,400,'self reset uses change-password instead');
- const update=await call('/api/admin/member','POST',{email:member,roleId:'sa',_version:1},admin);assert.equal(update.status,200);assert.equal(update.body.accountCreated,false);
+ const update=await call('/api/admin/member','POST',{email:member,roleId:'sa',_version:2},admin);assert.equal(update.status,200);assert.equal(update.body.accountCreated,false);
  assert.equal((await login(member,personalPassword)).body.mustChangePassword,false,'role edit does not reset the password');
  const activeCookie=cookieOf(await login(member,personalPassword));
  await query("CREATE TRIGGER fail_password_audit BEFORE INSERT ON audit FOR EACH ROW BEGIN IF NEW.action LIKE '重置为初始密码：%' OR NEW.action LIKE '创建初始密码账号：%' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='test password audit failure'; END IF; END");
@@ -83,7 +83,7 @@ try{
  assert.equal((await login(member,INITIAL_PASSWORD)).body.mustChangePassword,true);
  const adminState=(await call('/api/admin','GET',undefined,admin)).body;assert.equal(adminState.members.find(m=>m.email===member).must_change_password,true);
  for(const path of ['/api/auth/invite','/api/auth/activate'])assert.equal((await call(path,'POST',{email:member,token:'a'.repeat(64),password:personalPassword},admin)).status,410);
- const disabled=await call('/api/admin/member','POST',{email:member,roleId:'sa',enabled:false,_version:2},admin);assert.equal(disabled.status,200);
+ const disabled=await call('/api/admin/member','POST',{email:member,roleId:'sa',enabled:false,_version:3},admin);assert.equal(disabled.status,200);
  assert.equal((await login(member,INITIAL_PASSWORD)).status,401);assert.equal((await call('/api/auth/reset-password','POST',{email:member},admin)).status,403);
  await query('DELETE FROM login_limits');
 
@@ -107,7 +107,7 @@ try{
  await first.screenshot({path:'artifacts/password-first-login-zh.png',fullPage:true});
  await first.getByRole('button',{name:'English',exact:true}).click();await first.getByRole('heading',{name:'Change your initial password'}).waitFor();
  assert.equal(await first.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'English mobile password page fits');
- await first.getByLabel('Current password',{exact:true}).fill(INITIAL_PASSWORD);await first.getByLabel('New password (at least 12 characters)',{exact:true}).fill(personalPassword);await first.getByLabel('Confirm new password',{exact:true}).fill('Mismatched-test-password');
+ await first.getByLabel('Display name *',{exact:true}).fill('Test Member');await first.getByLabel('Current password',{exact:true}).fill(INITIAL_PASSWORD);await first.getByLabel('New password (at least 12 characters)',{exact:true}).fill(personalPassword);await first.getByLabel('Confirm new password',{exact:true}).fill('Mismatched-test-password');
  await first.getByRole('button',{name:'Save new password'}).click();await first.getByText('Passwords do not match.',{exact:true}).waitFor();
  await first.getByLabel('Confirm new password',{exact:true}).fill(personalPassword);await first.screenshot({path:'artifacts/password-first-login-en.png',fullPage:true});await first.getByRole('button',{name:'Save new password'}).click();
  await first.getByText('Password updated. Sign in with your new password.',{exact:true}).waitFor();
