@@ -9,9 +9,10 @@ try{
  await transaction(pool,async c=>{
   if(!(await c.query('SELECT email FROM accounts WHERE email=? FOR UPDATE',[email])).rows[0])throw new Error('Account not found');
   await c.query('DELETE FROM account_mfa WHERE email=?',[email]);
+  await c.query('DELETE FROM account_email_mfa WHERE email=?',[email]);
   await c.query('DELETE FROM sessions WHERE email=?',[email]);
-  await c.query('DELETE FROM login_limits WHERE `key`=?',['mfa:'+digest(email)]); 
+  for(const prefix of ['mfa:','mfa-email-send:','mfa-email-verify:'])await c.query('DELETE FROM login_limits WHERE `key`=?',[prefix+digest(email)]);
   await auditAuth(c,'verified-cloud-operator','MFA 人工恢复并撤销所有会话：'+email);
  });
- console.log('Authenticator reset; all sessions revoked. The owner must enroll again after password authentication.');
+ console.log('Email challenges and limits cleared; all sessions revoked. The owner must sign in with their password and a new email code.');
 }finally{await pool.end()}

@@ -336,6 +336,25 @@ Object.assign(en,{
  "全部隐藏":"Hide all",
  "默认不显示标注；展开“查看原图标注”或点击定位后显示对应位置。":"Annotations are hidden by default. Expand a diagram reference or select a location to reveal the matching areas."
 });
+Object.assign(en,{
+ "邮箱登录验证": "Email sign-in verification",
+ "输入登录邮箱收到的 6 位验证码，无需扫码或安装验证器。": "Enter the 6-digit code sent to your sign-in email. No QR code or authenticator app is needed.",
+ "邮箱验证码（6 位）": "Email verification code (6 digits)",
+ "发送验证码": "Send verification code",
+ "再次发送等待（秒）": "Resend available in (seconds)",
+ "首次收信请打开华为云确认邮件，确认订阅后再点击发送验证码。以后登录只需输入验证码。": "First time: open the Huawei Cloud confirmation email and confirm the subscription, then select Send verification code. Future sign-ins only require the code.",
+ "验证码已发送，5 分钟内有效。请查看收件箱或垃圾邮件。": "Code sent. It expires in 5 minutes. Check your inbox or spam folder.",
+ "点击发送验证码，验证登录邮箱。": "Select Send verification code to verify your sign-in email.",
+ "请稍后再发送验证码": "Please wait before requesting another code.",
+ "验证码发送过于频繁，请一小时后重试": "Too many code requests. Try again in one hour.",
+ "验证码邮件暂时无法发送，请稍后重试或联系管理员": "The verification email could not be sent. Try again later or contact an administrator.",
+ "已改用邮箱验证码，请刷新登录页面": "Sign-in now uses email verification. Refresh the sign-in page.",
+ "邮箱验证码验证通过": "Email sign-in verification succeeded",
+ "已发送登录邮箱验证码": "Sign-in verification email sent",
+ "等待登录邮箱确认收信订阅": "Awaiting email subscription confirmation",
+ "登录验证码邮件发送失败": "Sign-in verification email delivery failed",
+ "邮箱验证码验证失败": "Email sign-in verification failed"
+});
 const patterns=[
  [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
  [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],

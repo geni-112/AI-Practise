@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS account_email_mfa (
+ email VARCHAR(190) PRIMARY KEY,
+ user_id VARCHAR(190) NOT NULL,
+ last_requested_at DATETIME,
+ FOREIGN KEY (email) REFERENCES accounts(email) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS email_mfa_challenges (
+ token_hash VARCHAR(190) PRIMARY KEY,
+ challenge_id CHAR(32) NOT NULL,
+ user_id VARCHAR(190) NOT NULL,
+ code_hash CHAR(64),
+ expires_at DATETIME NOT NULL,
+ attempts INTEGER NOT NULL DEFAULT 0,
+ delivery_status VARCHAR(32) NOT NULL DEFAULT 'queued',
+ FOREIGN KEY (token_hash) REFERENCES sessions(token_hash) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS session_email_mfa (
+ token_hash VARCHAR(190) PRIMARY KEY,
+ verified_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (token_hash) REFERENCES sessions(token_hash) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

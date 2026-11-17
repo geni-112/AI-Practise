@@ -1,12 +1,14 @@
 # 数据专项作战平台 · Data Solutions Hub
 
-本目录是数据专项作战平台 **3.13.0** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。英文界面自动翻译中文项目名称、进展及资料正文，编辑时保留中文原文；译文在云端按账号隔离缓存。BD 姓名改为手工填写，留空显示“未分配”，仅记录负责人，不自动匹配账号或改变访问权限；SA 展示姓名输入框已移除，姓名来自所选账号。一个项目可以指派多个 SA，所有被指派的 SA 均可跟踪进展及查看关联架构图。架构分析不要求选择部署区域，也不使用平台所在区域作为默认限制。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
+本目录是数据专项作战平台 **3.14.0** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。英文界面自动翻译中文项目名称、进展及资料正文，编辑时保留中文原文；译文在云端按账号隔离缓存。BD 姓名改为手工填写，留空显示“未分配”，仅记录负责人，不自动匹配账号或改变访问权限；SA 展示姓名输入框已移除，姓名来自所选账号。一个项目可以指派多个 SA，所有被指派的 SA 均可跟踪进展及查看关联架构图。架构分析不要求选择部署区域，也不使用平台所在区域作为默认限制。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
 
 原图默认保持无标注，采用“按引用显示”模式；展开某条分析的“查看原图标注”后，仅显示对应位置，点击定位后加粗高亮。也可选择“全部展示”或“全部隐藏”，后者会连已定位的高亮一起隐藏。亮洋红、青色、黄绿色和紫色编号框保留。已有分析无需重新调用 AI，刷新即可使用。导出的离线 HTML 保留相同模式和定位效果，打印遵循当前显示状态。
 
-管理员及拥有成员或角色管理权限的账号必须绑定验证器，密码通过后还需动态验证码或一次性恢复码。验证码不能重复使用；恢复码只显示一次。密钥以 AES-GCM 加密保存在数据库，独立加密密钥位于云端 `data/private/mfa.key`，须随现有一致性备份一起备份。普通 SA 登录方式保持不变。登录失败和管理操作输出脱敏安全事件，不记录密码、令牌、验证码、恢复码或客户正文。
+管理员及拥有成员或角色管理权限的账号使用“密码 + 邮箱验证码”登录，无需验证器、扫码或恢复码。6 位验证码发往该账号自己的邮箱，5 分钟有效、只能使用一次，并绑定账号和本次登录会话。每次发送间隔 60 秒，每小时最多 20 次；单个验证码最多尝试 5 次，账号每 15 分钟最多验证 10 次。首次管理员登录先验证邮箱，再确认展示名和修改初始密码，完成后直接进入工作空间。普通 SA 登录方式保持不变。验证码只保存带独立密钥的 HMAC 摘要，`data/private/mfa.key` 须随一致性备份保存。日志不包含密码、云凭据、验证码或客户正文。
 
-丢失验证器和全部恢复码时，由受信任运维人员先在系统外核实本人身份，再在云端执行 `docker compose exec -T app node server/reset-mfa.mjs user@example.com --verified-owner`。该操作记录审计、撤销所有会话，并要求本人重新绑定。网页没有绕过 MFA 的重置接口。
+邮件使用华为云 SMN，通过绑定 ECS 的委托获取自动轮换的临时凭据，不在应用中保存长期 AK/SK。每个不可变账号 ID 对应独立的登录邮件主题；发送前检查只有该账号的邮箱收件人，发现其他订阅即停止发送。SMN 首次需要用户在邮箱确认一次订阅，之后登录直接输入验证码。主题与安全告警主题分开；只有本人发起登录才发送邮件。邮件发送失败不会放行登录，页面可等待后重试。
+
+如果需要清除卡住的验证码或尝试限制，由受信任运维人员先核实本人身份，再执行 `docker compose exec -T app node server/reset-mfa.mjs user@example.com --verified-owner`。该操作记录审计并撤销所有会话，之后仍须通过密码和邮箱验证；它不能绕过邮箱验证。3.13 的旧验证器记录保留用于受控回滚，但旧验证码、恢复码和已验证会话不能满足新邮箱验证。
 
 ## 从干净检出开始
 
@@ -53,10 +55,13 @@ npm run agent:verify
    | --- | --- |
    | `SITE_DOMAIN`、`APP_ORIGIN` | 实际站点域名与对应的完整 HTTPS 来源，例如 `ppl.example.org` 与 `https://ppl.example.org` |
    | `ADMIN_EMAIL` | 首位管理员的邮箱 |
+   | `MFA_EMAIL_REGION`、`MFA_EMAIL_PROJECT_ID` | SMN 区域及对应项目 ID，必须在部署前配置 |
    | `DB_HOST`、`DB_PORT`、`DB_NAME` | RDS 私网地址、端口及已创建的数据库名 |
    | `DB_USER`、`DB_PASSWORD` | 本实例的应用数据库账号和密码 |
    | `DB_SSL_CA_FILE` | 容器内路径 `/run/secrets/rds-ca.pem` |
    | `INITIAL_ACCOUNT_PASSWORD_FILE` | 容器内路径 `/run/secrets/initial-account-password` |
+
+为 ECS 绑定邮件委托，授权范围只选择实际部署的区域级项目。旧版 IAM JSON 策略（Version 1.1）需要 `smn:topic:create`、`smn:topic:list`、`smn:topic:update`、`smn:topic:publish`；旧版的 `update` 包含订阅管理，新版身份策略才支持单独的 `smn:topic:subscribe`。追加邮件权限时保留已有 LTS、CES 策略，不授予 IAM 管理权限。应用容器需要访问 ECS 元数据地址 `169.254.169.254` 和该区域的 SMN HTTPS 服务；不能将元数据地址代理到公网。未配置邮件或邮件权限错误时管理员登录会被阻止，部署前必须验证通道。
 
 3. 在有权访问 Docker 和私有配置的账户下启动。将示例域名替换为实际域名。
 
@@ -113,6 +118,6 @@ RDS 保存账号、台账、报表快照、分析状态、审核案例以及 dra
 
 ## English deployment summary
 
-Use a cloud Linux host, Docker Compose, a private MySQL 8 database and DNS for both the website and its draw.io subdomain. Run `deploy/prepare-config.sh` on that host. Fill in `.env`, install the database CA, then run `docker compose up -d --build --wait`. The first administrator signs in with the configured email and the private initial password, then changes it. Configure Huawei Cloud MaaS in the admin UI to enable architecture reviews. The project workspace, project-derived POC list, native Excel reporting and public resource catalog work independently of model credentials.
+Use a cloud Linux host, Docker Compose, a private MySQL 8 database and DNS for both the website and its draw.io subdomain. Run `deploy/prepare-config.sh` on that host. Fill in `.env`, install the database CA, then run `docker compose up -d --build --wait`. Configure the SMN region/project and an ECS agency with the documented mail permissions. The first administrator signs in with the configured email and private initial password, verifies a six-digit email code, then sets a personal password. SMN requires a one-time email subscription confirmation. Later sign-ins use password plus email code; no authenticator app is required. Configure Huawei Cloud MaaS in the admin UI to enable architecture reviews. The project workspace, project-derived POC list, native Excel reporting and public resource catalog work independently of model credentials.
 
 自动英文翻译使用已配置的 MaaS，由独立后台队列处理。每次调用合并多个短文本；每日全站调用限额为分析调用上限的 4 倍（最高 2,000），每个账号最多 40 次。缓存有效期 30 天，修改原文会自动生成新译文；失败时显示原文并提供重试。图纸与架构分析继续使用各自保存的中英文版本，月报 Excel 模板及原始数据不被译文覆盖。

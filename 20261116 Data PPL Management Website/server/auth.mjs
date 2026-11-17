@@ -156,6 +156,12 @@ export async function authRoute(client, request, user, config, ip) {
     await client.query('UPDATE account_password_state SET must_change_password=0 WHERE email=$1',[user.email]);
     await client.query('DELETE FROM sessions WHERE email=$1',[user.email]);
     await auditAuth(client,user.email,'修改密码并退出所有会话');
+    if(user.mustChangePassword&&user.mfa?.verified&&user.mfa.method==='email'){
+      const token=randomBytes(32).toString('hex'),hash=digest(token);
+      await client.query('INSERT INTO sessions(token_hash,email,expires_at) VALUES(?,?,now()+INTERVAL 8 HOUR)',[hash,user.email]);
+      await client.query('INSERT INTO session_email_mfa(token_hash) VALUES(?)',[hash]);
+      return json({ok:true,authenticated:true},200,{'Set-Cookie':sessionCookie(token,config.secure)});
+    }
     return json({ok:true},200,{'Set-Cookie':sessionCookie('',config.secure,0)});
   }
   if (path === '/api/auth/reset-password') return json(await resetPassword(client,user,String(body.email||'').trim().toLowerCase(),config.initialPassword));

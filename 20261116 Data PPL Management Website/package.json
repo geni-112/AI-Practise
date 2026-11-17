@@ -1,6 +1,6 @@
 {
   "name": "data-navigator",
-  "version": "3.13.0",
+  "version": "3.14.0",
   "private": true,
   "description": "数据专项作战平台 · Data Solutions Hub",
   "scripts": {
@@ -17,10 +17,10 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
+    "@huaweicloud/huaweicloud-sdk-smn": "3.1.222",
     "mysql2": "^3.24.6",
-    "otpauth": "9.6.0",
-    "qrcode": "1.5.4",
-    "saxes": "6.0.0"
+    "saxes": "6.0.0",
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0"

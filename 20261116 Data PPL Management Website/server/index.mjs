@@ -38,7 +38,7 @@ export async function createApplication(options = {}) {
     await initializeReportHistory(database(client));
     await initializeAssignmentPermission(database(client));
   });
-  const mfa=await createMfa({env,secure,enforce:options.mfaRequired!==false});
+  const mfa=await createMfa({env,secure,pool,enforce:options.mfaRequired!==false,emailProvider:options.emailProvider});
   const practices=await createPracticeService({pool,files,env,editorOrigin,fetchImpl:options.maasFetch,probeFactory:options.visionProbe});
   async function handle(request, ip = 'local') {
     const url = new URL(request.url);
