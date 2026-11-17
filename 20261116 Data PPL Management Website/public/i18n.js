@@ -176,6 +176,22 @@ Object.assign(en, {
  "更新架构图项目权限": "Updated diagram project access",
  "当前没有可查看的分析": "No analysis is available to view"
 });
+Object.assign(en, {
+ "调整顺序": "Reorder",
+ "保存顺序": "Save order",
+ "工作台导航": "Workspace navigation",
+ "拖动菜单上下排序，保存后对全站生效。": "Drag the menus up or down. Saving applies the order to the whole site.",
+ "拖动排序": "Drag to reorder",
+ "上移": "Move up",
+ "下移": "Move down",
+ "导航顺序已保存": "Navigation order saved",
+ "导航顺序已被其他管理员更新": "Another administrator changed the menu order.",
+ "另一位管理员已保存排序。已载入最新顺序，请重新调整。": "Another administrator saved a new order. The latest order is loaded. Adjust it and save again.",
+ "仅管理员可调整导航顺序": "Only administrators can reorder the navigation.",
+ "导航顺序须包含每个菜单一次": "Include each menu exactly once.",
+ "导航版本无效": "Invalid navigation version.",
+ "调整工作台导航顺序": "Reordered workspace navigation"
+});
 const patterns=[
  [/^创建初始密码账号：(.*)$/,(m,email)=>'Create account with initial password: '+email],
  [/^重置为初始密码：(.*)$/,(m,email)=>'Reset to initial password: '+email],

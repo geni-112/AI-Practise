@@ -21,6 +21,25 @@ async function insert(db,kind,obj){await db.prepare('INSERT INTO records(id,kind
 async function change(db,kind,obj,version){const result=await db.prepare('UPDATE records SET payload=?,version=version+1 WHERE id=? AND kind=? AND version=?').bind(JSON.stringify(obj),obj.id,kind,version).run();if(result.meta.changes!==1)fail(409,'内容已被其他人更新，请刷新后重试')}
 async function audit(db,u,action,entity){await db.prepare('INSERT INTO audit(id,actor,action,entity,at) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),u.email,action,entity,now()).run()}
 export async function initialize(db,env={}){const existing=await db.prepare("SELECT id FROM records WHERE id='setup-v2'").first();if(existing)return;const statements=DEFAULT_ROLES.map(r=>db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind(r.id,'role',JSON.stringify(r)));await db.batch(statements);await db.prepare('INSERT OR IGNORE INTO members(email,user_id,role_id,enabled) VALUES(?,NULL,?,1)').bind(env.ADMIN_EMAIL,'admin').run();await db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind('setup-v2','meta',JSON.stringify({file:'工作空间项目台账',sheet:'项目',rows:0,latestKnownDate:null})).run()}
+const navigationSettingId='workspace-navigation-v1';
+async function workspaceNavigation(db,user) {
+ const saved=await get(db,navigationSettingId,'meta');
+ const items=orderedWorkspaceMenus(saved?.order);
+ return {order:items.filter(menu=>user.roleId==='admin'||canSeeWorkspaceMenu(user,menu)).map(menu=>menu.id),_version:saved?._version||0};
+}
+async function saveWorkspaceNavigation(db,user,body) {
+ if(user.roleId!=='admin')fail(403,'仅管理员可调整导航顺序');
+ const {order,_version}=body||{};
+ if(!Array.isArray(order)||order.length!==workspaceMenuIds.length||new Set(order).size!==order.length||order.some(id=>!workspaceMenuIds.includes(id)))fail(400,'导航顺序须包含每个菜单一次');
+ if(!Number.isSafeInteger(_version)||_version<0)fail(400,'导航版本无效');
+ const entry={id:navigationSettingId,order};
+ if(_version===0){
+  const inserted=await db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind(entry.id,'meta',JSON.stringify(entry)).run();
+  if(inserted.meta.changes!==1)fail(409,'导航顺序已被其他管理员更新');
+ }else await change(db,'meta',entry,_version);
+ await audit(db,user,'调整工作台导航顺序',entry.id);
+ return {order,_version:_version+1};
+}
 export async function initializeAssignmentPermission(db) {
  if(await get(db,'assign-sa-v1','meta'))return;
  for(const id of ['bd','admin']){
@@ -74,7 +93,9 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
  if(path==='/api/source/download'&&req.method==='GET'){if(u.roleId!=='admin')fail(403,'仅管理员可下载源码');const bytes=Uint8Array.from(atob(SOURCE_ARCHIVE),c=>c.charCodeAt(0));await audit(db,u,'下载网站源码','source-export');return new Response(bytes,{headers:{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="data-navigator-source.zip"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}})}
  const archiveMatch=path.match(/^\/api\/(projects|resources)\/([^/]+)\/(archive|restore)$/);
  if(archiveMatch&&req.method==='POST'){const [,collection,id,operation]=archiveMatch,kind=collection==='projects'?'project':'resource';requireP(u,kind+'.archive');const item=await get(db,id,kind);if(!item)fail(404,'记录不存在');if(kind==='project'&&!canRead(u,item))fail(403,'无权访问项目');const b=await req.json();if(b._version!==item._version)fail(409,'记录已更新，请刷新');item.archivedAt=operation==='archive'?now():null;item.updatedAt=now();await change(db,kind,item,b._version);if(kind==='project')await rememberProject(db,item,b._version+1);await audit(db,u,(operation==='archive'?'归档':'恢复')+(kind==='project'?'项目':'资料'),id);return j({ok:true});}
- if(path==='/api/workspace'&&req.method==='GET'){const ps=await all(db,'project');return j({dictionaries:await dictionaries(db),projects:ps.filter(p=>canRead(u,p)).map(p=>redact(u,p)),resources:has(u,'resource.read')?await all(db,'resource'):[],members:await assignmentMembers(db,u),roles:has(u,'role.manage')?await all(db,'role'):[]})}
+ if(path==='/api/navigation'&&req.method==='GET')return j(await workspaceNavigation(db,u));
+ if(path==='/api/admin/navigation'&&req.method==='POST')return j(await saveWorkspaceNavigation(db,u,await req.json()));
+ if(path==='/api/workspace'&&req.method==='GET'){const ps=await all(db,'project');return j({navigation:await workspaceNavigation(db,u),dictionaries:await dictionaries(db),projects:ps.filter(p=>canRead(u,p)).map(p=>redact(u,p)),resources:has(u,'resource.read')?await all(db,'resource'):[],members:await assignmentMembers(db,u),roles:has(u,'role.manage')?await all(db,'role'):[]})}
  if(path==='/api/projects'&&req.method==='POST'){requireP(u,'project.create');const body=await req.json(),p={id:crypto.randomUUID(),name:body.name,customer:body.customer||body.name,type:body.type||'大数据',stage:0,bdId:u.id,saId:'',bdName:u.email,notes:'',pipelineDate:santiagoDate(),updatedAt:now(),repo:body.repo||'',actuals:[],logs:[],milestones:{},source:'网站新增',risk:false,status:'正常'};for(const k of biz)if(Object.hasOwn(body,k))p[k]=body[k];if(Object.hasOwn(body,'bdId')&&!has(u,'project.assign'))fail(403,'无权修改字段：bdId');if(has(u,'project.assign'))p.bdId=body.bdId||u.id;
  for(const [keys,permission]of [[tech.filter(k=>k!=='milestones'),'project.tech'],[finance,'finance.write']])for(const key of keys)if(Object.hasOwn(body,key)){if(!canWrite(u,p,permission))fail(403,'无权修改字段：'+key);p[key]=body[key]}
  if(Object.hasOwn(body,'milestones')){validateMilestones(u,p,body.milestones,true);p.milestones=body.milestones}

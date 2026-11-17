@@ -36,6 +36,13 @@ try{
  const admin=await personalize(env.ADMIN_EMAIL),bd='bd@example.invalid',sa='sa@example.invalid',other='other@example.invalid',pending='pending@example.invalid';
  for(const [email,roleId] of [[bd,'bd'],[sa,'sa'],[other,'sa'],[pending,'viewer']])await read('admin/member',admin.cookie,{email,roleId});
  const owner=(await personalize(bd)).cookie,assigned=(await personalize(sa)).cookie,unassigned=(await personalize(other)).cookie;
+ const initialNav=await read('navigation',admin.cookie);
+ const menuOrder=[...initialNav.order].reverse();
+ const writes=await Promise.all([request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version}),request('admin/navigation',admin.cookie,{order:menuOrder,_version:initialNav._version})]);
+ assert.deepEqual(writes.map(response=>response.status).sort(),[200,409]);
+ const ownMenu=(await read('workspace',owner)).navigation;
+ assert.deepEqual(ownMenu.order,menuOrder.filter(id=>['practices','home','projects','poc','library'].includes(id)));
+ assert.equal((await request('admin/navigation',owner,{order:menuOrder,_version:ownMenu._version})).status,403);
  const waiting=await login(pending);
  const project=await read('projects',owner,{name:'Fictional project',saId:sa,stage:4},201);
  assert.equal(project.saName,sa);
@@ -82,5 +89,7 @@ try{
  assert.equal((await request('workspace',admin.cookie)).status,200);
  const refreshed=(await transaction(app.pool,c=>c.query('SELECT password_hash FROM accounts WHERE email=?',[env.ADMIN_EMAIL]))).rows[0].password_hash;
  assert.equal(refreshed,originalAdminHash);
+ assert.deepEqual((await read('workspace',admin.cookie)).navigation,{order:menuOrder,_version:1});
+ console.log('PASS: RDS menu order, concurrent saves, role filtering and persistence after restart');
  console.log('PASS: MySQL migrations, account rotation, first sign-in, BD reassignment, private diagrams and drawings, redacted references and legacy review');
 }finally{await app.practices.stop();await app.pool.end()}

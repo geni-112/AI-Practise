@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from '@playwright/test';
+import {verifyNavigationBrowser} from './navigation-browser.mjs';
 import {fixture} from './architecture-fixture.mjs';
 
 const root=new URL('../public/',import.meta.url),origin='https://ppl-fixture.invalid';
@@ -11,6 +12,7 @@ const sample={id:'10000000-0000-4000-8000-000000000001',title:'Browser fixture',
 let offline,submitted;
 const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
 try{
+ await verifyNavigationBrowser(browser);
  const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url()),path=url.pathname;

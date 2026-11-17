@@ -49,3 +49,26 @@ assert.equal(restricted.stats.projects,0);assert.equal(restricted.groups.length,
 for(const marker of ['October opportunity','Board-only custom summary','November-only instruction','reportInputs'])assert(!JSON.stringify(restricted).includes(marker));
 const overview=(await call('view@test.com','reports/'+frozen.id+'/export')).body;assert.deepEqual(overview.projects,[]);assert(!JSON.stringify(overview).includes('October opportunity'));
 console.log('PASS: BD assignment boundaries, active POC counts, month-end states, historical fallback, fixed snapshots and role-scoped report exports');
+
+const initialNav=(await call(owner,'navigation')).body;
+const defaultMenu=['practices','home','projects','poc','library','reports','admin','maas','audit'];
+assert.deepEqual(initialNav,{order:defaultMenu,_version:0});
+const reversed=[...defaultMenu].reverse();
+for(const order of [null,defaultMenu.slice(1),[...defaultMenu.slice(1),'future'],[...defaultMenu.slice(1),'home']]){
+ assert.equal((await call(owner,'admin/navigation','POST',{order,_version:0})).status,400);
+}
+assert.equal((await call(owner,'admin/navigation','POST',{order:reversed})).status,400);
+assert.equal((await call(bdEmail,'admin/navigation','POST',{order:reversed,_version:0})).status,403);
+const savedMenu=await call(owner,'admin/navigation','POST',{order:reversed,_version:0});
+assert.deepEqual(savedMenu.body,{order:reversed,_version:1});
+assert.equal((await call(owner,'admin/navigation','POST',{order:defaultMenu,_version:0})).status,409);
+assert.deepEqual((await call(owner,'workspace')).body.navigation,savedMenu.body);
+assert.deepEqual((await call('view@test.com','workspace')).body.navigation.order,['reports']);
+assert.deepEqual((await call(bdEmail,'navigation')).body.order,['library','poc','projects','home']);
+const changedNav=await call(owner,'admin/navigation','POST',{order:defaultMenu,_version:1});assert.equal(changedNav.body._version,2);
+assert.equal((await call(owner,'admin/navigation','POST',{order:reversed,_version:1})).status,409);
+assert.equal(db.prepare("SELECT COUNT(*) AS n FROM audit WHERE entity='workspace-navigation-v1'").get().n,2);
+// Older saved orders can contain a retired entry and omit a newly added entry.
+db.prepare('UPDATE records SET payload=? WHERE id=?').run(JSON.stringify({order:['reports','retired','home','reports']}),'workspace-navigation-v1');
+assert.deepEqual((await call(owner,'navigation')).body.order,['reports','home',...defaultMenu.filter(id=>!['reports','home'].includes(id))]);
+console.log('PASS: workspace navigation order, role-scoped reads, admin-only writes, first-save and edit conflicts, audit, and menu evolution');
