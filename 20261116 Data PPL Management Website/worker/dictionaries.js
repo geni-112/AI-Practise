@@ -40,6 +40,7 @@ function validateDictionaryValue(list,field,value,oldValue,hasOld=false){
 }
 function validateProjectDictionaries(list,p,previous,names=new Map()){
  for(const field of ['type','cloud','repo','industry','vendor','bdName','saName','confidence','stage','status','risk']){
+  if(field==='bdName'&&p.bdNameManual)continue;
   if(['bdName','saName'].includes(field)&&p[field.slice(0,2)+'Id']&&(p[field]===p[field.slice(0,2)+'AccountName']||p[field]===names.get(p[field.slice(0,2)+'Id'])))continue;
   if(field==='saName'&&p.saAccountEmail&&p.saName===p.saAccountEmail)continue;
   validateDictionaryValue(list,field,p[field],previous?.[field],!!previous);

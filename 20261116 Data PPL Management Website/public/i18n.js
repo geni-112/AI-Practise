@@ -302,6 +302,7 @@ Object.assign(en,{
  "请使用一个 SA 账号列表":"Submit a single SA account list.",
  "成员已删除，已移除对应项目指派":"A deleted member was removed from the project team."
 });
+Object.assign(en,{"BD 姓名":"BD name","BD 姓名须为不超过 120 个字符的单行文字":"Enter a BD name of up to 120 characters on one line."});
 const patterns=[
  [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
  [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],

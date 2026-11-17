@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from '@playwright/test';
+import {verifyProjectEditingBrowser} from './project-edit-browser.mjs';
 import {verifyContentCollaborationBrowser} from './content-collaboration-browser.mjs';
 import {verifyMemberSettingsBrowser} from './member-settings-browser.mjs';
 import {verifyNavigationBrowser} from './navigation-browser.mjs';
@@ -42,6 +43,7 @@ try{
  await verifyNavigationBrowser(browser);
  await verifyMemberSettingsBrowser(browser);
  await verifyContentCollaborationBrowser(browser);
+ await verifyProjectEditingBrowser(browser);
  const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url()),path=url.pathname;

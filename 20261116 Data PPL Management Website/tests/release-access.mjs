@@ -134,6 +134,28 @@ try{
  const normalProject=await read('projects',owner,{name:'Project without diagram',saId:sa,stage:4},201);
  assert.equal(normalProject.saName,'架构师甲');
  assert.equal(normalProject.bdName,'业务负责人乙');
+
+ const normalOwner=normalProject.bdId;
+ const businessSaved=await read('projects/'+normalProject.id,admin.cookie,{
+  _version:normalProject._version,name:normalProject.name,customer:normalProject.customer,type:normalProject.type,repo:normalProject.repo,
+  industry:'',cloud:'',status:'正常',bdName:'External BD contact',confidence:'',delivery:'',next:'Administrator saved next action',due:'',
+  stage:4,risk:false,notes:'Admin technical baseline',vendor:'',scenario:'',milestones:{'高层对标':'未开展','技术交流':'未开展','方案设计':'进行中','POC 资源':'进行中','POC 验收':'未开展','合同签订':'未开展'},
+  planYear:2026,eiPlan:null,servicePlan:null,eiSpace:null,totalSpace:null,actuals:[]
+ },200,'PATCH');
+ assert.equal(businessSaved.bdName,'External BD contact');assert.equal(businessSaved.bdNameManual,true);assert.equal(businessSaved.bdId,normalOwner);
+ const technicalSaved=await read('projects/'+normalProject.id,assigned,{
+  _version:businessSaved._version,notes:'SA saved technical notes',vendor:'',scenario:'',
+  milestones:{'技术交流':'已完成','方案设计':'进行中','POC 资源':'进行中','POC 验收':'未开展'},update:'SA POC progress saved'
+ },200,'PATCH');
+ const reopened=(await read('workspace',assigned)).projects.find(p=>p.id===normalProject.id);
+ assert.equal(reopened.notes,'SA saved technical notes');assert.equal(reopened.next,'Administrator saved next action');
+ assert.equal(reopened.logs.at(-1).text,'SA POC progress saved');assert.equal(reopened.bdDisplayName,'External BD contact');
+ await read('projects/'+normalProject.id,assigned,{_version:technicalSaved._version,bdName:'Not authorized'},403,'PATCH');
+ await read('projects/'+normalProject.id,admin.cookie,{_version:technicalSaved._version,bdName:''},200,'PATCH');
+ const unassignedName=(await read('workspace',owner)).projects.find(p=>p.id===normalProject.id);
+ assert.equal(unassignedName.bdName,'');assert.equal(unassignedName.bdDisplayName,'');assert.equal(unassignedName.bdId,normalOwner);
+ console.log('PASS: MySQL full-form administrator and SA project updates, progress persistence, manual BD names and empty display without permission changes');
+
  const diagram={requestKey:randomUUID(),language:'en',name:'architecture.png',mime:'image/png',base64:probe.image.toString('base64')};
  const submit={name:'Project with a technical diagram',saId:sa,stage:4,architectureDiagram:diagram};
  const bad=await request('projects',owner,{...submit,architectureDiagram:{...diagram,base64:'not an image'}});
