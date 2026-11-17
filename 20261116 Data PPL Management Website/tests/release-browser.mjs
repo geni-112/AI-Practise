@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {chromium} from '@playwright/test';
+import {verifyContentCollaborationBrowser} from './content-collaboration-browser.mjs';
 import {verifyMemberSettingsBrowser} from './member-settings-browser.mjs';
 import {verifyNavigationBrowser} from './navigation-browser.mjs';
 import {fixture} from './architecture-fixture.mjs';
@@ -40,13 +41,14 @@ const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'ms
 try{
  await verifyNavigationBrowser(browser);
  await verifyMemberSettingsBrowser(browser);
+ await verifyContentCollaborationBrowser(browser);
  const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const url=new URL(route.request().url()),path=url.pathname;
   if(url.origin!==origin)return route.abort();
   if(path==='/offline')return route.fulfill({contentType:'text/html',body:offline});
   if(path==='/api/me')return route.fulfill({json:{user,permissions:{},source:{}}});
-  if(path==='/api/workspace')return route.fulfill({json:{projects,resources:[],roles:[],members:[{email:'sa@example.invalid',user_id:'sa-id',role_id:'sa',enabled:1}]}});
+  if(path==='/api/workspace')return route.fulfill({json:{projects,resources:[],roles:[],members:[{email:'sa@example.invalid',user_id:'sa-id',role_id:'sa',enabled:1},{email:'second@example.invalid',user_id:'second-sa',role_id:'sa',enabled:1}]}});
   if(path==='/api/projects'){
     submitted=route.request().postDataJSON();
     const {architectureDiagram,...fields}=submitted,id='project-'+projects.length;
@@ -56,16 +58,18 @@ try{
   if(path==='/api/practices'){if(url.searchParams.get('projectId')==='project-1'&&url.searchParams.get('archived')==='true')filtered=true;return route.fulfill({json:{items:[sample],total:1,page:1,service:{ready:true},catalog:[]}})}
   if(path==='/api/practices/'+sample.id)return route.fulfill({json:sample});
   if(path.endsWith('/image')||path.endsWith('/drawing/preview'))return route.fulfill({contentType:'image/png',body:image});
+  if(path==='/api/content-translations')return route.fulfill({json:{state:'unavailable',entries:[]}});
   if(path.startsWith('/api/'))throw Error('Unexpected fixture route '+path);
   const name=path==='/'?'index.html':path.slice(1);
   return route.fulfill({body:await fs.readFile(new URL(name,root)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.svg')?'image/svg+xml':'text/html'});
  });
  await page.goto(origin);await verifyWorkspaceAppearance(page);await page.getByRole('button',{name:/新建项目/}).click();
  await page.locator('[name=name]').fill('First lead');
- await page.locator('[name=saId]').selectOption('sa-id');
+ await page.locator('[name=saIds][value="sa-id"]').check();
+ await page.locator('[name=saIds][value="second-sa"]').check();
  assert.equal(await page.locator('[name=vendor]').isVisible(),false);
  await page.getByRole('button',{name:'保存',exact:true}).click();await page.waitForSelector('#modal:not([open])',{state:'attached'});
- assert.equal(submitted.saId,'sa-id');assert.equal(submitted.name,'First lead');assert(!('bdId' in submitted));
+ assert.deepEqual(submitted.saIds,['sa-id','second-sa']);assert.equal(submitted.name,'First lead');assert(!('bdId' in submitted));
  assert(!submitted.architectureDiagram);
  await page.getByRole('button',{name:/新建项目/}).click();await page.locator('[name=name]').fill('Diagram project');
  const file=page.getByLabel('技术架构图（可选）');assert(await file.isVisible());

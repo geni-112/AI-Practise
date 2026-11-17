@@ -10,9 +10,14 @@ import {deleteMember} from '../server/members.mjs';
 const env={...process.env,APP_ORIGIN:'https://qa.example.invalid',ADMIN_EMAIL:'admin@example.invalid',INITIAL_ACCOUNT_PASSWORD_FILE:'',INITIAL_ACCOUNT_PASSWORD:randomBytes(24).toString('hex')};
 assert.match(env.DB_NAME||'',/^ppl_qa_[a-f0-9]{12}$/);assert.equal(env.DB_USER,env.DB_NAME);
 const firstPassword=env.INITIAL_ACCOUNT_PASSWORD,probe=visionProbe();
-let failAnalysis=false;
+let failAnalysis=false,failContent=false,contentCalls=0;
 const mockModel=async(_url,options)=>{
  const req=JSON.parse(options.body);
+ const contentTranslation=req.messages[0]?.content?.startsWith?.('Translate each workspace entry');
+ if(contentTranslation){
+  contentCalls++;const entries=JSON.parse(req.messages[1].content);
+  return Response.json({choices:[{message:{content:JSON.stringify(Object.fromEntries(Object.keys(entries).map(key=>[key,failContent?'不完整译文':'Translated workspace entry '+key])))},finish_reason:'stop'}]});
+ }
  const translating=req.messages[0]?.content?.startsWith?.('Translate every supplied');
  const value=translating?Object.fromEntries(Object.keys(JSON.parse(req.messages[1].content)).map(key=>[key,'测试译文'])):req.messages.length===1?{code:probe.code}:failAnalysis?{}:fixture;
  return Response.json({choices:[{message:{content:JSON.stringify(value)},finish_reason:'stop'}]});
@@ -154,7 +159,7 @@ try{
  assert((await read(path+'/failures',owner)).items.length);assert.equal((await read(path,owner)).canMaintain,false);
  assert.equal((await request(path+'/retry',owner,{_version:failure.version})).status,403);await read(path+'/retry',assigned,{_version:failure.version});
  assert(await app.practices.runNext());const record=await read(path,assigned);
- assert.equal(record.status,'succeeded');assert.equal(record.project_id,project.id);assert(record.projectSubmission&&record.archived_at&&record.result);
+ assert.equal(record.target_region,'');assert.equal(record.status,'succeeded');assert.equal(record.project_id,project.id);assert(record.projectSubmission&&record.archived_at&&record.result);
  for(let n=0;n<8;n++){if(!await app.practices.runNextTranslation())break}
  assert((await read(path+'?lang=zh',assigned)).result);
  assert.equal((await read('practices?projectId='+project.id,owner)).total,0);
@@ -173,6 +178,35 @@ try{
  assert.equal((await request('practices/references/'+id,unassigned)).status,404);
  assert.equal((await read('practices/references',unassigned)).total,0);
 
+
+ const translateBody={language:'en',texts:['中文项目','启动数据库验证']};
+ await read('content-translations','',translateBody,401);
+ await read('content-translations',waiting,translateBody,403);
+ await read('content-translations',owner,{language:'zh',texts:['项目']},400);
+ await read('content-translations',owner,{language:'en',texts:['中'.repeat(1201)]},400);
+ let contentResponse=await read('content-translations',owner,translateBody);
+ assert(contentResponse.entries.every(entry=>entry.status==='queued'));
+ const callsBefore=contentCalls;assert(await app.practices.runNextContentTranslation());
+ contentResponse=await read('content-translations',owner,translateBody);
+ assert(contentResponse.entries.every(entry=>entry.status==='ready'&&!/\p{Script=Han}/u.test(entry.translation)));
+ await read('content-translations',owner,translateBody);assert.equal(contentCalls,callsBefore+1);
+ const privateCache=await read('content-translations',unassigned,translateBody);
+ assert(privateCache.entries.every(entry=>entry.status==='queued')); // Same text never reads another account's cache.
+ assert(await app.practices.runNextContentTranslation());
+ const updatedContent=await read('content-translations',owner,{language:'en',texts:['更新后的数据库验证']});
+ assert.equal(updatedContent.entries[0].status,'queued');assert(await app.practices.runNextContentTranslation());
+ failContent=true;
+ const failureText={language:'en',texts:['失败后重试翻译']};await read('content-translations',owner,failureText);
+ for(let attempt=0;attempt<3;attempt++){
+  await app.practices.runNextContentTranslation();
+  await transaction(app.pool,c=>c.query("UPDATE content_translations SET available_at=NOW() WHERE source_text=?",[failureText.texts[0]]));
+ }
+ assert.equal((await read('content-translations',owner,failureText)).entries[0].status,'failed');
+ failContent=false;await read('content-translations',owner,{...failureText,retry:true});assert(await app.practices.runNextContentTranslation());
+ assert.equal((await read('content-translations',owner,failureText)).entries[0].status,'ready');
+ assert.equal((await read('workspace',owner)).projects.find(p=>p.id===project.id).name,submit.name);
+ console.log('PASS: account-scoped English translation, source retention, caching, invalidation, failure retry and authentication');
+
  // Manually reviewed standalone cases still work. Linking one makes it private at once.
  const standalone=await read('practices',owner,{...diagram,requestKey:randomUUID(),title:'Standalone fixture',businessType:'大数据',targetRegion:'Test'},202);
  assert.equal((await request('practices/'+standalone.id+'/image',unassigned)).status,404);
@@ -187,7 +221,21 @@ try{
  assert.equal((await request('practices/references/'+standalone.id,unassigned)).status,404);
  assert.equal((await request(single+'/image',reviewer)).status,404);
 
- const reassigned=await read('projects/'+project.id,owner,{_version:project._version,saId:other},200,'PATCH');
+ const additionalSA=(await read('me',unassigned)).user.id,firstSA=(await read('me',assigned)).user.id;
+ let team=await read('projects/'+project.id,owner,{_version:project._version,saIds:[firstSA,additionalSA]},200,'PATCH');
+ assert.deepEqual(team.saIds,[firstSA,additionalSA]);
+ for(const cookie of [assigned,unassigned]){
+  assert((await read('workspace',cookie)).projects.some(p=>p.id===project.id));
+  for(const suffix of suffixes)assert.equal((await request(path+suffix,cookie)).status,200,suffix);
+  assert.equal((await read(path,cookie)).canMaintain,true);
+ }
+ for(const suffix of suffixes)assert.equal((await request(path+suffix,reviewer)).status,404,suffix);
+ await read('projects/'+project.id,assigned,{_version:team._version,saIds:[firstSA]},403,'PATCH');
+ await read('projects/'+project.id,owner,{_version:team._version,saIds:[firstSA,firstSA]},400,'PATCH');
+ await read('projects/'+project.id,owner,{_version:team._version,saId:other},409,'PATCH');
+ team=await read('projects/'+project.id,unassigned,{_version:team._version,notes:'Second SA technical update'},200,'PATCH');
+ const reassigned=await read('projects/'+project.id,owner,{_version:team._version,saIds:[additionalSA]},200,'PATCH');
+ console.log('PASS: multiple SA project and original-image access, technical edits, unrelated-role isolation and removal');
  assert.equal((await read(list,assigned)).total,0);assert.equal((await request(path+'/image',assigned)).status,404);
  assert.equal((await request(path+'/image',unassigned)).status,200);assert.equal((await request(path+'/image',owner)).status,200);
  // A designated BD without general Best practices access can open this project, while the original uploader loses access.
@@ -220,9 +268,11 @@ try{
  const removedUser=(await read('me',removedLogin.cookie)).user;
  const assignedProject=await read('projects',removedLogin.cookie,{name:'Member deletion project',stage:3},201);
  const sharedProject=await read('projects',admin.cookie,{name:'Legacy member assignment',bdId:removedUser.id,saId:removedUser.id},201);
+ const retainedTeam=await read('projects',admin.cookie,{name:'Retain other SA after member deletion',saIds:[removedUser.id,sa]},201);
+ await read('content-translations',removedLogin.cookie,{language:'en',texts:['待删除成员的翻译缓存']});
  await transaction(app.pool,async c=>{
   const row=(await c.query("SELECT payload FROM records WHERE id=?",[sharedProject.id])).rows[0];
-  const legacy=JSON.parse(row.payload);legacy.bdId=removedEmail;legacy.saId=removedEmail;
+  const legacy=JSON.parse(row.payload);legacy.bdId=removedEmail;legacy.saId=removedEmail;delete legacy.saIds;delete legacy.saAccounts;
   await c.query('UPDATE records SET payload=? WHERE id=?',[JSON.stringify(legacy),sharedProject.id]);
  });
  const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Santiago'}).format(new Date()).slice(0,7);
@@ -238,7 +288,7 @@ try{
  await read('admin/member-deletion?email='+encodeURIComponent(env.ADMIN_EMAIL),secondAdmin,undefined,400);
  await read('admin/member-deletion?email='+encodeURIComponent(secondAdminEmail),secondAdmin,undefined,400);
  const memberPreview=await read(previewPath,admin.cookie);
- assert.equal(memberPreview.projectCount,2);assert.equal(memberPreview.analysisCount,1);assert.equal(memberPreview.reportCount,1);
+ assert.equal(memberPreview.projectCount,3);assert.equal(memberPreview.analysisCount,1);assert.equal(memberPreview.reportCount,1);
  const deletionInput={email:removedEmail,userId:memberPreview.userId,_version:memberPreview._version};
  await read('admin/member',owner,deletionInput,403,'DELETE');
  await read('admin/member',admin.cookie,{...deletionInput,userId:randomUUID()},409,'DELETE');
@@ -263,6 +313,9 @@ try{
   const p=afterRemoval.projects.find(p=>p.id===id);assert.equal(p.bdId,'');assert.equal(p.saId??'','');
   assert.equal(p.bdName,'');assert.equal(p.saName??'','');
  }
+ const keptTeam=afterRemoval.projects.find(p=>p.id===retainedTeam.id);
+ assert.deepEqual(keptTeam.saIds,[firstSA]);assert((await read('workspace',assigned)).projects.some(p=>p.id===retainedTeam.id));
+ const cacheCount=await transaction(app.pool,async c=>(await c.query('SELECT COUNT(*) n FROM content_translations WHERE owner_id=?',[removedUser.id])).rows[0].n);assert.equal(Number(cacheCount),0);
  const retained=await read('practices/'+movedAnalysis.id,admin.cookie);
  assert.equal(retained.owner_email,env.ADMIN_EMAIL);assert.equal(retained.version,runningVersion);
  assert.deepEqual(Buffer.from(await (await request('practices/'+movedAnalysis.id+'/image',admin.cookie)).arrayBuffer()),probe.image);

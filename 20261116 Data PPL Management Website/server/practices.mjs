@@ -1,3 +1,5 @@
+import {createContentTranslations} from './content-translations.mjs';
+import {projectSAIds,owns} from '../dist/server/index.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomBytes,randomUUID,createHash,createCipheriv,createDecipheriv} from 'node:crypto';
@@ -19,7 +21,8 @@ const text=(v,max,required=false)=>{if(typeof v!=='string'||v.length>max||(requi
 // Unlinked analyses are private to their creator. Project-linked originals follow
 // the current project assignment on every request, including image and drawing downloads.
 const analysisJoin = ' FROM architecture_analyses a LEFT JOIN members owner ON owner.email=a.owner_email LEFT JOIN architecture_project_links l ON l.analysis_id=a.id LEFT JOIN records p ON p.id=l.project_id AND p.kind=\'project\' ';
-const assignedProjectMember="(JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.bdId')) IN (?,?) OR JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) IN (?,?))";
+const saArray="CASE WHEN JSON_TYPE(JSON_EXTRACT(p.payload,'$.saIds'))='ARRAY' THEN JSON_EXTRACT(p.payload,'$.saIds') ELSE JSON_ARRAY(JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId'))) END";
+const assignedProjectMember="(JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.bdId')) IN (?,?) OR JSON_CONTAINS("+saArray+",JSON_QUOTE(?)) OR JSON_CONTAINS("+saArray+",JSON_QUOTE(?)))";
 function originalAccess(user) {
   if(user.roleId==='admin')return {sql:'1=1',args:[]};
   const canRead=user.permissions.includes('practice.read'),manager=user.permissions.includes('practice.manage');
@@ -33,7 +36,7 @@ async function validatePracticeProject(client,user,id) {
   if (typeof id!=='string' || id.length>190) throw authError(400,'关联项目无效');
   const record=(await client.query("SELECT payload FROM records WHERE id=? AND kind='project' FOR UPDATE",[id])).rows[0];
   const project=record&&JSON.parse(record.payload);
-  const collaborator=project&&[project.bdId,project.saId].some(v=>v&&(v===user.id||v===user.email));
+  const collaborator=project&&owns(user,project);
   const allowed=user.roleId==='admin' || collaborator&&user.permissions.some(p=>p==='project.read.own'||p==='project.read.all');
   if (!project || project.archivedAt || !allowed) throw authError(403,'请选择你负责的有效项目');
   return id;
@@ -105,10 +108,10 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
  const view=row=>({...row,projectSubmission:projectUpload(row),result:row.result_json?JSON.parse(row.result_json):null,usage:row.usage_json?JSON.parse(row.usage_json):null,result_json:undefined,usage_json:undefined,image_key:undefined,errorMessage:row.error_code?messages[row.error_code]||messages.MAAS_UNAVAILABLE:null});
  async function accessible(c,id,user,lock=false){
   const access=originalAccess(user);
-  const row=(await c.query("SELECT a.*,owner.display_name AS ownerDisplayName,l.project_id,JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saId')) AS assigned_sa"+analysisJoin+'WHERE a.id=? AND '+access.sql+(lock?' FOR UPDATE':''),[id,...access.args])).rows[0];
+  const row=(await c.query("SELECT a.*,owner.display_name AS ownerDisplayName,l.project_id,p.payload AS assigned_project"+analysisJoin+'WHERE a.id=? AND '+access.sql+(lock?' FOR UPDATE':''),[id,...access.args])).rows[0];
   if(!row)return null;
-  const {assigned_sa,...item}=row;
-  const technicalOwner=!!assigned_sa&&[user.id,user.email].includes(assigned_sa);
+  const {assigned_project,...item}=row;
+  const technicalOwner=assigned_project&&projectSAIds(JSON.parse(assigned_project)).some(id=>[user.id,user.email].includes(id));
   const ownsManual=!projectUpload(row)&&row.owner_email===user.email;
   item.canMaintain=user.permissions.includes('practice.analyze')&&(user.roleId==='admin'||technicalOwner||ownsManual||(!row.project_id&&user.permissions.includes('practice.manage')));
   return item;
@@ -168,12 +171,14 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
    if(!created.ok)return created;
    const project=await created.json(),cfg=await config(c,true);
    const input={requestKey:diagram.requestKey,title:project.name,businessType:['大数据','数据库'].includes(project.type)?project.type:'综合架构',
-    targetRegion:project.region?.trim().slice(0,120)||'la-south-2 (Santiago)',language:diagram.language,context:'',name,mime:diagram.mime};
+    targetRegion:'',language:diagram.language,context:'',name,mime:diagram.mime};
    await enqueue(c,user,cfg,input,bytes,project.id,digest);
    return json({id:project.id,architectureSubmitted:true},201);
   }catch(error){if(error.modelCode)throw practiceError(error.modelCode);throw error}
  }
+ const contentTranslations=createContentTranslations({pool,config,ready,translate:(cfg,messages)=>callModel({...cfg,apiKey:decrypt(cfg.secret)},messages,{fetchImpl,stream:true})});
  async function route(c,request,user){
+  const translated=await contentTranslations.route(c,request,user);if(translated)return translated;
   const url=new URL(request.url),p=url.pathname;
   if(p==='/api/audit'&&request.method==='GET'&&user?.roleId!=='admin'){
    need(user,'audit.view');
@@ -229,7 +234,7 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
     const cfg=await config(c,true);if(!ready(cfg))throw practiceError('SERVICE_NOT_CONFIGURED');
     if(b.inputMode!=null&&b.inputMode!==cfg.inputMode)throw authError(409,'识别模式已改变，请重新打开上传窗口');
     if(b.referenceRequested!=null&&typeof b.referenceRequested!=='boolean')throw authError(400,'参考案例内容无效');
-    const title=text(b.title,200,true),context=text(b.context||'',8000),targetRegion=text(b.targetRegion||'',120,true),name=text(b.name,200,true);
+    const title=text(b.title,200,true),context=text(b.context||'',8000),targetRegion='',name=text(b.name,200,true);
     if(!['大数据','数据库','综合架构'].includes(b.businessType)||!['zh','en'].includes(b.language))throw authError(400,'最佳实践字段格式无效');
     const bytes=validateImage(b.base64,b.mime);
     const id=await enqueue(c,user,cfg,{...b,title,context,targetRegion,name},bytes,projectId);
@@ -356,5 +361,5 @@ export async function createPracticeService({pool,files,env,editorOrigin,fetchIm
  const nextTranslation=()=>runNextTranslation({pool,config,ready,budget,
   translate:(cfg,messages)=>callModel({...cfg,apiKey:decrypt(cfg.secret)},messages,{fetchImpl,stream:true})});
  async function tick(){if(stopped||active)return;active=(async()=>{if(!await runNext())await nextTranslation()})();try{await active}catch{console.error(JSON.stringify({level:'error',code:'PRACTICE_WORKER_FAILED'}))}finally{active=null;if(!stopped)timer=setTimeout(tick,2000).unref()}}
- return {route,createProjectWithDiagram,runNext,runNextTranslation:nextTranslation,start(){if(!stopped)return;stopped=false;timer=setTimeout(tick,500).unref()},async stop(){stopped=true;clearTimeout(timer);await active}};
+ return {route,createProjectWithDiagram,runNext,runNextTranslation:nextTranslation,runNextContentTranslation:contentTranslations.runNext,start(){if(!stopped)return;contentTranslations.start();stopped=false;timer=setTimeout(tick,500).unref()},async stop(){stopped=true;clearTimeout(timer);await Promise.all([active,contentTranslations.stop()])}};
 }

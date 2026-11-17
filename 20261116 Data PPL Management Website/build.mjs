@@ -1,6 +1,6 @@
 import {sourceArchive} from './export-source.mjs';
 import fs from 'node:fs';
-const root=new URL('.',import.meta.url);const read=p=>fs.readFileSync(new URL(p,root),'utf8');const assets=Object.fromEntries(['index.html','style.css','brand.svg','ui-icons.svg','app.js','project-status.js','navigation-schema.js','navigation-editor.js','i18n.js','dictionary-schema.js','dictionaries.js'].map(p=>[p,read('public/'+p)]));
+const root=new URL('.',import.meta.url);const read=p=>fs.readFileSync(new URL(p,root),'utf8');const assets=Object.fromEntries(['index.html','style.css','brand.svg','ui-icons.svg','app.js','content-translations.js','project-status.js','navigation-schema.js','navigation-editor.js','i18n.js','dictionary-schema.js','dictionaries.js'].map(p=>[p,read('public/'+p)]));
 assets['report-template.js']=read('public/report-template.js');
 assets['practices.js']=read('public/practices.js');
 assets['practice-citations.js']=read('public/practice-citations.js');

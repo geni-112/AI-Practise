@@ -293,6 +293,15 @@ Object.assign(en,{
  "请由其他管理员删除此账号": "Ask another administrator to delete your account.",
  "成员已删除，负责人待分配": "A member was deleted. Assign a new project owner."
 });
+Object.assign(en,{
+ "SA 账号（可多选）":"SA accounts (select multiple)",
+ "暂无可指派成员":"No members available",
+ "项目已配置多个 SA，请刷新后重新选择":"This project has multiple SAs. Refresh and select the complete SA team.",
+ "请选择最多 20 个不同的 SA 账号":"Select up to 20 different SA accounts.",
+ "请选择不同的 SA 账号":"Select different SA accounts.",
+ "请使用一个 SA 账号列表":"Submit a single SA account list.",
+ "成员已删除，已移除对应项目指派":"A deleted member was removed from the project team."
+});
 const patterns=[
  [/^删除成员：(.*)$/,(m,name)=>'Deleted member: '+name],
  [/^删除角色：(.*)$/,(m,name)=>'Deleted role: '+name],

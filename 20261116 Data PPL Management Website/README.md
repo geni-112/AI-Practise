@@ -1,6 +1,6 @@
 # 数据专项作战平台 · Data Solutions Hub
 
-本目录是数据专项作战平台 **3.11.2** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
+本目录是数据专项作战平台 **3.12.0** 的独立部署源码。拉美团队可以在同一工作空间管理大数据和数据库项目，从线索、POC 跟进到月报，也可以把客户架构图转成可核对、可编辑的华为云方案。网页支持中文和 English。英文界面自动翻译中文项目名称、进展及资料正文，编辑时保留中文原文；译文在云端按账号隔离缓存。一个项目可以指派多个 SA，所有被指派的 SA 均可跟踪进展及查看关联架构图。架构分析不要求选择部署区域，也不使用平台所在区域作为默认限制。应用运行在自己的云主机上，结构化数据保存在 MySQL 8。
 
 ## 从干净检出开始
 
@@ -108,3 +108,5 @@ RDS 保存账号、台账、报表快照、分析状态、审核案例以及 dra
 ## English deployment summary
 
 Use a cloud Linux host, Docker Compose, a private MySQL 8 database and DNS for both the website and its draw.io subdomain. Run `deploy/prepare-config.sh` on that host. Fill in `.env`, install the database CA, then run `docker compose up -d --build --wait`. The first administrator signs in with the configured email and the private initial password, then changes it. Configure Huawei Cloud MaaS in the admin UI to enable architecture reviews. The project workspace, project-derived POC list, native Excel reporting and public resource catalog work independently of model credentials.
+
+自动英文翻译使用已配置的 MaaS，由独立后台队列处理。每次调用合并多个短文本；每日全站调用限额为分析调用上限的 4 倍（最高 2,000），每个账号最多 40 次。缓存有效期 30 天，修改原文会自动生成新译文；失败时显示原文并提供重试。图纸与架构分析继续使用各自保存的中英文版本，月报 Excel 模板及原始数据不被译文覆盖。

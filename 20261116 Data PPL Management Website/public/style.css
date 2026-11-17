@@ -560,3 +560,9 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 
 .deletion-impact{padding-left:22px;line-height:1.8}.deletion-impact li{margin:8px 0}
 #members .listrow{flex-wrap:wrap}#members .listrow>span:first-child{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+
+.sa-picker{border:1px solid #c8dded;border-radius:10px;padding:12px;max-height:260px;overflow:auto;min-width:0;margin:0}.sa-picker legend{padding:0 6px;font-weight:600;color:#174c75}.sa-picker label{display:flex!important;align-items:center;gap:12px;margin:0;padding:9px 4px;cursor:pointer}.sa-picker input[type=checkbox]{width:19px;height:19px;flex:0 0 19px;accent-color:#0176d3}.sa-picker small{display:block;color:#526b7f;font-size:14px;overflow-wrap:anywhere}.sa-picker span{min-width:0}
+
+.content-translation-status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 34px 0;padding:10px 14px;background:#eef7ff;border:1px solid #c9e3f7;border-radius:9px;color:#315a7d;font-size:14px}.content-translation-status[hidden]{display:none}.content-translation-status button{padding:5px 10px;font-size:14px}.content-translation-status span{min-width:0}@media(max-width:700px){.content-translation-status{margin:12px 16px 0;flex-wrap:wrap}}
+
+.field-translation{display:none}html[lang=en] .field-translation{display:block;margin:8px 0 12px;padding:10px 12px;border-left:3px solid #58b5ef;background:#f0f8ff;border-radius:4px;color:#245477;white-space:pre-wrap;max-height:230px;overflow:auto;font-size:15px}.field-translation::before{content:"English";display:block;font-size:12px;font-weight:bold;color:#526b7f;margin-bottom:4px}

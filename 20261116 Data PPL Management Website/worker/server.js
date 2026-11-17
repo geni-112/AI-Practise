@@ -11,7 +11,8 @@ const j=(d,status=200)=>new Response(JSON.stringify(d),{status,headers:{'Content
 const fail=(status,msg)=>{throw Object.assign(new Error(msg),{status})};
 const now=()=>new Date().toISOString();
 export function has(u,p){return !!u?.permissions?.includes(p)}
-export function owns(u,p){return p.bdId===u.id||p.saId===u.id||p.bdId===u.email||p.saId===u.email}
+export function projectSAIds(p){return [...new Set((Array.isArray(p.saIds)?p.saIds:p.saId?[p.saId]:[]).filter(id=>typeof id==='string'&&id))]}
+export function owns(u,p){return [p.bdId,...projectSAIds(p)].some(id=>id&&(id===u.id||id===u.email))}
 export function canRead(u,p){return has(u,'project.read.all')||(has(u,'project.read.own')&&owns(u,p))}
 export function canWrite(u,p,part){return has(u,`${part}.all`)||(has(u,`${part}.own`)&&owns(u,p))}
 export function redact(u,p){const r=structuredClone(p);if(!has(u,'finance.read'))for(const k of financeNames)delete r[k];return r}
@@ -77,7 +78,7 @@ function canAssignOwnSA(user,project){
 }
 export async function memberDeletionImpact(db,member){
  const matches=value=>!!value&&(value===member.user_id||value===member.email);
- const projects=(await all(db,'project')).filter(project=>matches(project.bdId)||matches(project.saId));
+ const projects=(await all(db,'project')).filter(project=>matches(project.bdId)||projectSAIds(project).some(matches));
  const reports=(await all(db,'report')).filter(report=>report.scopeOwner===member.email);
  return {projectCount:projects.length,reportCount:reports.length};
 }
@@ -85,12 +86,18 @@ export async function detachMemberRecords(db,actor,member,adminEmail){
  const matches=value=>!!value&&(value===member.user_id||value===member.email);
  let projectCount=0,reportCount=0;
  for(const project of await all(db,'project')){
-  const owners=['bd','sa'].filter(key=>matches(project[key+'Id']));
-  if(!owners.length)continue;
-  for(const key of owners)for(const suffix of ['Id','Name','AccountName','AccountEmail'])project[key+suffix]='';
+  const bd=matches(project.bdId),sas=projectSAIds(project),remaining=sas.filter(id=>!matches(id));
+  if(!bd&&sas.length===remaining.length)continue;
+  if(bd)for(const suffix of ['Id','Name','AccountName','AccountEmail'])project['bd'+suffix]='';
+  if(remaining.length!==sas.length){
+   project.saIds=remaining;project.saId=remaining[0]||'';
+   project.saAccounts=(project.saAccounts||[]).filter(account=>remaining.includes(account.id));
+   project.saName=project.saAccounts.map(account=>account.displayName).filter(Boolean).join(' / ');
+   project.saAccountName=project.saName;project.saAccountEmail=project.saAccounts.map(account=>account.email).join(', ');
+  }
   project.updatedAt=now();
   project.logs??=[];
-  project.logs.push({at:project.updatedAt,text:'成员已删除，负责人待分配',by:actor.email,byDisplayName:actor.displayName||'',system:true});
+  project.logs.push({at:project.updatedAt,text:'成员已删除，已移除对应项目指派',by:actor.email,byDisplayName:actor.displayName||'',system:true});
   await change(db,'project',project,project._version);
   await rememberProject(db,project,project._version+1);
   projectCount++;
@@ -122,6 +129,8 @@ function withMemberNames(project,names) {
   const saved=project[key+'Name']||'';
   named[key+'DisplayName']=names.get(project[key+'Id'])||(!saved.includes('@')?saved:'');
  }
+ const saNames=projectSAIds(project).map(id=>names.get(id)||project.saAccounts?.find(account=>account.id===id)?.displayName||'').filter(Boolean);
+ named.saIds=projectSAIds(project);if(saNames.length)named.saDisplayName=saNames.join(' / ');
  named.logs=(project.logs||[]).map(log=>({...log,byDisplayName:names.get(log.by)||log.byDisplayName||''}));
  return named;
 }
@@ -136,14 +145,33 @@ async function assignBD(db,project,previous,displayName) {
  project.bdName=displayName||member.display_name||'';
 }
 async function assignSA(db,user,project,value,previous,displayName) {
- if(previous && value===previous.saId)return;
- if(!has(user,'project.assign')&&!canAssignOwnSA(user,project))fail(403,'只能为本人负责的项目指派 SA');
- if(typeof value!=='string'||value.length>190)fail(400,'SA 账号无效');
- if(!value){project.saId='';project.saAccountEmail='';project.saAccountName='';project.saName=displayName||'';return;}
- const member=await db.prepare('SELECT email,user_id,role_id,enabled,display_name FROM members WHERE email=? OR user_id=?').bind(value,value).first();
- if(!member?.enabled||!has(user,'project.assign')&&member.role_id!=='sa')fail(400,'请选择已启用的 SA 账号');
- project.saId=member.user_id||member.email;
- project.saAccountEmail=member.email;project.saAccountName=member.display_name||'';project.saName=displayName||member.display_name||'';
+ if(!Array.isArray(value)){
+  if(typeof value!=='string'||value.length>190)fail(400,'SA 账号无效');
+  if(previous&&projectSAIds(previous).length>1){
+   if(value===previous.saId)return;
+   fail(409,'项目已配置多个 SA，请刷新后重新选择');
+  }
+  value=value?[value]:[];
+ }
+ if(value.length>20||value.some(id=>typeof id!=='string'||!id||id.length>190)||new Set(value).size!==value.length)fail(400,'请选择最多 20 个不同的 SA 账号');
+ if(previous&&JSON.stringify(value)===JSON.stringify(projectSAIds(previous)))return;
+ if(!has(user,'project.assign')&&!canAssignOwnSA(user,previous||project))fail(403,'只能为本人负责的项目指派 SA');
+ const accounts=[];
+ for(const id of value){
+  const member=await db.prepare('SELECT email,user_id,role_id,enabled,display_name FROM members WHERE email=? OR user_id=?').bind(id,id).first();
+  if(!member?.enabled||!has(user,'project.assign')&&member.role_id!=='sa')fail(400,'请选择已启用的 SA 账号');
+  const account={id:member.user_id||member.email,email:member.email,displayName:member.display_name||''};
+  if(accounts.some(existing=>existing.id===account.id))fail(400,'请选择不同的 SA 账号');
+  accounts.push(account);
+ }
+ project.saIds=accounts.map(account=>account.id);project.saId=project.saIds[0]||'';
+ project.saAccounts=accounts;project.saAccountEmail=accounts.map(account=>account.email).join(', ');
+ project.saAccountName=accounts.map(account=>account.displayName).filter(Boolean).join(' / ');
+ project.saName=project.saAccountName||displayName||'';
+}
+function saInput(body){
+ if(Object.hasOwn(body,'saIds')&&Object.hasOwn(body,'saId'))fail(400,'请使用一个 SA 账号列表');
+ return Object.hasOwn(body,'saIds')?body.saIds:body.saId;
 }
 async function identity(req,db){const id=req.headers.get('oai-authenticated-user-id'),email=(req.headers.get('oai-authenticated-user-email')||'').toLowerCase();if(!id||!email)fail(401,'请先登录');const member=await db.prepare('SELECT * FROM members WHERE email=?').bind(email).first();if(!member||!member.enabled)fail(403,'账号尚未获授权，请联系管理员');if(member.user_id&&member.user_id!==id)fail(403,'账号身份不匹配');if(!member.user_id){await db.prepare('UPDATE members SET user_id=? WHERE email=? AND user_id IS NULL').bind(id,email).run();const check=await db.prepare('SELECT user_id FROM members WHERE email=?').bind(email).first();if(check.user_id!==id)fail(403,'身份绑定失败')}const role=await get(db,member.role_id,'role');if(!role)fail(403,'角色不存在');return{id,email,displayName:member.display_name||'',profileVersion:member.version,roleId:role.id,roleName:role.name,permissions:role.permissions}}
 function requireP(u,p){if(!has(u,p))fail(403,'当前角色没有此操作权限')}
@@ -178,9 +206,9 @@ export default {async fetch(req,env){try{const url=new URL(req.url),path=url.pat
  for(const [keys,permission]of [[tech.filter(k=>k!=='milestones'),'project.tech'],[finance,'finance.write']])for(const key of keys)if(Object.hasOwn(body,key)){if(!canWrite(u,p,permission))fail(403,'无权修改字段：'+key);p[key]=body[key]}
  if(Object.hasOwn(body,'milestones')){validateMilestones(u,p,body.milestones,true);p.milestones=body.milestones}
  await assignBD(db,p,null,body.bdName);
- if(Object.hasOwn(body,'saId'))await assignSA(db,u,p,body.saId,null,p.saName);
+ if(Object.hasOwn(body,'saId')||Object.hasOwn(body,'saIds'))await assignSA(db,u,p,saInput(body),null,p.saName);
  validateProject(p);validateProjectDictionaries(await dictionaries(db),p,undefined,await memberNames(db));await insert(db,'project',p);await rememberProject(db,p,1);await audit(db,u,'创建项目',p.id);return j(redact(u,{...p,_version:1}),201)}
- if(path.startsWith('/api/projects/')&&req.method==='PATCH'){const id=decodeURIComponent(path.split('/')[3]),p=await get(db,id,'project');if(!p)fail(404,'项目不存在');if(p.archivedAt)fail(409,'请先恢复项目再编辑');if(!canRead(u,p))fail(403,'没有项目访问权限');const body=await req.json(),previous=structuredClone(p);if(body._version!==p._version)fail(409,'请刷新获取最新项目版本');const allowed=new Set();if(canWrite(u,p,'project.biz'))biz.forEach(x=>allowed.add(x));if(canWrite(u,p,'project.tech'))tech.forEach(x=>allowed.add(x));if(canWrite(u,p,'finance.write'))finance.forEach(x=>allowed.add(x));if(has(u,'project.assign'))allowed.add('bdId');if(has(u,'project.assign')||canAssignOwnSA(u,p))allowed.add('saId');if(canWrite(u,p,'project.biz')||canWrite(u,p,'project.tech'))allowed.add('milestones');if(Object.hasOwn(body,'milestones'))validateMilestones(u,p,body.milestones);let changes=0;for(const[k,v]of Object.entries(body)){if(k==='_version'||k==='update')continue;if(!allowed.has(k))fail(403,'无权修改字段：'+k);p[k]=k==='milestones'?{...p.milestones,...v}:v;changes++}if(!changes&&!(body.update&&allowed.size))fail(403,'没有编辑权限');const automaticUpdate=!body.update&&changes>0;if(automaticUpdate){body.update='项目更新：'+Object.keys(body).filter(k=>k!=='_version').join('、')}if(body.update){if(typeof body.update!=='string'||body.update.length>10000)fail(400,'进展记录无效');p.logs??=[];p.logs.push({at:now(),text:body.update,by:u.email,byDisplayName:u.displayName||'',system:automaticUpdate})}if(Object.hasOwn(body,'bdId'))await assignBD(db,p,previous,body.bdName&&body.bdName!==previous.bdName?body.bdName:'');if(Object.hasOwn(body,'saId'))await assignSA(db,u,p,body.saId,previous,body.saName&&body.saName!==previous.saName?body.saName:'');validateProject(p);validateProjectDictionaries(await dictionaries(db),p,previous,await memberNames(db));p.updatedAt=now();await change(db,'project',p,body._version);await rememberProject(db,p,body._version+1);await audit(db,u,'更新项目',id);return j(redact(u,{...p,_version:body._version+1}))}
+ if(path.startsWith('/api/projects/')&&req.method==='PATCH'){const id=decodeURIComponent(path.split('/')[3]),p=await get(db,id,'project');if(!p)fail(404,'项目不存在');if(p.archivedAt)fail(409,'请先恢复项目再编辑');if(!canRead(u,p))fail(403,'没有项目访问权限');const body=await req.json(),previous=structuredClone(p);if(body._version!==p._version)fail(409,'请刷新获取最新项目版本');const allowed=new Set();if(canWrite(u,p,'project.biz'))biz.forEach(x=>allowed.add(x));if(canWrite(u,p,'project.tech'))tech.forEach(x=>allowed.add(x));if(canWrite(u,p,'finance.write'))finance.forEach(x=>allowed.add(x));if(has(u,'project.assign'))allowed.add('bdId');if(has(u,'project.assign')||canAssignOwnSA(u,p)){allowed.add('saId');allowed.add('saIds')}if(canWrite(u,p,'project.biz')||canWrite(u,p,'project.tech'))allowed.add('milestones');if(Object.hasOwn(body,'milestones'))validateMilestones(u,p,body.milestones);let changes=0;for(const[k,v]of Object.entries(body)){if(k==='_version'||k==='update')continue;if(!allowed.has(k))fail(403,'无权修改字段：'+k);p[k]=k==='milestones'?{...p.milestones,...v}:v;changes++}if(!changes&&!(body.update&&allowed.size))fail(403,'没有编辑权限');const automaticUpdate=!body.update&&changes>0;if(automaticUpdate){body.update='项目更新：'+Object.keys(body).filter(k=>k!=='_version').join('、')}if(body.update){if(typeof body.update!=='string'||body.update.length>10000)fail(400,'进展记录无效');p.logs??=[];p.logs.push({at:now(),text:body.update,by:u.email,byDisplayName:u.displayName||'',system:automaticUpdate})}if(Object.hasOwn(body,'bdId'))await assignBD(db,p,previous,body.bdName&&body.bdName!==previous.bdName?body.bdName:'');if(Object.hasOwn(body,'saId')||Object.hasOwn(body,'saIds'))await assignSA(db,u,p,saInput(body),previous,body.saName&&body.saName!==previous.saName?body.saName:'');validateProject(p);validateProjectDictionaries(await dictionaries(db),p,previous,await memberNames(db));p.updatedAt=now();await change(db,'project',p,body._version);await rememberProject(db,p,body._version+1);await audit(db,u,'更新项目',id);return j(redact(u,{...p,_version:body._version+1}))}
 
  if(path==='/api/files'&&req.method==='POST'){requireP(u,'resource.write');if(!env.BUCKET)fail(503,'文件存储未就绪');const b=await req.json();validateDictionaryValue(await dictionaries(db),'type',b.type);if(typeof b.name!=='string'||b.name.length>200||! /\.(pdf|pptx?|docx?|xlsx?|txt|md)$/i.test(b.name))fail(400,'文件类型不受支持');if(typeof b.base64!=='string'||b.base64.length>2800000)fail(400,'文件不能超过 2MB');let bytes;try{bytes=Uint8Array.from(atob(b.base64),c=>c.charCodeAt(0))}catch{fail(400,'文件编码无效')}if(bytes.length>2097152)fail(400,'文件不能超过 2MB');const id=crypto.randomUUID(),key='resources/'+id;await env.BUCKET.put(key,bytes,{httpMetadata:{contentType:'application/octet-stream'}});const r={id,title:b.name,type:b.type,tag:'',body:'',fileKey:key,fileName:b.name,size:bytes.length,updatedAt:now()};try{await insert(db,'resource',r)}catch(e){await env.BUCKET.delete(key);throw e}await audit(db,u,'上传资料文件',id);return j({...r,_version:1},201)}
  if(path.startsWith('/api/files/')&&req.method==='GET'){requireP(u,'resource.read');const id=path.split('/')[3],r=await get(db,id,'resource');if(!r?.fileKey||r.archivedAt)fail(404,'文件不存在');const file=await env.BUCKET?.get(r.fileKey);if(!file)fail(404,'文件不存在');return new Response(file.body,{headers:{'Content-Type':'application/octet-stream','Content-Disposition':"attachment; filename*=UTF-8''"+encodeURIComponent(r.fileName),'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}})}

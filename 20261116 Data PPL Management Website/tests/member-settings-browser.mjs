@@ -57,6 +57,7 @@ export async function verifyMemberSettingsBrowser(browser) {
       return reply({ok:true});
     }
     if(p==='/api/practices/config')return reply({_version:1,inputMode:'ocr',enabled:true,tested:true,endpoint:'https://maas.example.invalid/v1',model:'Example model',region:'test',apiKeySet:true,dailyLimit:20,maxTokens:8192,analysisTimeoutMinutes:10});
+    if(p==='/api/content-translations')return reply({state:'unavailable',entries:[]});
     if(p.startsWith('/api/'))throw Error('Unexpected fixture route '+p);
     const name=['/','/settings','/settings/maas'].includes(p)?'index.html':p==='/login'?'login.html':p.slice(1);
     await route.fulfill({body:await fs.readFile(new URL(name,root)),
@@ -166,7 +167,7 @@ export async function verifyMemberSettingsBrowser(browser) {
     await page.getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto(origin);
     await page.getByRole('button',{name:'New project',exact:true}).click();
-    assert.match(await page.locator('[name=saId]').innerText(),/管理员预填 · member@example.invalid/);
+    assert.match(await page.locator('.sa-picker').innerText(),/管理员预填\s+member@example.invalid/);
     await page.getByRole('button',{name:'Cancel',exact:true}).click();
     current=null;
     await page.goto(origin+'/login');

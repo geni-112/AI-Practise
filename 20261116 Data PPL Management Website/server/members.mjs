@@ -24,6 +24,7 @@ export async function deleteMember(client,actor,input,adminEmail,preview=false){
   // Keep running jobs on their current lease version so their result can commit.
   // A fresh request key avoids collisions when two former owners reused a key.
   const analyses=await client.query("UPDATE architecture_analyses SET owner_email=?,request_key=UUID(),version=IF(status='running',version,version+1) WHERE owner_email=?",[adminEmail,email]);
+  await client.query('DELETE FROM content_translations WHERE owner_id=?',[member.user_id]);
   await client.query('DELETE FROM sessions WHERE email=?',[email]);
   await client.query('DELETE FROM account_password_state WHERE email=?',[email]);
   await client.query('DELETE FROM invitations WHERE email=?',[email]);

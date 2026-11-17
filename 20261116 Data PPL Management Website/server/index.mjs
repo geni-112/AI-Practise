@@ -102,7 +102,7 @@ export async function createApplication(options = {}) {
         const domain=body=>application.fetch(new Request(request.url,{method:request.method,headers,body}),{DB:database(client),BUCKET:files,ADMIN_EMAIL:adminEmail,STANDALONE:true});
         if(['POST','PATCH'].includes(request.method)&&/^\/api\/projects(?:\/[^/]+)?$/.test(url.pathname)){
           const body=JSON.parse(rawBody);
-          const owners=[...new Set([body.bdId,body.saId].filter(value=>typeof value==='string'&&value))].sort();
+          const owners=[...new Set([body.bdId,body.saId,...(Array.isArray(body.saIds)?body.saIds:[])].filter(value=>typeof value==='string'&&value))].sort();
           for(const id of owners)await client.query('SELECT a.email FROM accounts a JOIN members m ON m.email=a.email WHERE m.email=? OR m.user_id=? FOR UPDATE',[id,id]);
         }
         if(request.method==='POST'&&url.pathname==='/api/projects'){

@@ -2,7 +2,7 @@ function dictionary(field){return data.dictionaries?.find(d=>d.field===field)||d
 function dictionaryLabel(field,value){const item=dictionary(field).items.find(i=>i.value===String(value));return item?(i18n.language==='en'?(item.en||item.zh):item.zh):String(value??'')}
 function dictionaryValue(field,value){const item=dictionary(field).items.find(i=>[i.value,i.zh,i.en].filter(Boolean).includes(value));return item?.value??value}
 function dictionaryDefault(field){return dictionary(field).items.find(i=>i.enabled)?.value??''}
-function dictionaryContent(field,value,fallback=''){return value===null||value===undefined||value===''?`<span>${esc(fallback)}</span>`:`<span data-user-content data-dictionary-field="${field}" data-dictionary-value="${esc(value)}">${esc(dictionaryLabel(field,value))}</span>`}
+function dictionaryContent(field,value,fallback=''){return value===null||value===undefined||value===''?`<span>${esc(fallback)}</span>`:`<span data-user-content ${!['bdName','saName'].includes(field)?`data-auto-translate="${esc(dictionaryLabel(field,value))}"`: ''} data-dictionary-field="${field}" data-dictionary-value="${esc(value)}">${esc(dictionaryLabel(field,value))}</span>`}
 function dictionaryOptions(field,current,{blank=false,filter=false}={}){
  const dict=dictionary(field),items=dict.items.filter(i=>filter||i.enabled||i.value===String(current));
  if(current!==undefined&&current!==null&&current!==''&&!items.some(i=>i.value===String(current)))items.push({value:String(current),zh:String(current),en:String(current),enabled:false});
@@ -11,10 +11,10 @@ function dictionaryOptions(field,current,{blank=false,filter=false}={}){
 function dictionaryField(label,name,value='',disabled=false,wide=false){
  const dict=dictionary(name),text=dictionaryLabel(name,value),id='dictionary-input-'+name;
  if(!dict.allowCustom)return `<div class="${wide?'wide':''}"><label for="${id}">${label}</label><select id="${id}" name="${name}" ${disabled?'disabled':''}>${dictionaryOptions(name,value,{blank:!dict.required})}</select></div>`;
- return `<div class="${wide?'wide':''}"><label for="${id}">${label}</label><input id="${id}" name="${name}" list="dictionary-list-${name}" value="${esc(text)}" data-dictionary-input="${name}" data-dictionary-value="${esc(value??'')}" data-rendered-value="${esc(text)}" ${disabled?'disabled':''} autocomplete="off"><datalist id="dictionary-list-${name}">${dict.items.filter(i=>i.enabled).map(i=>`<option data-user-content data-dictionary-suggestion="${name}" data-dictionary-value="${esc(i.value)}" value="${esc(dictionaryLabel(name,i.value))}"></option>`).join('')}</datalist></div>`;
+ return `<div class="${wide?'wide':''}"><label for="${id}">${label}</label><input id="${id}" name="${name}" list="dictionary-list-${name}" value="${esc(text)}" data-dictionary-input="${name}" data-dictionary-value="${esc(value??'')}" data-rendered-value="${esc(text)}" ${disabled?'disabled':''} autocomplete="off">${translatedPreview(text,name)}<datalist id="dictionary-list-${name}">${dict.items.filter(i=>i.enabled).map(i=>`<option data-user-content data-dictionary-suggestion="${name}" data-dictionary-value="${esc(i.value)}" value="${esc(dictionaryLabel(name,i.value))}"></option>`).join('')}</datalist></div>`;
 }
 function refreshDictionaryLabels(){
- document.querySelectorAll('[data-dictionary-field]').forEach(el=>{el.textContent=dictionaryLabel(el.dataset.dictionaryField,el.dataset.dictionaryValue)+(el.dataset.inactive?' '+i18n.t('（已停用）'):'')});
+ document.querySelectorAll('[data-dictionary-field]').forEach(el=>{el.textContent=dictionaryLabel(el.dataset.dictionaryField,el.dataset.dictionaryValue)+(el.dataset.inactive?' '+i18n.t('（已停用）'):'');if(el.hasAttribute('data-auto-translate'))el.dataset.autoTranslate=dictionaryLabel(el.dataset.dictionaryField,el.dataset.dictionaryValue)});
  document.querySelectorAll('[data-dictionary-suggestion]').forEach(el=>{el.value=dictionaryLabel(el.dataset.dictionarySuggestion,el.dataset.dictionaryValue)});
  document.querySelectorAll('[data-dictionary-input]').forEach(el=>{if(el.value===el.dataset.renderedValue){el.value=dictionaryLabel(el.dataset.dictionaryInput,el.dataset.dictionaryValue);el.dataset.renderedValue=el.value}});
 }
