@@ -68,7 +68,23 @@ assert.deepEqual((await call(bdEmail,'navigation')).body.order,['library','poc',
 const changedNav=await call(owner,'admin/navigation','POST',{order:defaultMenu,_version:1});assert.equal(changedNav.body._version,2);
 assert.equal((await call(owner,'admin/navigation','POST',{order:reversed,_version:1})).status,409);
 assert.equal(db.prepare("SELECT COUNT(*) AS n FROM audit WHERE entity='workspace-navigation-v1'").get().n,2);
+const labels={home:{zh:'项目看板',en:'Team <overview>'},maas:{zh:'模型配置'}};
+const saveLabels=(labels,_version,order=defaultMenu)=>call(owner,'admin/navigation','POST',{order,labels,_version});
+for(const invalid of [null,[],{hidden:{zh:'x'}},{home:[]},{home:{fr:'x'}},{home:{en:4}},{home:{zh:'x'.repeat(49)}},{home:{en:'two\nlines'}}]){
+ assert.equal((await saveLabels(invalid,2)).status,400);
+}
+assert.equal((await call(bdEmail,'admin/navigation','POST',{order:defaultMenu,labels,_version:2})).status,403);
+const rename=await saveLabels({...labels,home:{...labels.home,zh:' 项目看板 '},reports:{zh:'报表中心',en:''}},2);
+assert.deepEqual(rename.body,{order:defaultMenu,labels,_version:3});
+assert.deepEqual((await call(owner,'workspace')).body.navigation,rename.body);
+assert.deepEqual((await call(bdEmail,'navigation')).body.labels,{home:labels.home});
+assert.equal((await call('view@test.com','workspace')).body.navigation.labels,undefined);
+assert.equal((await saveLabels({},2)).status,409);
+const legacyWrite=await call(owner,'admin/navigation','POST',{order:reversed,_version:3});
+assert.deepEqual(legacyWrite.body,{order:reversed,labels,_version:4});
+const resetNames=await saveLabels({home:{zh:'',en:'Overview'}},4,reversed);
+assert.deepEqual(resetNames.body,{order:reversed,_version:5});
 // Older saved orders can contain a retired entry and omit a newly added entry.
 db.prepare('UPDATE records SET payload=? WHERE id=?').run(JSON.stringify({order:['reports','retired','home','reports']}),'workspace-navigation-v1');
 assert.deepEqual((await call(owner,'navigation')).body.order,['reports','home',...defaultMenu.filter(id=>!['reports','home'].includes(id))]);
-console.log('PASS: workspace navigation order, role-scoped reads, admin-only writes, first-save and edit conflicts, audit, and menu evolution');
+console.log('PASS: workspace navigation order, role-scoped reads, admin-only writes, bilingual names, locale resets, order-only clients, conflicts, audit, and menu evolution');

@@ -28,7 +28,7 @@ aside{width:272px;background:white;position:fixed;height:100vh;border-right:1px 
 nav{margin-top:12px}
 nav button{display:block;width:100%;border:0;text-align:left;margin:5px 0;background:none;padding:13px 15px;color:var(--muted)}
 nav button.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-nav button span{display:inline-block;width:26px}
+nav button span[aria-hidden]{display:inline-block;width:26px}
 .sidebottom{margin-top:auto}
 .help{background:var(--accent-wash);border-radius:9px;padding:16px;font-size:14px}
 .help p{font-size:14px;color:var(--muted)}
@@ -153,7 +153,7 @@ header{height:52px;padding:0 20px}
 .hero,.resources{grid-template-columns:1fr}
 .stats{grid-template-columns:1fr 1fr;gap:10px}
 .titlebar{align-items:flex-start}
-.titlebar>div:last-child{display:flex;flex-direction:column;gap:8px}
+.titlebar>.page-actions{display:flex;flex-direction:column;gap:8px}
 .titlebar button{font-size:14px}
 h1{font-size:22px}
 .journey{overflow:auto}
@@ -210,7 +210,7 @@ input:disabled,select:disabled,textarea:disabled{color:var(--muted);background:#
 .listrow{align-items:flex-start}
 }
 
-@media print{aside,header,footer,.noprint,.filters,.report-controls,.titlebar>div:last-child{display:none!important}
+@media print{aside,header,footer,.noprint,.filters,.report-controls,.titlebar>.page-actions{display:none!important}
 main{margin:0}
 section{padding:0}
 .panel{break-inside:avoid;border-color:#ddd}
@@ -225,7 +225,7 @@ body{background:white}
 }
 
 .authpage{min-height:100vh;display:grid;place-items:center;background:radial-gradient(ellipse at 15% 30%,#e0edff,transparent 65%),var(--accent-wash)}
-.authlayout{width:min(1050px,92vw);display:grid;grid-template-columns:1.2fr 1fr;gap:80px;padding:65px 0}
+.authlayout{width:min(470px,92vw);display:grid;padding:65px 0}
 .authintro .brand{margin-bottom:100px}
 .authintro h1{font-size:42px;line-height:1.5;letter-spacing:1px}
 .authintro p{line-height:2;color:var(--muted)}
@@ -263,7 +263,7 @@ body:has(dialog[open]){overflow:hidden}
 .journey{max-width:100%}
 @media(max-width:720px){.grid{grid-template-columns:minmax(0,1fr)}
 .titlebar{display:block}
-.titlebar>div:last-child{flex-direction:row;flex-wrap:wrap;margin-top:16px}
+.titlebar>.page-actions{flex-direction:row;flex-wrap:wrap;margin-top:16px}
 .titlebar button{margin-left:0;white-space:nowrap}
 }
 
@@ -444,7 +444,7 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 .nav-hint,.nav-feedback{margin:6px 4px;color:var(--muted);font-size:14px;line-height:1.5}
 .nav-feedback:empty{display:none}
 #nav.nav-editing{display:block;max-height:52vh;max-height:52dvh;overflow-y:auto;overscroll-behavior:contain;margin:6px 0;padding:3px 1px;scrollbar-width:thin}
-.nav-sort-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 30px 30px;align-items:center;gap:2px;border-radius:7px;background:var(--surface,#fff)}
+.nav-sort-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) repeat(3,30px);align-items:center;gap:2px;border-radius:7px;background:var(--surface,#fff)}
 .nav-sort-row+.nav-sort-row{margin-top:3px}
 #nav .nav-grip,#nav .nav-step{margin:0;box-shadow:none;border:0;color:var(--ink);background:transparent}
 #nav .nav-grip{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:5px 3px;text-align:left;cursor:grab;touch-action:none;user-select:none;white-space:normal}
@@ -457,4 +457,15 @@ html[lang=en] .journey .step label{overflow-wrap:normal;word-break:normal}
 .nav-sort-row.nav-drop-before:before,.nav-sort-row.nav-drop-after:after{content:"";position:absolute;z-index:1;left:0;right:0;height:2px;border-radius:2px;background:var(--accent);pointer-events:none}
 .nav-sort-row.nav-drop-before:before{top:-2px}.nav-sort-row.nav-drop-after:after{bottom:-2px}
 .nav-actions{justify-content:flex-start;margin:8px 0 4px}.nav-actions button{min-height:36px;padding:6px 10px}
-@media(max-width:720px){.nav-heading{justify-content:flex-end}.nav-heading:has(#navEdit:not([hidden])),.nav-heading:has(+.nav-hint:not([hidden])){justify-content:space-between}.nav-heading:has(#navEdit:not([hidden])) .navlabel,.nav-heading:has(+.nav-hint:not([hidden])) .navlabel{display:block;margin:0}.nav-sort-row{grid-template-columns:minmax(0,1fr) 40px 40px}#nav .nav-step{width:40px;min-height:40px}}
+@media(max-width:720px){.nav-heading{justify-content:flex-end}.nav-heading:has(#navEdit:not([hidden])),.nav-heading:has(+.nav-hint:not([hidden])){justify-content:space-between}.nav-heading:has(#navEdit:not([hidden])) .navlabel,.nav-heading:has(+.nav-hint:not([hidden])) .navlabel{display:block;margin:0}.nav-sort-row{grid-template-columns:minmax(0,1fr) repeat(3,40px)}#nav .nav-step{width:40px;min-height:40px}}
+.nav-menu-name,.titlebar h1,#crumb{overflow-wrap:anywhere}
+#nav .nav-rename[aria-expanded=true]{background:var(--accent-soft);color:var(--accent)}
+.nav-name-fields{min-width:0;flex-shrink:0;margin:10px 0 0;padding:8px 12px 12px;border:1px solid var(--line);border-radius:9px}
+.nav-name-fields[hidden]{display:none}
+.nav-name-fields legend{padding:0 4px;font-size:14px;overflow-wrap:anywhere}
+.nav-name-fields label{display:block;margin:6px 0 3px;font-size:14px}
+.nav-name-fields input{width:100%;min-width:0}
+.nav-name-fields small{display:block;margin-top:7px;color:var(--muted)}
+.authcard .brand{margin-bottom:24px}
+.track h3{margin-top:0;max-width:75%}
+@media(min-width:721px){#nav:not(.nav-editing)>button{display:flex;align-items:baseline;gap:4px}#nav>button>span[aria-hidden]{flex:0 0 22px}}

@@ -20,7 +20,7 @@ export async function verifyNavigationBrowser(browser) {
       if(path==='/api/admin/navigation'){
         const body=route.request().postDataJSON();
         if(body._version!==setting._version)return route.fulfill({status:409,json:{error:'conflict'}});
-        assert.equal(role,'admin');setting={order:body.order,_version:body._version+1};
+        assert.equal(role,'admin');setting={order:body.order,labels:body.labels??setting.labels,_version:body._version+1};
         return route.fulfill({json:setting});
       }
       if(path.startsWith('/api/'))throw Error('Unexpected fixture route '+path);
@@ -59,19 +59,50 @@ export async function verifyNavigationBrowser(browser) {
     assert.deepEqual(setting.order,saved);
     await admin.reload();await admin.locator('#navEdit').waitFor();assert.deepEqual(await order(admin),saved);
     await admin.locator('header [data-language=en]').click();
-    await admin.getByRole('button',{name:'Reorder',exact:true}).click();
+    await admin.getByRole('button',{name:'Edit navigation',exact:true}).click();
     await admin.getByRole('button',{name:'Move down · Projects',exact:true}).click();
     // A second admin saves from a different device while this editor is open.
     const mobile=await open('admin',true);await mobile.locator('#navEdit').tap();await dragFirst(mobile,'poc',true);
     await mobile.locator('#navSave').tap();await mobile.locator('#navEdit').waitFor();
     assert.equal(setting.order[0],'poc');
-    await admin.getByRole('button',{name:'Save order',exact:true}).click();
-    await admin.getByText('Another administrator saved a new order.',{exact:false}).waitFor();
+    await admin.getByRole('button',{name:'Save navigation',exact:true}).click();
+    await admin.getByText('Another administrator changed navigation.',{exact:false}).waitFor();
     assert.deepEqual(await order(admin),setting.order);assert(await admin.locator('#navSave').isDisabled());
     await admin.locator('#navCancel').click();
     const member=await open('bd');assert(await member.locator('#navEdit').isHidden());
     assert.deepEqual(await order(member),setting.order.filter(id=>['home','projects','poc'].includes(id)));
+    const editName=(page,id)=>page.locator('[data-menu-id="'+id+'"] [data-nav-rename]').click();
+    const expectName=async(page,id,name)=>{
+      await page.waitForFunction(({id,name})=>['#crumb','#workspacePageTitle','#nav [data-menu-id="'+id+'"] .nav-menu-name'].every(s=>document.querySelector(s)?.textContent===name),{id,name});
+    };
+    await admin.locator('#navEdit').click();await editName(admin,'home');
+    assert.equal(await admin.locator('#navName-en').getAttribute('placeholder'),'Overview');
+    assert.equal(await admin.locator('#navName-zh').getAttribute('placeholder'),'工作台总览');
+    await admin.locator('#navName-en').fill('Team <Board> & Ops');
+    await admin.locator('#navName-zh').fill('专项看板');
+    await admin.locator('header [data-language=zh]').click();
+    assert.equal(await admin.locator('#navName-en').inputValue(),'Team <Board> & Ops');
+    await editName(admin,'projects');await admin.locator('#navName-en').fill('Delivery');
+    await admin.locator('#navSave').click();await expectName(admin,'home','专项看板');
+    await admin.locator('header [data-language=en]').click();await expectName(admin,'home','Team <Board> & Ops');
+    assert.equal(await admin.locator('#workspacePageTitle').evaluate(el=>el.childElementCount),0);
+    assert.equal(await admin.locator('[data-menu-id="projects"] .nav-menu-name').textContent(),'Delivery');
+    await admin.reload();await expectName(admin,'home','Team <Board> & Ops');
+    await member.reload();await member.locator('header [data-language=en]').click();await expectName(member,'home','Team <Board> & Ops');
+    await member.locator('[data-menu-id="projects"]').click();await expectName(member,'projects','Delivery');
+    await member.locator('header [data-language=zh]').click();await expectName(member,'projects','项目运作');
+    await admin.locator('#navEdit').click();await editName(admin,'home');
+    await admin.locator('#navName-en').fill('Discard this');await admin.locator('#navCancel').click();
+    await expectName(admin,'home','Team <Board> & Ops');
+    await admin.locator('#navEdit').click();await editName(admin,'home');await admin.locator('#navName-en').fill('');
+    await admin.locator('[data-menu-id="home"] [data-step="-1"]').click();
+    await admin.locator('#navSave').click();await expectName(admin,'home','Overview');
+    assert.deepEqual(setting.labels.home,{zh:'专项看板'});
+    assert.equal(setting.labels.projects.en,'Delivery');
+    await admin.locator('header [data-language=zh]').click();await expectName(admin,'home','专项看板');
+    assert.doesNotMatch(await admin.locator('body').innerText(),/每一个项目，都有清晰的下一步|DATA BUSINESS WORKSPACE|把机会，推进为结果/);
+    for(const page of [admin,mobile])assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     assert.deepEqual(errors,[]);
-    console.log('PASS: admin drag, touch, arrow buttons and keyboard, cancel, save/reload, bilingual menu, concurrent edits and member view');
+    console.log('PASS: admin drag, touch, arrow buttons and keyboard, cancel, save/reload, bilingual renames and reset, headings and breadcrumbs, concurrent edits and member view');
   }finally{for(const context of contexts)await context.close()}
 }

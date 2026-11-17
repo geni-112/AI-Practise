@@ -2,7 +2,7 @@ function maasLandingHTML(){
   const role=roleLabel({id:user.roleId,name:user.roleName});
   const details=user.roleId==='admin'?maasSettingsHTML():
     '<section class="panel"><h2>需要平台管理员配置</h2><p>请将此页面链接发给平台管理员。管理员可以填写模型调用地址、模型名称和 API Key。</p></section>';
-  return title('架构分析设置','管理最佳实践使用的华为云 MaaS 服务。')+
+  return pageTitle()+
     '<p class="viewnote"><span>当前角色</span> · '+role+'</p>'+details;
 }
 

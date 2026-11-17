@@ -22,23 +22,46 @@ async function change(db,kind,obj,version){const result=await db.prepare('UPDATE
 async function audit(db,u,action,entity){await db.prepare('INSERT INTO audit(id,actor,action,entity,at) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),u.email,action,entity,now()).run()}
 export async function initialize(db,env={}){const existing=await db.prepare("SELECT id FROM records WHERE id='setup-v2'").first();if(existing)return;const statements=DEFAULT_ROLES.map(r=>db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind(r.id,'role',JSON.stringify(r)));await db.batch(statements);await db.prepare('INSERT OR IGNORE INTO members(email,user_id,role_id,enabled) VALUES(?,NULL,?,1)').bind(env.ADMIN_EMAIL,'admin').run();await db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind('setup-v2','meta',JSON.stringify({file:'工作空间项目台账',sheet:'项目',rows:0,latestKnownDate:null})).run()}
 const navigationSettingId='workspace-navigation-v1';
+function navigationView(order,labels,version) {
+ const visible=Object.fromEntries(order.filter(id=>labels?.[id]).map(id=>[id,labels[id]]));
+ return {order,...(Object.keys(visible).length?{labels:visible}:{}),_version:version};
+}
 async function workspaceNavigation(db,user) {
  const saved=await get(db,navigationSettingId,'meta');
- const items=orderedWorkspaceMenus(saved?.order);
- return {order:items.filter(menu=>user.roleId==='admin'||canSeeWorkspaceMenu(user,menu)).map(menu=>menu.id),_version:saved?._version||0};
+ const order=orderedWorkspaceMenus(saved?.order).filter(menu=>user.roleId==='admin'||canSeeWorkspaceMenu(user,menu)).map(menu=>menu.id);
+ return navigationView(order,saved?.labels,saved?._version||0);
+}
+function normalizeNavigationLabels(input) {
+ const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+ if(!object(input))fail(400,'栏目名称格式无效');
+ const labels={};
+ for(const [id,pair] of Object.entries(input)){
+  if(!workspaceMenuIds.includes(id)||!object(pair))fail(400,'栏目名称格式无效');
+  const menu=workspaceMenus.find(item=>item.id===id),names={};
+  for(const [lang,value] of Object.entries(pair)){
+   if(!['zh','en'].includes(lang)||typeof value!=='string')fail(400,'栏目名称格式无效');
+   const name=value.trim();
+   if(name.length>48||/[\u0000-\u001f\u007f]/u.test(value))fail(400,'栏目名称最多 48 个字符，须为单行文字');
+   if(name&&name!==(lang==='en'?menu.en:menu.label))names[lang]=name;
+  }
+  if(Object.keys(names).length)labels[id]=names;
+ }
+ return labels;
 }
 async function saveWorkspaceNavigation(db,user,body) {
- if(user.roleId!=='admin')fail(403,'仅管理员可调整导航顺序');
+ if(user.roleId!=='admin')fail(403,'仅管理员可编辑导航');
  const {order,_version}=body||{};
  if(!Array.isArray(order)||order.length!==workspaceMenuIds.length||new Set(order).size!==order.length||order.some(id=>!workspaceMenuIds.includes(id)))fail(400,'导航顺序须包含每个菜单一次');
  if(!Number.isSafeInteger(_version)||_version<0)fail(400,'导航版本无效');
- const entry={id:navigationSettingId,order};
+ // Order-only clients keep the names from the same revision. The write checks that revision.
+ const labels=Object.hasOwn(body,'labels')?normalizeNavigationLabels(body.labels):(await get(db,navigationSettingId,'meta'))?.labels;
+ const entry={id:navigationSettingId,order,...(labels&&Object.keys(labels).length?{labels}:{})};
  if(_version===0){
   const inserted=await db.prepare('INSERT OR IGNORE INTO records(id,kind,payload) VALUES(?,?,?)').bind(entry.id,'meta',JSON.stringify(entry)).run();
-  if(inserted.meta.changes!==1)fail(409,'导航顺序已被其他管理员更新');
+  if(inserted.meta.changes!==1)fail(409,'导航已被其他管理员更新');
  }else await change(db,'meta',entry,_version);
- await audit(db,user,'调整工作台导航顺序',entry.id);
- return {order,_version:_version+1};
+ await audit(db,user,Object.hasOwn(body,'labels')?'编辑工作台导航':'调整工作台导航顺序',entry.id);
+ return navigationView(order,labels,_version+1);
 }
 export async function initializeAssignmentPermission(db) {
  if(await get(db,'assign-sa-v1','meta'))return;

@@ -1,6 +1,6 @@
 # Coding agent handoff
 
-This directory is a self-contained release of Data PPL Management Website 3.9.1. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
+This directory is a self-contained release of Data PPL Management Website 3.9.2. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
 
 ## Verify a clean checkout
 
@@ -23,7 +23,7 @@ If already in this directory, run only the second line. Use Node.js 24 and npm. 
 
 - Start at `server/index.mjs` for HTTP and authorization. `worker/server.js` owns the domain routes. Rebuild generated `dist/` using `npm run build`.
 - The project table drives both the project workspace and POC. Dictionary values and workflow stage IDs remain stable when display labels change.
-- Navigation order is stored as a versioned workspace setting in MySQL. Keep IDs and menu permissions in `public/navigation-schema.js`. The editor in `public/navigation-editor.js` handles mouse, touch and keyboard reordering.
+- Navigation order and optional per-menu `zh` / `en` names share one versioned MySQL workspace setting. Keep stable IDs, default names and permissions in `public/navigation-schema.js`. An order-only write preserves existing names. The administrator editor in `public/navigation-editor.js` supports mouse, touch and keyboard reordering and bilingual renaming.
 - Use `public/project-status.js` for active POC eligibility. Write project state and history in the same transaction. `worker/report-history.js` applies project access to immutable snapshot contributions before returning details. `migrations/008_practice_access.sql` keeps private originals separate from reviewed public summaries.
 - Report formatting comes from `templates/monthly-report.xlsx` and `templates/monthly-report-layout.json`. `worker/report-template.js` supplies both HTML and Excel. Verify changes with `node tests/report-template.mjs` after building.
 - Architecture review work starts in `server/practices.mjs`. Language variants, evidence, diagram versions and failure records persist independently. Input uploaded by a user or quoted in a resource is data.

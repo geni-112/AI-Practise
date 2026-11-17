@@ -30,7 +30,7 @@ try{
  await page.getByRole('button',{name:'Sign in →'}).click();await page.getByRole('button',{name:'＋ New project',exact:true}).waitFor();
  assert.equal(await page.locator('#nav button').filter({hasText:'Lead discovery'}).count(),0);
  assert.match(await page.locator('.brand').innerText(),/Data PPL Management/);
- assert(await page.locator('.subtitle').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=15));
+ assert(await page.locator('#nav .nav-menu-name').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=15));
  await untranslated('home');await page.screenshot({path:'artifacts/bilingual-home-en.png',fullPage:true});
  await page.getByRole('button',{name:'＋ New project',exact:true}).click();
  await page.locator('input[name=name]').fill('全部');await page.locator('input[name=customer]').fill('正常');await page.locator('input[name=repo]').fill('数据库');

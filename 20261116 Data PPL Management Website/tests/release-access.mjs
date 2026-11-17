@@ -43,6 +43,14 @@ try{
  const ownMenu=(await read('workspace',owner)).navigation;
  assert.deepEqual(ownMenu.order,menuOrder.filter(id=>['practices','home','projects','poc','library'].includes(id)));
  assert.equal((await request('admin/navigation',owner,{order:menuOrder,_version:ownMenu._version})).status,403);
+ const labels={home:{zh:'测试工作台',en:'QA overview'},maas:{en:'QA models'}};
+ const renamed=await read('admin/navigation',admin.cookie,{order:menuOrder,labels,_version:1});
+ assert.deepEqual(renamed,{order:menuOrder,labels,_version:2});
+ assert.deepEqual((await read('workspace',owner)).navigation.labels,{home:labels.home});
+ assert.equal((await request('admin/navigation',owner,{order:menuOrder,labels:{},_version:2})).status,403);
+ assert.equal((await request('admin/navigation',admin.cookie,{order:menuOrder,labels:{},_version:1})).status,409);
+ const orderOnly=await read('admin/navigation',admin.cookie,{order:menuOrder,_version:2});
+ assert.deepEqual(orderOnly.labels,labels);
  const waiting=await login(pending);
  const project=await read('projects',owner,{name:'Fictional project',saId:sa,stage:4},201);
  assert.equal(project.saName,sa);
@@ -89,7 +97,7 @@ try{
  assert.equal((await request('workspace',admin.cookie)).status,200);
  const refreshed=(await transaction(app.pool,c=>c.query('SELECT password_hash FROM accounts WHERE email=?',[env.ADMIN_EMAIL]))).rows[0].password_hash;
  assert.equal(refreshed,originalAdminHash);
- assert.deepEqual((await read('workspace',admin.cookie)).navigation,{order:menuOrder,_version:1});
+ assert.deepEqual((await read('workspace',admin.cookie)).navigation,{order:menuOrder,labels,_version:3});
  console.log('PASS: RDS menu order, concurrent saves, role filtering and persistence after restart');
  console.log('PASS: MySQL migrations, account rotation, first sign-in, BD reassignment, private diagrams and drawings, redacted references and legacy review');
 }finally{await app.practices.stop();await app.pool.end()}

@@ -177,6 +177,22 @@ Object.assign(en, {
  "当前没有可查看的分析": "No analysis is available to view"
 });
 Object.assign(en, {
+ "编辑导航": "Edit navigation",
+ "保存导航": "Save navigation",
+ "栏目名称": "Menu name",
+ "英文名称": "English name",
+ "重命名": "Rename",
+ "留空使用该语言的默认名称。": "Leave a field blank to use its default name.",
+ "拖动栏目调整顺序，点击铅笔修改名称。": "Drag to reorder. Select the pencil to rename a menu.",
+ "导航已保存": "Navigation saved",
+ "仅管理员可编辑导航": "Only administrators can edit navigation.",
+ "栏目名称格式无效": "Invalid menu name format.",
+ "栏目名称最多 48 个字符，须为单行文字": "Use a single line of up to 48 characters for a menu name.",
+ "导航已被其他管理员更新": "Another administrator updated navigation.",
+ "另一位管理员已修改导航。已载入最新设置，请重新编辑。": "Another administrator changed navigation. The latest settings are loaded. Edit and save again.",
+ "编辑工作台导航": "Edited workspace navigation",
+ "在推进项目的阶段分布": "Active projects by stage",
+ "查看项目 →": "View projects →",
  "调整顺序": "Reorder",
  "保存顺序": "Save order",
  "工作台导航": "Workspace navigation",

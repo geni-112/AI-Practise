@@ -2,6 +2,38 @@ let navigationDraft=null;
 let navigationDrag=null;
 const navElement=id=>document.getElementById(id);
 
+function menuName(menu,labels,language=i18n.language) {
+  return labels?.[menu.id]?.[language] || (language==='en'?menu.en:menu.label);
+}
+function currentPageName() {
+  const id=page==='leads'?'library':page;
+  const menu=workspaceMenus.find(item=>item.id===id);
+  return menu?menuName(menu,data.navigation?.labels):i18n.t('使用指南');
+}
+function updateNavigationHeadings() {
+  const name=currentPageName();
+  navElement('crumb').textContent=name;
+  const heading=navElement('workspacePageTitle');
+  if(heading)heading.textContent=name;
+}
+function navigationChanged() {
+  if(!navigationDraft)return false;
+  const {order,original,labels,originalLabels}=navigationDraft;
+  return order.some((id,i)=>id!==original[i]||['zh','en'].some(lang=>labels[id]?.[lang]!==originalLabels[id]?.[lang]));
+}
+function updateNameFields() {
+  const menu=workspaceMenus.find(item=>item.id===navigationDraft?.selected);
+  navElement('navNameFields').hidden=!menu;
+  if(!menu)return;
+  const labels=navigationDraft.labels;
+  navElement('navNameHeading').textContent=menuName(menu,labels);
+  for(const lang of ['zh','en']){
+    const input=navElement('navName-'+lang);
+    input.placeholder=menuName(menu,null,lang);
+    input.value=labels[menu.id]?.[lang]||'';
+    input.disabled=navigationDraft.saving;
+  }
+}
 function renderWorkspaceNavigation() {
   clearNavigationDrag();
   const nav=navElement('nav'),editing=!!navigationDraft,busy=!!navigationDraft?.saving;
@@ -10,25 +42,52 @@ function renderWorkspaceNavigation() {
   navElement('navHint').hidden=!editing;
   navElement('navActions').hidden=!editing;
   navElement('navCancel').disabled=busy;
-  navElement('navSave').disabled=busy||!editing||navigationDraft.order.every((id,i)=>id===navigationDraft.original[i]);
+  navElement('navSave').disabled=busy||!navigationChanged();
   nav.classList.toggle('nav-editing',editing);
+  updateNameFields();
   if(!editing){
     nav.innerHTML=items.filter(menu=>canSeeWorkspaceMenu(user,menu)).map(menu=>
-      `<button type="button" data-menu-id="${menu.id}" class="${page===menu.id?'active':''}" ${page===menu.id?'aria-current="page"':''} onclick="go('${menu.id}')"><span aria-hidden="true">${menu.icon}</span>${menu.label}</button>`).join('');
+      `<button type="button" data-menu-id="${menu.id}" class="${page===menu.id?'active':''}" ${page===menu.id?'aria-current="page"':''} onclick="go('${menu.id}')"><span aria-hidden="true">${menu.icon}</span><span class="nav-menu-name" data-user-content>${esc(menuName(menu,data.navigation?.labels))}</span></button>`).join('');
     return;
   }
   nav.innerHTML=items.map((menu,index)=>{
-    const label=i18n.t(menu.label),title=action=>esc(i18n.t(action)+' · '+label);
+    const label=menuName(menu,navigationDraft.labels),title=action=>esc(i18n.t(action)+' · '+label);
     return `<div class="nav-sort-row" data-menu-id="${menu.id}">
-      <button type="button" class="nav-grip" data-nav-grip title="${title('拖动排序')}" aria-label="${title('拖动排序')}" ${busy?'disabled':''}><i aria-hidden="true">⠿</i><b>${menu.label}</b></button>
-      <button type="button" class="nav-step" data-step="-1" aria-label="${title('上移')}" title="${title('上移')}" ${busy||index===0?'disabled':''}>↑</button>
-      <button type="button" class="nav-step" data-step="1" aria-label="${title('下移')}" title="${title('下移')}" ${busy||index===items.length-1?'disabled':''}>↓</button></div>`;
+      <button type="button" class="nav-grip" data-nav-grip data-user-content title="${title('拖动排序')}" aria-label="${title('拖动排序')}" ${busy?'disabled':''}><i aria-hidden="true">⠿</i><b>${esc(label)}</b></button>
+      <button type="button" class="nav-step nav-rename" data-nav-rename data-user-content aria-controls="navNameFields" aria-expanded="${navigationDraft.selected===menu.id}" aria-label="${title('重命名')}" title="${title('重命名')}" ${busy?'disabled':''}>✎</button>
+      <button type="button" class="nav-step" data-step="-1" data-user-content aria-label="${title('上移')}" title="${title('上移')}" ${busy||index===0?'disabled':''}>↑</button>
+      <button type="button" class="nav-step" data-step="1" data-user-content aria-label="${title('下移')}" title="${title('下移')}" ${busy||index===items.length-1?'disabled':''}>↓</button></div>`;
   }).join('');
 }
-
 function navDraftFrom(saved) {
-  const order=orderedWorkspaceMenus(saved?.order).map(menu=>menu.id);
-  return {order,original:[...order],version:saved?._version||0,saving:false};
+  const order=orderedWorkspaceMenus(saved?.order).map(menu=>menu.id),originalLabels=saved?.labels||{};
+  const labels=Object.fromEntries(Object.entries(originalLabels).map(([id,names])=>[id,{...names}]));
+  return {order,original:[...order],labels,originalLabels,selected:null,version:saved?._version||0,saving:false};
+}
+function editMenuName(id) {
+  navigationDraft.selected=id;
+  renderWorkspaceNavigation();
+  navElement('navName-'+i18n.language).focus();
+}
+function changeMenuName(lang,value) {
+  if(!navigationDraft||navigationDraft.saving)return;
+  const menu=workspaceMenus.find(item=>item.id===navigationDraft.selected);
+  if(!menu)return;
+  const labels=navigationDraft.labels,names=labels[menu.id]||{},name=value.trim();
+  if(name&&name!==menuName(menu,null,lang))names[lang]=name;
+  else delete names[lang];
+  if(Object.keys(names).length)labels[menu.id]=names;
+  else delete labels[menu.id];
+  const display=menuName(menu,labels);
+  navElement('navNameHeading').textContent=display;
+  const row=navList.querySelector('[data-menu-id="'+menu.id+'"]');
+  row.querySelector('b').textContent=display;
+  for(const [selector,action] of [['[data-nav-grip]','拖动排序'],['[data-nav-rename]','重命名'],['[data-step="-1"]','上移'],['[data-step="1"]','下移']]){
+    const button=row.querySelector(selector);
+    button.title=i18n.t(action)+' · '+display;
+    button.setAttribute('aria-label',button.title);
+  }
+  navElement('navSave').disabled=!navigationChanged();
 }
 function focusMenuGrip(id) {
   navElement('nav').querySelector('[data-menu-id="'+id+'"] [data-nav-grip]')?.focus({preventScroll:true});
@@ -45,6 +104,7 @@ function finishNavigationEdit() {
   navigationDraft=null;
   navElement('navFeedback').textContent='';
   renderWorkspaceNavigation();
+  updateNavigationHeadings();
   navElement('navEdit').focus();
 }
 function moveNavigationItem(id,index) {
@@ -58,26 +118,27 @@ function moveNavigationItem(id,index) {
     entry.querySelector('[data-step="-1"]').disabled=pos===0;
     entry.querySelector('[data-step="1"]').disabled=pos===order.length-1;
   }
-  navElement('navSave').disabled=order.every((key,i)=>key===navigationDraft.original[i]);
+  navElement('navSave').disabled=!navigationChanged();
   focusMenuGrip(id);
-  const label=i18n.t(workspaceMenus.find(menu=>menu.id===id).label);
+  const label=menuName(workspaceMenus.find(menu=>menu.id===id),navigationDraft.labels);
   navElement('navFeedback').textContent=i18n.language==='en'?`${label} moved to position ${index+1} of ${order.length}.`:`已将“${label}”移至第 ${index+1} 位，共 ${order.length} 项。`;
 }
-async function saveNavigationOrder() {
+async function saveNavigation() {
   const draft=navigationDraft;
   if(!draft||draft.saving)return;
   clearNavigationDrag();
   draft.saving=true;renderWorkspaceNavigation();
   try{
-    data.navigation=await api('admin/navigation','POST',{order:draft.order,_version:draft.version});
-    finishNavigationEdit();toast(i18n.t('导航顺序已保存'));
+    data.navigation=await api('admin/navigation','POST',{order:draft.order,labels:draft.labels,_version:draft.version});
+    finishNavigationEdit();toast(i18n.t('导航已保存'));
   }catch(err){
     let message=err.message;
     if(err.status===409){
       try{
         data.navigation=await api('navigation');
         navigationDraft=navDraftFrom(data.navigation);
-        message='另一位管理员已保存排序。已载入最新顺序，请重新调整。';
+        updateNavigationHeadings();
+        message='另一位管理员已修改导航。已载入最新设置，请重新编辑。';
       }catch(refreshError){message=refreshError.message}
     }
     navigationDraft.saving=false;renderWorkspaceNavigation();
@@ -143,7 +204,10 @@ for(const type of ['pointercancel','lostpointercapture'])navList.addEventListene
   if(event.pointerId===navigationDrag?.pointerId)clearNavigationDrag();
 });
 navList.addEventListener('click',event=>{
-  const step=event.target.closest('[data-step]');if(!step||!navigationDraft||navigationDraft.saving)return;
+  if(!navigationDraft||navigationDraft.saving)return;
+  const rename=event.target.closest('[data-nav-rename]');
+  if(rename){editMenuName(rename.closest('.nav-sort-row').dataset.menuId);return}
+  const step=event.target.closest('[data-step]');if(!step)return;
   const id=step.closest('.nav-sort-row').dataset.menuId;
   moveNavigationItem(id,navigationDraft.order.indexOf(id)+Number(step.dataset.step));
 });
@@ -156,13 +220,15 @@ navList.addEventListener('keydown',event=>{
   const id=grip.closest('.nav-sort-row').dataset.menuId;
   moveNavigationItem(id,navigationDraft.order.indexOf(id)+(event.key==='ArrowUp'?-1:1));
 });
+for(const lang of ['zh','en'])navElement('navName-'+lang).addEventListener('input',event=>changeMenuName(lang,event.target.value));
 navElement('navEdit').addEventListener('click',enterNavigationEdit);
-navElement('navSave').addEventListener('click',saveNavigationOrder);
+navElement('navSave').addEventListener('click',saveNavigation);
 navElement('navCancel').addEventListener('click',finishNavigationEdit);
 document.addEventListener('languagechange',()=>{
   if(!user)return;
   clearNavigationDrag();
   navElement('navFeedback').textContent='';
   renderWorkspaceNavigation();
+  updateNavigationHeadings();
   i18n.apply(navList);
 });
