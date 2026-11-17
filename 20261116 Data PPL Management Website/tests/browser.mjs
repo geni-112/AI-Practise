@@ -17,11 +17,11 @@ const page=await browser.newPage({viewport:{width:1440,height:1000},locale:'zh-C
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await fs.mkdir('artifacts',{recursive:true});
 try{
- await page.goto(env.APP_ORIGIN+'/');await page.getByLabel('邮箱',{exact:true}).fill(env.ADMIN_EMAIL);await page.getByLabel('密码',{exact:true}).fill('Browser-test-password');await page.getByRole('button',{name:'登录 →'}).click();
- await page.getByRole('button',{name:'＋ 新建项目'}).waitFor();
- await page.getByRole('button',{name:'＋ 新建项目'}).click();await page.locator('input[name=name]').fill('浏览器验证 '+Date.now());await page.locator('input[name=repo]').fill('智利');await page.getByRole('button',{name:'保存',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
- await page.getByRole('button',{name:'项目运作',exact:false}).click();await page.getByPlaceholder('⌕ 搜索项目、代表处或资料').fill('浏览器验证');await page.locator('tbody tr').first().click();await page.locator('input[name=next]').fill('与客户确认验证范围');await page.getByRole('button',{name:'保存',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
- await page.reload();await page.getByRole('button',{name:'项目运作',exact:false}).click();await page.getByPlaceholder('⌕ 搜索项目、代表处或资料').fill('浏览器验证');assert.match(await page.locator('#results').innerText(),/与客户确认验证范围/);
+ await page.goto(env.APP_ORIGIN+'/');await page.getByLabel('邮箱',{exact:true}).fill(env.ADMIN_EMAIL);await page.getByLabel('密码',{exact:true}).fill('Browser-test-password');await page.getByRole('button',{name:'登录'}).click();
+ await page.getByRole('button',{name:'新建项目'}).waitFor();
+ await page.getByRole('button',{name:'新建项目'}).click();await page.locator('input[name=name]').fill('浏览器验证 '+Date.now());await page.locator('input[name=repo]').fill('智利');await page.getByRole('button',{name:'保存',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
+ await page.getByRole('button',{name:'项目运作',exact:false}).click();await page.getByPlaceholder('搜索项目、代表处或资料').fill('浏览器验证');await page.locator('tbody tr').first().click();await page.locator('input[name=next]').fill('与客户确认验证范围');await page.getByRole('button',{name:'保存',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});
+ await page.reload();await page.getByRole('button',{name:'项目运作',exact:false}).click();await page.getByPlaceholder('搜索项目、代表处或资料').fill('浏览器验证');assert.match(await page.locator('#results').innerText(),/与客户确认验证范围/);
  await page.getByRole('button',{name:'工作台总览',exact:false}).click();await page.screenshot({path:'artifacts/desktop.png',fullPage:true});
  await page.getByRole('button',{name:'报表中心',exact:false}).click();await page.locator('#reportBody .reporthead').waitFor();
  await page.getByRole('button',{name:'成员与角色',exact:false}).click();await page.locator('#members .listrow').first().waitFor();

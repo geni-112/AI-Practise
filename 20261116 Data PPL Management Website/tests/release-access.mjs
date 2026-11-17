@@ -36,6 +36,11 @@ async function personalize(email){
  return {cookie:await login(email,password),password};
 }
 try{
+ for(const asset of ['brand.svg','ui-icons.svg']){
+  const res=await app.handle(new Request(env.APP_ORIGIN+'/'+asset),'release-qa');
+  assert.equal(res.status,200);assert.match(res.headers.get('content-type'),/image\/svg\+xml/);
+  assert.match(await res.text(),/<svg\b/);
+ }
  const admin=await personalize(env.ADMIN_EMAIL),bd='bd@example.invalid',sa='sa@example.invalid',other='other@example.invalid',pending='pending@example.invalid';
  for(const [email,roleId] of [[bd,'bd'],[sa,'sa'],[other,'sa'],[pending,'viewer']])await read('admin/member',admin.cookie,{email,roleId});
  const owner=(await personalize(bd)).cookie,assigned=(await personalize(sa)).cookie,unassigned=(await personalize(other)).cookie;

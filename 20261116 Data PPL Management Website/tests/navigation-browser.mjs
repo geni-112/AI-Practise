@@ -25,7 +25,7 @@ export async function verifyNavigationBrowser(browser) {
       }
       if(path.startsWith('/api/'))throw Error('Unexpected fixture route '+path);
       const name=path==='/'?'index.html':path.slice(1);
-      return route.fulfill({body:await fs.readFile(new URL(name,root)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html'});
+      return route.fulfill({body:await fs.readFile(new URL(name,root)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.svg')?'image/svg+xml':'text/html'});
     });
     await page.goto(origin);await page.locator('#nav [data-menu-id]').first().waitFor();return page;
   }

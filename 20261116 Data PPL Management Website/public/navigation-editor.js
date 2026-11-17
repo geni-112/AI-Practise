@@ -47,16 +47,16 @@ function renderWorkspaceNavigation() {
   updateNameFields();
   if(!editing){
     nav.innerHTML=items.filter(menu=>canSeeWorkspaceMenu(user,menu)).map(menu=>
-      `<button type="button" data-menu-id="${menu.id}" class="${page===menu.id?'active':''}" ${page===menu.id?'aria-current="page"':''} onclick="go('${menu.id}')"><span aria-hidden="true">${menu.icon}</span><span class="nav-menu-name" data-user-content>${esc(menuName(menu,data.navigation?.labels))}</span></button>`).join('');
+      `<button type="button" data-menu-id="${menu.id}" class="${page===menu.id?'active':''}" ${page===menu.id?'aria-current="page"':''} onclick="go('${menu.id}')"><span class="menu-icon" data-module="${menu.id}" aria-hidden="true">${uiIcon(menu.id)}</span><span class="nav-menu-name" data-user-content>${esc(menuName(menu,data.navigation?.labels))}</span></button>`).join('');
     return;
   }
   nav.innerHTML=items.map((menu,index)=>{
     const label=menuName(menu,navigationDraft.labels),title=action=>esc(i18n.t(action)+' · '+label);
     return `<div class="nav-sort-row" data-menu-id="${menu.id}">
-      <button type="button" class="nav-grip" data-nav-grip data-user-content title="${title('拖动排序')}" aria-label="${title('拖动排序')}" ${busy?'disabled':''}><i aria-hidden="true">⠿</i><b>${esc(label)}</b></button>
-      <button type="button" class="nav-step nav-rename" data-nav-rename data-user-content aria-controls="navNameFields" aria-expanded="${navigationDraft.selected===menu.id}" aria-label="${title('重命名')}" title="${title('重命名')}" ${busy?'disabled':''}>✎</button>
-      <button type="button" class="nav-step" data-step="-1" data-user-content aria-label="${title('上移')}" title="${title('上移')}" ${busy||index===0?'disabled':''}>↑</button>
-      <button type="button" class="nav-step" data-step="1" data-user-content aria-label="${title('下移')}" title="${title('下移')}" ${busy||index===items.length-1?'disabled':''}>↓</button></div>`;
+      <button type="button" class="nav-grip" data-nav-grip data-user-content title="${title('拖动排序')}" aria-label="${title('拖动排序')}" ${busy?'disabled':''}>${uiIcon('grip')}<b>${esc(label)}</b></button>
+      <button type="button" class="nav-step nav-rename" data-nav-rename data-user-content aria-controls="navNameFields" aria-expanded="${navigationDraft.selected===menu.id}" aria-label="${title('重命名')}" title="${title('重命名')}" ${busy?'disabled':''}>${uiIcon('edit')}</button>
+      <button type="button" class="nav-step" data-step="-1" data-user-content aria-label="${title('上移')}" title="${title('上移')}" ${busy||index===0?'disabled':''}>${uiIcon('up')}</button>
+      <button type="button" class="nav-step" data-step="1" data-user-content aria-label="${title('下移')}" title="${title('下移')}" ${busy||index===items.length-1?'disabled':''}>${uiIcon('down')}</button></div>`;
   }).join('');
 }
 function navDraftFrom(saved) {

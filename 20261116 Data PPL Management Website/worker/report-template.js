@@ -37,7 +37,7 @@ async function reportTemplateResponse(db,user,body){
  }
  const visible=await visibleReport(db,user,report),dicts=report.dictionarySnapshot||await dictionaries(db),model=monthlyTemplateModel(visible,dicts,body.language);
  if(body.format==='html')return j({...monthlyTemplatePreview(model),summary:model.values.A3});
- return new Response(monthlyTemplateWorkbook(model),{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="Data-PPL-${report.period}.xlsx"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+ return new Response(monthlyTemplateWorkbook(model),{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':`attachment; filename="Data-Solutions-Hub-${report.period}.xlsx"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 }
 
 const templateEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));

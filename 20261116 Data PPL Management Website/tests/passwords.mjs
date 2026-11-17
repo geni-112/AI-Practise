@@ -90,8 +90,8 @@ try{
  server=httpServer(app);await new Promise(r=>server.listen(3103,'127.0.0.1',r));
  browser=await chromium.launch({channel:'msedge',headless:true});
  const page=await browser.newPage({viewport:{width:1440,height:1000},locale:'en-US'}),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(env.APP_ORIGIN+'/login');await page.getByLabel('Email',{exact:true}).fill(env.ADMIN_EMAIL);await page.getByLabel('Password',{exact:true}).fill(adminPassword);await page.getByRole('button',{name:'Sign in →'}).click();
- await page.locator('#nav button').filter({hasText:'Members & roles'}).click();await page.getByRole('button',{name:'＋ Add member'}).click();
+ await page.goto(env.APP_ORIGIN+'/login');await page.getByLabel('Email',{exact:true}).fill(env.ADMIN_EMAIL);await page.getByLabel('Password',{exact:true}).fill(adminPassword);await page.getByRole('button',{name:'Sign in'}).click();
+ await page.locator('#nav button').filter({hasText:'Members & roles'}).click();await page.getByRole('button',{name:'Add member'}).click();
  await page.locator('[name=email]').fill(uiMember);await page.locator('[name=roleId]').selectOption('sa');await page.getByRole('button',{name:'Save',exact:true}).click();
  await page.getByRole('heading',{name:'Account initial password'}).waitFor();assert.equal(await page.getByLabel('Initial password',{exact:true}).inputValue(),INITIAL_PASSWORD);
  await page.locator('#modal button[type=button]').last().click();
@@ -99,7 +99,7 @@ try{
  await page.getByRole('heading',{name:'Reset password'}).waitFor();await page.getByRole('button',{name:'Confirm reset'}).click();await page.getByRole('heading',{name:'Account initial password'}).waitFor();
  await page.locator('#modal button[type=button]').last().click();await page.screenshot({path:'artifacts/password-admin-en.png',fullPage:true});
  const context=await browser.newContext({viewport:{width:390,height:844},locale:'zh-CN'}),first=await context.newPage();first.on('pageerror',e=>errors.push(e.message));
- await first.goto(env.APP_ORIGIN+'/login');await first.getByLabel('邮箱',{exact:true}).fill(uiMember);await first.getByLabel('密码',{exact:true}).fill(INITIAL_PASSWORD);await first.getByRole('button',{name:'登录 →'}).click();
+ await first.goto(env.APP_ORIGIN+'/login');await first.getByLabel('邮箱',{exact:true}).fill(uiMember);await first.getByLabel('密码',{exact:true}).fill(INITIAL_PASSWORD);await first.getByRole('button',{name:'登录'}).click();
  await first.getByRole('heading',{name:'首次登录，请修改密码'}).waitFor();assert.equal(await first.locator('#email').inputValue(),uiMember);
  await first.reload();await first.getByRole('heading',{name:'首次登录，请修改密码'}).waitFor();
  await first.goto(env.APP_ORIGIN+'/');await first.getByRole('heading',{name:'首次登录，请修改密码'}).waitFor();
@@ -111,11 +111,11 @@ try{
  await first.getByRole('button',{name:'Save new password'}).click();await first.getByText('Passwords do not match.',{exact:true}).waitFor();
  await first.getByLabel('Confirm new password',{exact:true}).fill(personalPassword);await first.screenshot({path:'artifacts/password-first-login-en.png',fullPage:true});await first.getByRole('button',{name:'Save new password'}).click();
  await first.getByText('Password updated. Sign in with your new password.',{exact:true}).waitFor();
- await first.getByLabel('Password',{exact:true}).fill(personalPassword);await first.getByRole('button',{name:'Sign in →'}).click();await first.locator('#nav button').filter({hasText:'Projects'}).waitFor();
+ await first.getByLabel('Password',{exact:true}).fill(personalPassword);await first.getByRole('button',{name:'Sign in'}).click();await first.locator('#nav button').filter({hasText:'Projects'}).waitFor();
  await first.reload();await first.locator('#nav button').filter({hasText:'Projects'}).waitFor();
  await row.getByRole('button',{name:'Reset password',exact:true}).click();await page.getByRole('button',{name:'Confirm reset'}).click();await page.getByRole('heading',{name:'Account initial password'}).waitFor();
  assert.equal(await first.evaluate(()=>fetch('/api/workspace').then(r=>r.status)),401);
- await first.reload();await first.getByRole('heading',{name:'Sign in to your workspace'}).waitFor();await first.getByLabel('Email',{exact:true}).fill(uiMember);await first.getByLabel('Password',{exact:true}).fill(INITIAL_PASSWORD);await first.getByRole('button',{name:'Sign in →'}).click();await first.getByRole('heading',{name:'Change your initial password'}).waitFor();
+ await first.reload();await first.getByRole('heading',{name:'Sign in to your workspace'}).waitFor();await first.getByLabel('Email',{exact:true}).fill(uiMember);await first.getByLabel('Password',{exact:true}).fill(INITIAL_PASSWORD);await first.getByRole('button',{name:'Sign in'}).click();await first.getByRole('heading',{name:'Change your initial password'}).waitFor();
  await first.getByRole('button',{name:'Sign out',exact:true}).click();await first.getByRole('heading',{name:'Sign in to your workspace'}).waitFor();
  await first.goto(env.APP_ORIGIN+'/login#activate='+'a'.repeat(64));await first.getByText('Password links are no longer supported. Ask your administrator to reset your initial password.',{exact:true}).waitFor();
  assert.deepEqual(errors,[]);

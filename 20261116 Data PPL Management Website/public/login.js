@@ -19,7 +19,8 @@ function showForm(required,email=''){
   $('#newPasswordField').hidden=!required;$('#newPassword').required=required;
   $('#repeatField').hidden=!required;$('#repeat').required=required;
   $('#signOut').hidden=!required;$('#loginNote').hidden=required;
-  button.textContent=required?'保存新密码':'登录 →';
+  $('#loginActionLabel').textContent=required?'保存新密码':'登录';
+  button.querySelector('.ui-icon').toggleAttribute('hidden',required);
   const params=new URLSearchParams();
   if(required)params.set('change-password','required');
   if(destination!=='/')params.set('next',requestedPage);

@@ -1,7 +1,7 @@
 .practice-detail .practice-citations{margin:.45rem 0 0;font:normal 15px/1.5 Arial,'Microsoft YaHei',sans-serif;color:#344b60}
-.practice-citations>summary{display:list-item;cursor:pointer;color:#375c7a;font-weight:500}
-.practice-citations>summary:focus-visible{outline:2px solid #497397;outline-offset:3px}
-.practice-citations>ul{background:#f0f5f9;border-radius:6px;padding:.5rem .75rem;list-style:none;margin:.4rem 0 0}
+.practice-citations>summary{display:list-item;cursor:pointer;color:var(--brand-hover);font-weight:500}
+.practice-citations>summary:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.practice-citations>ul{background:#edf6ff;border-radius:6px;padding:.5rem .75rem;list-style:none;margin:.4rem 0 0}
 .practice-citations>ul>li{margin:0;padding:.35rem 0;overflow-wrap:anywhere}
 .practice-citations li+li{border-top:1px solid #dce5ed}
 .practice-citations li small{display:block;margin:.1rem 0 0;color:#506479;font-size:.9em}
@@ -11,6 +11,7 @@
 .practice-tools{margin:10px 0}.target-preview{display:block;width:100%;max-height:510px;object-fit:contain;border:1px solid #d1dce7;border-radius:9px;background:#fff}
 .practice-reference{margin-top:22px;padding:4px 0 12px;border-top:1px solid #d7dfe8}
 #form .case-choice{display:flex;align-items:flex-start;gap:10px;font-weight:400;margin:12px 0}
+#form .case-choice[hidden]{display:none}
 #form .case-choice input{width:18px;height:18px;flex:none;margin:3px 0}
 .case-entry{padding:12px 0;border-top:1px solid #d8e1ea}.case-entry p{margin:4px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .case-patterns button,.case-search button{font-size:15px}.case-search input{flex:1 1 200px;min-width:0}
@@ -29,5 +30,5 @@ dialog.drawio-editor{width:min(96vw,1700px);height:93dvh;max-width:none;max-heig
 .diagram-image img.practice-original{display:block;width:100%;height:auto;max-height:none;max-width:100%;padding:0;margin:0;border:0;border-radius:0}
 .diagram-highlight{position:absolute;pointer-events:none;scroll-margin-block:18vh}
 .diagram-highlight:target{outline:3px solid #174c85;outline-offset:2px;background:rgba(120,181,249,.25);box-shadow:0 0 0 5px white}
-.diagram-link{display:inline-block;margin:.2rem .4rem;color:#325f8e;text-decoration:underline}
+.diagram-link{display:inline-block;margin:.2rem .4rem;color:var(--brand-hover);text-decoration:underline}
 .lead-details>summary{cursor:pointer;font-weight:600;padding:.65rem 0}

@@ -10,6 +10,31 @@ const image=await fs.readFile(new URL('../server/ocr-check.png',import.meta.url)
 const result={...fixture,summary:'Object storage (L1)',target:{...fixture.target,summary:'Storage layer (L1)'}};
 const sample={id:'10000000-0000-4000-8000-000000000001',title:'Browser fixture',status:'succeeded',language:'en',owner_email:user.email,updated_at:'2026-01-01',created_at:'2026-01-01',result,translations:{zh:{status:'succeeded',result:{...result,summary:'对象存储（L1）'}}},ocrEvidence:{labels:[{id:'L1',text:'Storage',box:[100,200,300,120],confidence:94}],connections:[]}};
 let offline,submitted,filtered=false;const projects=[];
+function luminance(color) {
+ const [r,g,b]=color.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number).map(n=>n/255).map(n=>n<=0.04045?n/12.92:((n+0.055)/1.055)**2.4);
+ return 0.2126*r+0.7152*g+0.0722*b;
+}
+async function verifyWorkspaceAppearance(page) {
+ const add=page.getByRole('button',{name:'新建项目',exact:true});
+ await add.waitFor();
+ assert.equal(await page.title(),'数据专项作战平台');
+ await page.waitForFunction(()=>[...document.querySelectorAll('#nav .menu-icon use,.track-art use,.page-actions .primary use')].every(el=>el.getBBox().width>0));
+ const glyphs=await page.locator('#nav .menu-icon use').evaluateAll(items=>items.map(el=>el.getAttribute('href')));
+ assert(glyphs.length>=4);assert.equal(new Set(glyphs).size,glyphs.length);
+ assert.equal(await page.locator('.track-art').count(),2);
+ const colors=await add.evaluate(el=>{const s=getComputedStyle(el);return [s.color,s.backgroundColor]});
+ const [light,dark]=colors.map(luminance).sort((a,b)=>b-a);
+ assert((light+.05)/(dark+.05)>=4.5,'Primary button contrast');
+ await page.locator('header [data-language=en]').click();
+ assert.equal(await page.title(),'Data Solutions Hub');
+ assert.equal((await page.locator('aside .brand').innerText()).trim(),'Data Solutions Hub');
+ await page.getByRole('button',{name:'New project',exact:true}).waitFor();
+ await page.locator('.track[data-business=database]').click();
+ assert.equal(await page.locator('body').getAttribute('data-business'),'database');
+ assert.equal(await page.getByRole('button',{name:'New project',exact:true}).evaluate(el=>getComputedStyle(el).backgroundColor),colors[1]);
+ await page.locator('#nav [data-menu-id=home]').click();
+ await page.locator('header [data-language=zh]').click();
+}
 const browser=await chromium.launch({channel:process.env.PLAYWRIGHT_CHANNEL||'msedge',headless:true});
 try{
  await verifyNavigationBrowser(browser);
@@ -31,9 +56,9 @@ try{
   if(path.endsWith('/image')||path.endsWith('/drawing/preview'))return route.fulfill({contentType:'image/png',body:image});
   if(path.startsWith('/api/'))throw Error('Unexpected fixture route '+path);
   const name=path==='/'?'index.html':path.slice(1);
-  return route.fulfill({body:await fs.readFile(new URL(name,root)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html'});
+  return route.fulfill({body:await fs.readFile(new URL(name,root)),contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.svg')?'image/svg+xml':'text/html'});
  });
- await page.goto(origin);await page.getByRole('button',{name:/新建项目/}).click();
+ await page.goto(origin);await verifyWorkspaceAppearance(page);await page.getByRole('button',{name:/新建项目/}).click();
  await page.locator('[name=name]').fill('First lead');
  await page.locator('[name=saId]').selectOption('sa-id');
  assert.equal(await page.locator('[name=vendor]').isVisible(),false);

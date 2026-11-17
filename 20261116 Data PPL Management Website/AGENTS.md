@@ -1,6 +1,6 @@
 # Coding agent handoff
 
-This directory is a self-contained release of Data PPL Management Website 3.10.0. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
+This directory is a self-contained release of Data Solutions Hub (数据专项作战平台) 3.10.1. Run commands from the directory containing this file. Quote its name when entering it from the repository root.
 
 ## Verify a clean checkout
 
@@ -22,6 +22,7 @@ If already in this directory, run only the second line. Use Node.js 24 and npm. 
 ## Change the right source
 
 - Start at `server/index.mjs` for HTTP and authorization. `worker/server.js` owns the domain routes. Rebuild generated `dist/` using `npm run build`.
+- Keep the Chinese and English platform names synchronized in both HTML shells and `public/i18n.js`. The local `brand.svg` is the logo and favicon. The workspace uses `public/ui-icons.svg` for its module and action icons and `public/style.css` for its color palette.
 - The project table drives both the project workspace and POC. Dictionary values and workflow stage IDs remain stable when display labels change.
 - Navigation order and optional per-menu `zh` / `en` names share one versioned MySQL workspace setting. Keep stable IDs, default names and permissions in `public/navigation-schema.js`. An order-only write preserves existing names. The administrator editor in `public/navigation-editor.js` supports mouse, touch and keyboard reordering and bilingual renaming.
 - Use `public/project-status.js` for active POC eligibility. Write project state and history in the same transaction. `worker/report-history.js` applies project access to immutable snapshot contributions before returning details. `migrations/008_practice_access.sql` keeps private originals separate from reviewed public summaries.

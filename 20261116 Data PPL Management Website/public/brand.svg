@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#198ce1"/><stop offset="1" stop-color="#0753ad"/></linearGradient></defs>
+  <rect width="40" height="40" rx="10" fill="url(#sky)"/>
+  <g fill="white"><rect x="8.5" y="22" width="5.5" height="9.5" rx="1.6"/><rect x="17.3" y="16" width="5.5" height="15.5" rx="1.6"/><rect x="26.1" y="8.5" width="5.5" height="23" rx="1.6"/></g>
+</svg>

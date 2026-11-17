@@ -27,12 +27,12 @@ try{
  await page.getByRole('heading',{name:'Sign in to your workspace'}).waitFor();
  await untranslated('login');
  await page.getByLabel('Email',{exact:true}).fill(env.ADMIN_EMAIL);await page.getByLabel('Password',{exact:true}).fill('Bilingual-test-password');
- await page.getByRole('button',{name:'Sign in →'}).click();await page.getByRole('button',{name:'＋ New project',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Sign in'}).click();await page.getByRole('button',{name:'New project',exact:true}).waitFor();
  assert.equal(await page.locator('#nav button').filter({hasText:'Lead discovery'}).count(),0);
- assert.match(await page.locator('.brand').innerText(),/Data PPL Management/);
+ assert.match(await page.locator('.brand').innerText(),/Data Solutions Hub/);
  assert(await page.locator('#nav .nav-menu-name').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=15));
  await untranslated('home');await page.screenshot({path:'artifacts/bilingual-home-en.png',fullPage:true});
- await page.getByRole('button',{name:'＋ New project',exact:true}).click();
+ await page.getByRole('button',{name:'New project',exact:true}).click();
  await page.locator('input[name=name]').fill('全部');await page.locator('input[name=customer]').fill('正常');await page.locator('input[name=repo]').fill('数据库');
  await page.locator('input[name=saName]').fill('架构师甲');await page.locator('input[name=vendor]').fill('Oracle');await page.locator('input[name=scenario]').fill('金融风控');await page.locator('textarea[name=notes]').fill('验证技术方案');await page.locator('input[name=eiPlan]').fill('1.25');await page.locator('select[name=stage]').selectOption('3');await page.locator('select[name=milestone3]').selectOption('已完成');
  await page.locator('select[name=type]').selectOption('数据库');await page.locator('select[name=cloud]').selectOption('公有云');
@@ -47,7 +47,7 @@ try{
  await page.reload();assert.equal(await page.locator('html').getAttribute('lang'),'en');
  await page.getByRole('button',{name:'Projects',exact:false}).first().click();await untranslated('projects');
  await page.locator('tbody tr').filter({hasText:'全部'}).first().click();await untranslated('edit project');
- await page.getByRole('button',{name:'＋ Add revenue entry'}).click();
+ await page.getByRole('button',{name:'Add revenue entry'}).click();
  assert.equal(await page.locator('[data-kind] option').nth(1).textContent(),'Professional services');assert.equal(await page.locator('[data-kind] option').nth(1).getAttribute('value'),'专业服务');
  await page.getByRole('button',{name:'Cancel',exact:true}).click();
  await page.locator('tbody tr').filter({hasText:'全部'}).first().click();
@@ -59,34 +59,34 @@ try{
   const send=(action,version)=>fetch(`/api/projects/${p.id}/${action}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({_version:version})});
   if(!(await send('archive',p._version)).ok)throw Error('Archive failed');if(!(await send('restore',p._version+1)).ok)throw Error('Restore failed');
  });
- await page.reload();await page.getByRole('button',{name:'＋ New project',exact:true}).waitFor();
+ await page.reload();await page.getByRole('button',{name:'New project',exact:true}).waitFor();
  for(const name of ['POC center','Resources','Reports','Members & roles','Activity log']){
   await page.locator('#nav button').filter({hasText:name}).click();
   if(name==='Reports')await page.locator('.reporthead').waitFor();
   if(name==='Members & roles')await page.locator('#roles .listrow').first().waitFor();
   await untranslated(name);
-  if(name==='Resources'){await page.getByRole('heading',{name:'Branch source fixture'}).click();await page.locator('.resource-branches summary').click();assert.equal(await page.locator('.resource-branches a').getAttribute('href'),'https://github.com/geni-112/AI-Practise/tree/main/chatbi');await untranslated('source branches');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.getByRole('button',{name:'＋ New resource'}).click();await untranslated('resource form');await page.getByRole('button',{name:'Cancel',exact:true}).click()}
+  if(name==='Resources'){await page.getByRole('heading',{name:'Branch source fixture'}).click();await page.locator('.resource-branches summary').click();assert.equal(await page.locator('.resource-branches a').getAttribute('href'),'https://github.com/geni-112/AI-Practise/tree/main/chatbi');await untranslated('source branches');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.getByRole('button',{name:'New resource'}).click();await untranslated('resource form');await page.getByRole('button',{name:'Cancel',exact:true}).click()}
   if(name==='Members & roles'){
-   await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();await page.getByRole('button',{name:'＋ Add option'}).click();await page.locator('[data-property=zh]').fill('甲厂');await page.locator('[data-property=en]').fill('Vendor A');await untranslated('dictionary form');await page.getByRole('button',{name:'Save',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();assert.equal(await page.locator('[data-property=en]').inputValue(),'Vendor A');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.screenshot({path:'artifacts/admin-dictionaries-en.png',fullPage:true});
-   await page.getByRole('button',{name:'＋ Add member'}).click();await untranslated('member form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
-   await page.getByRole('button',{name:'＋ New role'}).click();await untranslated('role form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
+   await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();await page.getByRole('button',{name:'Add option'}).click();await page.locator('[data-property=zh]').fill('甲厂');await page.locator('[data-property=en]').fill('Vendor A');await untranslated('dictionary form');await page.getByRole('button',{name:'Save',exact:true}).click();await page.locator('#modal').waitFor({state:'hidden'});await page.locator('.dictionary-card').filter({hasText:'Current vendor'}).getByRole('button',{name:'Manage options'}).click();assert.equal(await page.locator('[data-property=en]').inputValue(),'Vendor A');await page.getByRole('button',{name:'Cancel',exact:true}).click();await page.screenshot({path:'artifacts/admin-dictionaries-en.png',fullPage:true});
+   await page.getByRole('button',{name:'Add member'}).click();await untranslated('member form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
+   await page.getByRole('button',{name:'Create role'}).click();await untranslated('role form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   }
  }
- await page.locator('#nav button').filter({hasText:'Projects'}).click();await page.getByRole('button',{name:'＋ New project',exact:true}).click();assert.equal(await page.locator('#dictionary-list-vendor option').first().getAttribute('value'),'Vendor A');await page.getByRole('button',{name:'Cancel',exact:true}).click();
- await page.getByRole('button',{name:'Open user guide ↗'}).click();await untranslated('guide');
+ await page.locator('#nav button').filter({hasText:'Projects'}).click();await page.getByRole('button',{name:'New project',exact:true}).click();assert.equal(await page.locator('#dictionary-list-vendor option').first().getAttribute('value'),'Vendor A');await page.getByRole('button',{name:'Cancel',exact:true}).click();
+ await page.getByRole('button',{name:'Open user guide'}).click();await untranslated('guide');
  await page.locator('#nav button').filter({hasText:'Reports'}).click();await page.locator('.reporthead').waitFor();
  const original=await page.locator('#summaryEdit').inputValue();assert.match(original,/opportunities/);
  await page.locator('#summaryEdit').fill('不要翻译我的业务总结');await page.locator('header [data-language=zh]').click();assert.equal(await page.locator('#summaryEdit').inputValue(),'不要翻译我的业务总结');
  await page.locator('header [data-language=en]').click();assert.equal(await page.locator('#summaryEdit').inputValue(),'不要翻译我的业务总结');
  await page.frameLocator('#templateFrame').locator('.cell').filter({hasText:'不要翻译我的业务总结'}).waitFor();
  await page.locator('#templateZoom').selectOption('fit');await page.locator('#templateViewport').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/report-template-page-en.png',fullPage:true});
- const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'↓ Export Excel'}).click();const download=await downloadPromise;await download.saveAs('artifacts/template-work/browser-report.xlsx');assert((await fs.stat('artifacts/template-work/browser-report.xlsx')).size>40000);
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Export Excel'}).click();const download=await downloadPromise;await download.saveAs('artifacts/template-work/browser-report.xlsx');assert((await fs.stat('artifacts/template-work/browser-report.xlsx')).size>40000);
  const sheets=await page.evaluate(()=>reportSheets(report));assert.equal(sheets[0].name,'Summary');assert(sheets[2].rows.some(row=>row[2]==='全部'&&row[3]==='Database'));
  await page.getByRole('button',{name:'Change password',exact:true}).click();await untranslated('password form');await page.getByRole('button',{name:'Cancel',exact:true}).click();
  await page.setViewportSize({width:390,height:844});await page.locator('#nav button').filter({hasText:'Overview'}).click();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'English mobile layout does not overflow');
  await page.screenshot({path:'artifacts/bilingual-mobile-en.png',fullPage:true});
- await page.setViewportSize({width:1440,height:1000});await page.locator('header [data-language=zh]').click();assert.match(await page.locator('.brand').innerText(),/数据专项管理平台/);await page.screenshot({path:'artifacts/platform-home-zh.png',fullPage:true});await page.locator('header [data-language=en]').click();
+ await page.setViewportSize({width:1440,height:1000});await page.locator('header [data-language=zh]').click();assert.match(await page.locator('.brand').innerText(),/数据专项作战平台/);await page.screenshot({path:'artifacts/platform-home-zh.png',fullPage:true});await page.locator('header [data-language=en]').click();
  await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Sign in to your workspace'}).waitFor();
  assert.deepEqual(errors,[]);console.log(JSON.stringify({missingTranslations:missing},null,2));
  assert.deepEqual(missing,[],'Every visible interface string is translated');

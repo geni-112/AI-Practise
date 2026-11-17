@@ -39,6 +39,7 @@ export async function createApplication(options = {}) {
   const practices=await createPracticeService({pool,files,env,editorOrigin,fetchImpl:options.maasFetch,probeFactory:options.visionProbe});
   async function handle(request, ip = 'local') {
     const url = new URL(request.url);
+    const publicAsset=['/style.css','/brand.svg','/ui-icons.svg'].includes(url.pathname);
     const maasPage=url.pathname==='/settings/maas'&&['GET','HEAD'].includes(request.method);
     const reviewSlug=['GET','HEAD'].includes(request.method)?url.pathname.match(/^\/best-practices\/reviews\/([a-z0-9][a-z0-9-]{0,63})$/)?.[1]:null;
     const next=maasPage?'maas':reviewSlug?'review-'+reviewSlug:'';
@@ -71,10 +72,10 @@ export async function createApplication(options = {}) {
         const user = await sessionUser(client,request,secure);
         const auth = await authRoute(client,request,user,{origin,secure,initialPassword},ip);
         if (auth) return auth;
-        if (!user && url.pathname !== '/style.css') {
+        if (!user && !publicAsset) {
           return url.pathname.startsWith('/api/') ? json({error:'登录已过期，请重新登录'},401) : new Response(null,{status:303,headers:{Location:loginURL(false)}});
         }
-        if (user?.mustChangePassword && url.pathname !== '/style.css') {
+        if (user?.mustChangePassword && !publicAsset) {
           return url.pathname.startsWith('/api/') ? json({error:'请先修改初始密码',code:'PASSWORD_CHANGE_REQUIRED'},403) : new Response(null,{status:303,headers:{Location:loginURL(true)}});
         }
         if(maasPage)return new Response(await fs.readFile(path.join(root,'public','index.html')),{headers:{'Content-Type':'text/html; charset=utf-8'}});
